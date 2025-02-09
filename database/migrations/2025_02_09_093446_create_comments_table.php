@@ -15,14 +15,14 @@ return new class extends Migration
 
         Schema::create('comments', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->integer('image_id');
-            $table->foreign('image_id')->references('id')->on('images');
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedInteger('image_id');
+            $table->foreign('image_id')->references('id')->on('images')->onDelete('cascade');
             $table->integer('parent_id');
             $table->text('content');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
 
         Schema::enableForeignKeyConstraints();

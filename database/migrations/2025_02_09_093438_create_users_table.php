@@ -21,8 +21,8 @@ return new class extends Migration
             $table->integer('sum_like');
             $table->integer('sum_img');
             $table->integer('remaining_creadits')->default(20);
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->enum('status_user', ["active","banned"]);
         });
     }

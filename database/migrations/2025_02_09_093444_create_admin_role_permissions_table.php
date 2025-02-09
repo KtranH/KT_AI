@@ -15,9 +15,10 @@ return new class extends Migration
 
         Schema::create('admin_role_permissions', function (Blueprint $table) {
             $table->enum('role', ["super_admin","admin","moderator"]);
-            $table->integer('permission_id');
-            $table->foreign('permission_id')->references('id')->on('admin_permissions');
-            $table->timestamp('created_at');
+            $table->unsignedInteger('permission_id');
+            $table->foreign('permission_id')->references('id')->on('admin_permissions')->onDelete('cascade');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
 
         Schema::enableForeignKeyConstraints();

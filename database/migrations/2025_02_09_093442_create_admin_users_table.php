@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('email');
             $table->string('password');
             $table->enum('role', ["super_admin","admin","moderator"]);
-            $table->timestamp('last_login_at');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('last_login_at')->useCurrent();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->enum('status_admin', ["active","inactive"]);
         });
 

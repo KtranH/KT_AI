@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug');
             $table->text('description');
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
 
         Schema::enableForeignKeyConstraints();

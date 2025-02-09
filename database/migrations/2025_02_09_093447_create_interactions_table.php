@@ -15,14 +15,14 @@ return new class extends Migration
 
         Schema::create('interactions', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->bigInteger('image_id');
-            $table->foreign('image_id')->references('id')->on('images');
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedInteger('image_id');
+            $table->foreign('image_id')->references('id')->on('images')->onDelete('cascade');
             $table->enum('type_interaction', ["like","save","report"]);
             $table->text('content');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->enum('status_interaction', ["active","hidden","resolved"]);
         });
 

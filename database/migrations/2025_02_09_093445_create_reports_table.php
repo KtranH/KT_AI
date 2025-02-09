@@ -15,12 +15,12 @@ return new class extends Migration
 
         Schema::create('reports', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('admin_id');
-            $table->foreign('admin_id')->references('id')->on('admin_users');
-            $table->integer('image_id');
-            $table->foreign('image_id')->references('id')->on('images');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->unsignedInteger('admin_id');
+            $table->foreign('admin_id')->references('id')->on('admin_users')->onDelete('cascade');
+            $table->unsignedInteger('image_id');
+            $table->foreign('image_id')->references('id')->on('images')->onDelete('cascade');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->enum('status_report', ["waiting","ignored","accept"]);
         });
 

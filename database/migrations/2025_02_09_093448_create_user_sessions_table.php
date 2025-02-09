@@ -15,16 +15,16 @@ return new class extends Migration
 
         Schema::create('user_sessions', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('token');
             $table->string('ip_address');
             $table->text('user_agent');
-            $table->timestamp('last_activity');
-            $table->timestamp('expires_at');
+            $table->timestamp('last_activity')->useCurrent();
+            $table->timestamp('expires_at')->useCurrent();
             $table->boolean('is_valid');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
 
         Schema::enableForeignKeyConstraints();

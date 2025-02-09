@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('category');
             $table->integer('sum_img');
             $table->integer('average_processing_time');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->enum('status_feature', ["active","inactive","beta"]);
         });
     }
