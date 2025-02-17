@@ -1,11 +1,12 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm">
-    <div class="container mx-auto px-4">
+  <!--<header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl shadow-sm transition-all duration-300"> -->  
+  <header class="fixed top-0 left-0 right-0 z-50 bg-gray-100 backdrop-blur-sm shadow-sm">
+    <div class="container mx-auto px-2">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <div class="flex items-center">
           <router-link to="/" class="flex items-center space-x-2">
-            <img src="/images/logo.svg" alt="KT_AI Logo" class="h-8 w-8">
+            <img :src="logo" alt="KT_AI Logo" class="h-8 w-8">
             <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               KT_AI
             </span>
@@ -13,7 +14,7 @@
         </div>
 
         <!-- Navigation -->
-        <nav class="hidden md:flex items-center space-x-4">
+        <nav class="hidden md:flex items-center ml-24 space-x-6">
           <router-link 
             v-for="item in menuItems" 
             :key="item.path" 
@@ -47,7 +48,7 @@
                 class="flex items-center space-x-2 focus:outline-none"
               >
                 <img 
-                  :src="user.avatar || '/images/default-avatar.png'" 
+                  :src="user.avatar_url || '/img/default-avatar.png'" 
                   alt="User avatar"
                   class="h-8 w-8 rounded-full object-cover"
                 >
@@ -91,6 +92,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'Header',
@@ -100,23 +102,29 @@ export default {
     const isUserMenuOpen = ref(false)
     const isAuthenticated = ref(false)
     const user = ref(null)
+    const logo = ref('/img/voice.png')
 
     const menuItems = [
       { name: 'Trang chủ', path: '/' },
-      { name: 'Dịch vụ', path: '/services' },
-      { name: 'Giá cả', path: '/pricing' },
-      { name: 'Liên hệ', path: '/contact' },
+      { name: 'Tạo ảnh', path: '/services' },
+      { name: 'Thông tin', path: '/contact' },
     ]
 
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/check')
-        const data = await response.json()
+        const response = await axios.get('/api/auth/check', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        })
         
-        isAuthenticated.value = data.authenticated
-        user.value = data.user
+        isAuthenticated.value = response.data.authenticated
+        user.value = response.data.user
       } catch (error) {
         console.error('Error checking auth status:', error)
+        isAuthenticated.value = false
+        user.value = null
       }
     }
 
@@ -130,18 +138,13 @@ export default {
 
     const logout = async () => {
       try {
-        const response = await fetch('/api/auth/logout', {
-          method: 'POST',
+        await axios.post('/api/auth/logout', {}, {
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Đăng xuất thất bại')
-        }
 
         await checkAuth()
         router.push('/login')
@@ -161,7 +164,8 @@ export default {
       isUserMenuOpen,
       toggleUserMenu,
       closeUserMenu,
-      logout
+      logout,
+      logo
     }
   }
 }

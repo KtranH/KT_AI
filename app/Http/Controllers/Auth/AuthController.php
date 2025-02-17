@@ -32,6 +32,10 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'remaining_credits' => 0,
+            'sum_img' => 0,
+            'sum_like' => 0,
+            'status_user' => 'active'
         ]);
 
         Auth::login($user);
@@ -55,6 +59,8 @@ class AuthController extends Controller
             ]);
         }
 
+        $request->session()->regenerate();
+
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user' => Auth::user()
@@ -73,6 +79,6 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json(Auth::user());
     }
 } 
