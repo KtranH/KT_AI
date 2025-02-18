@@ -3,12 +3,12 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <router-link to="/" class="flex justify-center">
-          <img src="/images/logo.svg" alt="KT_AI Logo" class="h-12 w-12">
+          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12" data-aos="fade-up">
         </router-link>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900" data-aos="fade-up" data-aos-delay="200">
           Đăng nhập vào tài khoản
         </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
+        <p class="mt-2 text-center text-sm text-gray-600" data-aos="fade-up" data-aos-delay="400">
           Hoặc
           <router-link to="/register" class="font-medium text-purple-600 hover:text-purple-500">
             đăng ký tài khoản mới
@@ -20,7 +20,7 @@
         {{ error }}
       </div>
 
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" data-aos="zoom-in" data-aos-delay="600">
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
             <label for="email" class="sr-only">Email</label>
@@ -130,7 +130,7 @@
               href="/api/auth/google/url"
               class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
-              <img class="h-5 w-5 mr-2" src="/images/google.svg" alt="Google logo">
+              <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
               Google
             </a>
           </div>
@@ -143,12 +143,14 @@
 <script>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 
 export default {
   name: 'Login',
   
   setup() {
     const router = useRouter()
+    const auth = useAuthStore()
     const loading = ref(false)
     const error = ref(null)
 
@@ -162,28 +164,10 @@ export default {
       try {
         loading.value = true
         error.value = null
-        
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-          body: JSON.stringify(form)
-        })
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Đã có lỗi xảy ra')
-        }
-
-        // Chuyển hướng sau khi đăng nhập thành công
-        const redirect = router.currentRoute.value.query.redirect || '/dashboard'
-        router.push(redirect)
+        await auth.login(form)
       } catch (err) {
-        error.value = err.message
+        error.value = err.message || 'Đã có lỗi xảy ra'
       } finally {
         loading.value = false
       }

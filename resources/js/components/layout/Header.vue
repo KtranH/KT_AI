@@ -1,25 +1,25 @@
 <template>
   <!--<header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl shadow-sm transition-all duration-300"> -->  
-  <header class="fixed top-0 left-0 right-0 z-50 bg-gray-100 backdrop-blur-sm shadow-sm">
+  <header class="fixed top-0 left-0 right-0 z-50 shadow-sm" style="backdrop-filter: blur(50px);" data-aos="fade-down">
     <div class="container mx-auto px-2">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <div class="flex items-center">
-          <router-link to="/" class="flex items-center space-x-2">
+          <a href="/" class="flex items-center space-x-2">
             <img :src="logo" alt="KT_AI Logo" class="h-8 w-8">
             <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               KT_AI
             </span>
-          </router-link>
+          </a>
         </div>
 
         <!-- Navigation -->
-        <nav class="hidden md:flex items-center ml-24 space-x-6">
+        <nav class="hidden md:flex items-center ml-24 space-x-6" v-if="shouldShowHeader">
           <router-link 
             v-for="item in menuItems" 
             :key="item.path" 
             :to="item.path"
-            class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-purple-600 transition"
+            class="px-3 py-2 rounded-md text-sm font-medium transition"
           >
             {{ item.name }}
           </router-link>
@@ -90,43 +90,31 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 
 export default {
   name: 'Header',
   
   setup() {
     const router = useRouter()
+    const route = useRoute()
+    const auth = useAuthStore()
     const isUserMenuOpen = ref(false)
-    const isAuthenticated = ref(false)
-    const user = ref(null)
     const logo = ref('/img/voice.png')
+    const currentSection = ref(1)
+    const color = ref('white')
+
+    const shouldShowHeader = computed(() => {
+      return route.path !== '/' && route.path !== '/register' && route.path !== '/login'
+    })
 
     const menuItems = [
-      { name: 'Trang chủ', path: '/' },
+      { name: 'Trang chủ', path: '/dashboard' },
       { name: 'Tạo ảnh', path: '/services' },
       { name: 'Thông tin', path: '/contact' },
     ]
-
-    const checkAuth = async () => {
-      try {
-        const response = await axios.get('/api/auth/check', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        })
-        
-        isAuthenticated.value = response.data.authenticated
-        user.value = response.data.user
-      } catch (error) {
-        console.error('Error checking auth status:', error)
-        isAuthenticated.value = false
-        user.value = null
-      }
-    }
 
     const toggleUserMenu = () => {
       isUserMenuOpen.value = !isUserMenuOpen.value
@@ -138,34 +126,35 @@ export default {
 
     const logout = async () => {
       try {
-        await axios.post('/api/auth/logout', {}, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
-        })
-
-        await checkAuth()
-        router.push('/login')
+        await auth.logout()
       } catch (error) {
         console.error('Logout failed:', error)
       }
     }
 
     onMounted(() => {
-      checkAuth()
+      auth.checkAuth()
+      
+      // Listen for section change event from other components
+      document.addEventListener('sectionChange', (event) => {
+        currentSection.value = event.detail.section;
+        if(currentSection.value === 2) color.value = "#7c3aed"
+        else color.value = "white"
+      })
     })
 
     return {
       menuItems,
-      isAuthenticated,
-      user,
+      isAuthenticated: auth.isAuthenticated,
+      user: auth.user,
       isUserMenuOpen,
       toggleUserMenu,
       closeUserMenu,
       logout,
-      logo
+      logo,
+      currentSection,
+      color,
+      shouldShowHeader,
     }
   }
 }
@@ -173,6 +162,9 @@ export default {
 
 <style scoped>
 .router-link-active {
-  color: #7c3aed;
+  background-color: #7c3aed;
+  border-radius: 20px;
+  border: none;
+  color: white;
 }
 </style> 

@@ -3,7 +3,7 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <router-link to="/" class="flex justify-center">
-          <img src="/images/logo.svg" alt="KT_AI Logo" class="h-12 w-12">
+          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12">
         </router-link>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Đăng ký tài khoản mới
@@ -44,16 +44,22 @@
               placeholder="Email"
             >
           </div>
-          <div>
-            <label for="password" class="sr-only">Mật khẩu</label>
+          <div class="relative w-full">
             <input 
-              id="password" 
+              id="password"
               v-model="form.password"
-              type="password" 
-              required 
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
+              :type="showPassword ? 'text' : 'password'"
+              required
+              class="appearance-none rounded relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
               placeholder="Mật khẩu"
             >
+            <button 
+              type="button"
+              @click="togglePassword"
+              class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+            >
+              {{ showPassword ? '🙈' : '👁' }}
+            </button>
           </div>
           <div>
             <label for="password_confirmation" class="sr-only">Xác nhận mật khẩu</label>
@@ -132,7 +138,7 @@
               href="/api/auth/google/url"
               class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
-              <img class="h-5 w-5 mr-2" src="/images/google.svg" alt="Google logo">
+              <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
               Google
             </a>
           </div>
@@ -145,6 +151,7 @@
 <script>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'Register',
@@ -153,6 +160,7 @@ export default {
     const router = useRouter()
     const loading = ref(false)
     const error = ref(null)
+    const showPassword = ref(false)
 
     const form = reactive({
       name: '',
@@ -161,31 +169,29 @@ export default {
       password_confirmation: ''
     })
 
+    const togglePassword = () => {
+      showPassword.value =!showPassword.value
+    }
     const handleSubmit = async () => {
       try {
         loading.value = true
         error.value = null
         
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
+        const response = await axios.post('/api/register', form, {
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-          body: JSON.stringify(form)
-        })
+            'Accept': 'application/json'
+          }
+        });
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Đã có lỗi xảy ra')
+        if (response.data.success) {
+          // Chuyển hướng sau khi đăng ký thành công
+          router.push('/dashboard')
+        } else {
+          throw new Error(response.data.message || 'Đã có lỗi xảy ra')
         }
-
-        // Chuyển hướng sau khi đăng ký thành công
-        router.push('/dashboard')
       } catch (err) {
-        error.value = err.message
+        error.value = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra'
       } finally {
         loading.value = false
       }
@@ -195,7 +201,9 @@ export default {
       form,
       loading,
       error,
-      handleSubmit
+      handleSubmit,
+      showPassword,
+      togglePassword
     }
   }
 }

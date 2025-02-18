@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100 pt-24">
     <div class="container mx-auto px-4">
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="bg-white rounded-lg shadow-sm p-6" data-aos="fade-up">
         <h1 class="text-2xl font-bold text-gray-900 mb-4">
           Xin chào, {{ user?.name || 'Người dùng' }}!
         </h1>
@@ -11,7 +11,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="bg-white rounded-lg shadow-sm p-6" data-aos="fade-right" data-aos-delay="400">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Thống kê</h2>
           <div class="space-y-4">
             <div class="flex justify-between items-center">
@@ -29,7 +29,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="bg-white rounded-lg shadow-sm p-6" data-aos="fade-right" data-aos-delay="200">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Hoạt động gần đây</h2>
           <div class="space-y-4">
             <div class="text-gray-600 text-center py-8">
@@ -38,7 +38,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="bg-white rounded-lg shadow-sm p-6" data-aos="fade-right">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Tài khoản</h2>
           <div class="space-y-4">
             <div class="flex justify-between items-center">
@@ -65,65 +65,49 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import AOS from 'aos'
 
 export default {
   name: 'Dashboard',
   
   setup() {
+    AOS.init(
+      {
+        duration: 800,
+        deplay: 500,
+        once: false,
+        offset: 150,
+        easing: 'ease-in-sine',
+      }
+    )
     const router = useRouter()
-    const user = ref(null)
+    const auth = useAuthStore()
     
     const formatDate = (date) => {
       if (!date) return 'N/A'
       return new Date(date).toLocaleDateString('vi-VN')
     }
 
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check')
-        const data = await response.json()
-        
-        if (!data.authenticated) {
-          router.push('/login')
-          return
-        }
-        
-        user.value = data.user
-      } catch (error) {
-        console.error('Error checking auth status:', error)
-        router.push('/login')
-      }
-    }
-
     const logout = async () => {
       try {
-        const response = await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error('Đăng xuất thất bại')
+        const response = await auth.logout()
+        if (response.success) {
+          router.push('/login')
         }
-
-        router.push('/login')
       } catch (error) {
         console.error('Logout failed:', error)
       }
     }
 
     onMounted(() => {
-      checkAuth()
+      auth.checkAuth()
     })
 
     return {
-      user,
+      user: auth.user,
       formatDate,
       logout
     }

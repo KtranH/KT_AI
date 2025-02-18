@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import axios from 'axios'
 
 // Components
 import Home from '../components/Home.vue'
@@ -31,7 +32,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/auth/google/callback',
+    path: '/api/google/callback',
     name: 'google-callback',
     component: {
       template: '<div>Đang xử lý đăng nhập...</div>',
@@ -64,10 +65,14 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // Gọi API kiểm tra auth status
     try {
-      const response = await fetch('/api/auth/check')
-      const data = await response.json()
+      const response = await axios.get('/api/check', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
       
-      if (!data.authenticated) {
+      if (!response.data.authenticated) {
         next({
           path: '/login',
           query: { redirect: to.fullPath }
@@ -84,10 +89,14 @@ router.beforeEach(async (to, from, next) => {
   } else if (to.matched.some(record => record.meta.guest)) {
     // Kiểm tra guest routes
     try {
-      const response = await fetch('/api/auth/check')
-      const data = await response.json()
+      const response = await axios.get('/api/check', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
       
-      if (data.authenticated) {
+      if (response.data.authenticated) {
         next('/dashboard')
       } else {
         next()

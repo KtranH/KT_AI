@@ -81,11 +81,21 @@ import 'fullpage.js/dist/fullpage.css';
 export default {
   name: 'Home',
   setup() {
+    const fullpage = ref(null);
     const options = ref({
-      licenseKey: "",
+      licenseKey: 'null',
       scrollingSpeed: 1000,
       navigation: true,
-      anchors: ['home', 'features', 'cta']
+      navigatorPosition: 'right',
+      animateAnchor: true,
+      paddingTop: '64px',
+      anchors: ['home', 'features', 'cta'],
+      afterLoad: function(origin, destination, direction) {
+        const currentSection = destination.index + 1;
+        document.dispatchEvent(new CustomEvent('sectionChange', { 
+          detail: { section: currentSection }
+        }));
+      }
     });
     
     const features = ref([]); // Tất cả các features được tải từ API
@@ -97,8 +107,16 @@ export default {
     const perPage = ref(4); // Số lượng items mỗi trang
     const hasMore = computed(() => displayedFeatures.value.length < features.value.length);
     
-    const moveTo = (section) => {
-      document.querySelector(`#${section}`).scrollIntoView({ behavior: 'smooth' });
+    const moveTo = (index) => {
+      if (fullpage.value) {
+        if (index >= 1 && index <= options.value.anchors.length) {
+          fullpage.value.api.moveTo(index);
+        } else {
+          console.error('Chỉ số không hợp lệ:', index);
+        }
+      } else {
+        console.error('fullpageRef chưa được gán giá trị');
+      }
     };
 
     const fetchFeatures = async () => {
@@ -140,7 +158,7 @@ export default {
       if (!hasMore.value)
       {
         return;
-      }
+      };
       
       page.value++;
       const start = (page.value - 1) * perPage.value;
@@ -164,6 +182,7 @@ export default {
     });
 
     return {
+      fullpage,
       options,
       features,
       displayedFeatures,
