@@ -31,7 +31,8 @@ class GoogleController extends Controller
                     'sum_like' => 0,
                     'sum_img' => 0,
                     'remaining_creadits' => 20,
-                    'status_user' => 'active'
+                    'status_user' => 'active',
+                    'is_verified' => true
                 ]
             );
 

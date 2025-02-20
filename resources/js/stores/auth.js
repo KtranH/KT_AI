@@ -25,20 +25,22 @@ export const useAuthStore = () => {
     try {
       const response = await axios.post('/api/login', credentials)
       
-      if (response.data.success) {
-        user.value = response.data.user
-        const redirect = router.currentRoute.value.query.redirect || '/dashboard'
-        window.location.href = redirect
-      }
-      else
-      {
+      if (response.data.needs_verification) {
         return response.data
       }
+      
+      user.value = response.data.user
+      const redirect = router.currentRoute.value.query.redirect || '/dashboard'
+      window.location.href = redirect
+      return response.data
     } catch (error) {
       if (error.response?.status === 419) {
         // Lấy CSRF token mới và thử lại
         await axios.get('/sanctum/csrf-cookie')
-        return login(credentials) // Gọi lại hàm login
+        return login(credentials)
+      }
+      if (error.response?.status === 403 && error.response?.data?.needs_verification) {
+        return error.response.data
       }
       throw error
     }

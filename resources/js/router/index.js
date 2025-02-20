@@ -6,6 +6,7 @@ import Home from '../components/Home.vue'
 import Login from '../components/auth/Login.vue'
 import Register from '../components/auth/Register.vue'
 import Dashboard from '../components/Dashboard.vue'
+import VerifyEmail from '../components/auth/VerifyEmail.vue'
 
 const routes = [
   {
@@ -23,6 +24,12 @@ const routes = [
     path: '/register',
     name: 'register',
     component: Register,
+    meta: { guest: true }
+  },
+  {
+    path: '/verify-email',
+    name: 'verify-email',
+    component: VerifyEmail,
     meta: { guest: true }
   },
   {

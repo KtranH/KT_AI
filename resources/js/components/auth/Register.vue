@@ -173,6 +173,10 @@ export default {
       showPassword.value =!showPassword.value
     }
     const handleSubmit = async () => {
+      if(password.value !== password_confirmation.value) {
+        error.value = 'Mật khẩu không khớp nhau'
+        return
+      }
       try {
         loading.value = true
         error.value = null
@@ -186,7 +190,7 @@ export default {
 
         if (response.data.success) {
           // Chuyển hướng sau khi đăng ký thành công
-          router.push('/dashboard')
+          router.push({path:'/verify-email', query:{email:email.value, message:response.data.message}})
         } else {
           throw new Error(response.data.message || 'Đã có lỗi xảy ra')
         }

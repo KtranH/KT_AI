@@ -20,6 +20,18 @@
         {{ error }}
       </div>
 
+      <div v-if="needsVerification" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded relative" role="alert">
+        <p>Tài khoản của bạn chưa được xác thực.</p>
+        <div class="mt-2">
+          <button 
+            @click="goToVerification" 
+            class="text-sm font-medium text-yellow-800 underline hover:text-yellow-900"
+          >
+            Xác thực ngay
+          </button>
+        </div>
+      </div>
+
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" data-aos="zoom-in" data-aos-delay="600">
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
@@ -153,6 +165,7 @@ export default {
     const auth = useAuthStore()
     const loading = ref(false)
     const error = ref(null)
+    const needsVerification = ref(false)
 
     const form = reactive({
       email: '',
@@ -160,12 +173,25 @@ export default {
       remember: false
     })
 
+    const goToVerification = () => {
+      router.push({
+        name: 'verify-email',
+        query: { email: form.email }
+      })
+    }
+
     const handleSubmit = async () => {
       try {
         loading.value = true
         error.value = null
+        needsVerification.value = false
 
-        await auth.login(form)
+        const response = await auth.login(form)
+        
+        if (response?.needs_verification) {
+          needsVerification.value = true
+          error.value = response.message
+        }
       } catch (err) {
         error.value = err.message || 'Đã có lỗi xảy ra'
       } finally {
@@ -177,7 +203,9 @@ export default {
       form,
       loading,
       error,
-      handleSubmit
+      needsVerification,
+      handleSubmit,
+      goToVerification
     }
   }
 }
