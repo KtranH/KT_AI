@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\API\FeatureController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -19,10 +20,6 @@ Route::middleware(['web', 'api'])->prefix('api')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
         
-    // Google OAuth Routes
-    Route::get('/google/url', [AuthController::class, 'getGoogleAuthUrl']);
-    Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback']);
-    
     // Public API Routes
     Route::get('/features', [FeatureController::class, 'load_feature']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -34,6 +31,10 @@ Route::middleware(['web', 'api'])->prefix('api')->group(function () {
         });
     });
 });
+
+// Google OAuth Routes
+Route::get('/auth/google/url', [GoogleController::class, 'redirectUrl']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleCallback']);
 
 // SPA Routes (phải đặt cuối cùng)
 Route::get('/{any}', function () {

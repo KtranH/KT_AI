@@ -30,28 +30,6 @@ const routes = [
     name: 'dashboard',
     component: Dashboard,
     meta: { requiresAuth: true }
-  },
-  {
-    path: '/api/google/callback',
-    name: 'google-callback',
-    component: {
-      template: '<div>Đang xử lý đăng nhập...</div>',
-      created() {
-        const code = this.$route.query.code
-        if (code) {
-          this.$store.dispatch('auth/handleGoogleCallback', code)
-            .then(() => {
-              this.$router.push('/dashboard')
-            })
-            .catch(error => {
-              console.error('Google callback error:', error)
-              this.$router.push('/login')
-            })
-        } else {
-          this.$router.push('/login')
-        }
-      }
-    }
   }
 ]
 
