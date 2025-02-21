@@ -7,6 +7,7 @@ import Login from '../components/auth/Login.vue'
 import Register from '../components/auth/Register.vue'
 import Dashboard from '../components/Dashboard.vue'
 import VerifyEmail from '../components/auth/VerifyEmail.vue'
+import Features from '../components/Features.vue'
 
 const routes = [
   {
@@ -36,6 +37,12 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/features',
+    name: 'features',
+    component: Features,
     meta: { requiresAuth: true }
   }
 ]

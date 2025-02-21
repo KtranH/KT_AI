@@ -62,16 +62,16 @@
               >
                 <div class="py-1">
                   <router-link 
-                    to="/profile" 
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Hồ sơ
-                  </router-link>
-                  <router-link 
                     to="/dashboard" 
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Bảng điều khiển
+                  </router-link>
+                  <router-link 
+                    to="/settings" 
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Tùy chỉnh
                   </router-link>
                   <button 
                     @click="logout"
@@ -112,7 +112,7 @@ export default {
 
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard' },
-      { name: 'Tạo ảnh', path: '/services' },
+      { name: 'Tạo ảnh', path: '/features' },
       { name: 'Thông tin', path: '/contact' },
     ]
 
