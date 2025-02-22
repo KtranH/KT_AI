@@ -6,6 +6,21 @@ import router from './router'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
+// Cấu hình Axios interceptor để tự động thêm token
+axios.interceptors.request.use(config => {
+    // Lấy token từ localStorage
+    const token = localStorage.getItem('token')
+    
+    // Nếu token tồn tại, thêm vào header Authorization
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    
+    return config
+}, error => {
+    return Promise.reject(error)
+})
+
 const app = createApp(App)
 
 // Use plugins

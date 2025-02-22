@@ -176,7 +176,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user = Auth::user();
+        $user = User::find(Auth::user()->id);
         
         if (!$user->is_verified) {
             Auth::logout();
@@ -187,26 +187,26 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $request->session()->regenerate();
-
+        // Tạo token Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'message' => 'Đăng nhập thành công',
-            'user' => $user
+            'user' => $user,
+            'token' => $token
         ]);
     }
 
     public function logout(Request $request)
     {
         Auth::logout();
-        
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Đã đăng xuất thành công']);
+            return response()->json(['message' => 'Đã đăng xuất thành công']);
     }
 
-    public function user(Request $request)
+    /*public function user(Request $request)
     {
         return response()->json(Auth::user());
-    }
+    }*/
 } 

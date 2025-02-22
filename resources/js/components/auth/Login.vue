@@ -193,7 +193,8 @@ export default {
           error.value = response.message
         }
       } catch (err) {
-        error.value = err.message || 'Đã có lỗi xảy ra'
+        error.value = "Thông tin đăng nhập không đúng"
+        console.log(err)
       } finally {
         loading.value = false
       }

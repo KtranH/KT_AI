@@ -22,7 +22,7 @@ export const useAuthStore = () => {
   }
 
   const login = async (credentials) => {
-    try {
+    try {      
       const response = await axios.post('/api/login', credentials)
       
       if (response.data.needs_verification) {
@@ -30,15 +30,12 @@ export const useAuthStore = () => {
       }
       
       user.value = response.data.user
+      localStorage.setItem('token', response.data.token) // Lưu token
+
       const redirect = router.currentRoute.value.query.redirect || '/dashboard'
-      window.location.href = redirect
+      router.push(redirect)
       return response.data
     } catch (error) {
-      if (error.response?.status === 419) {
-        // Lấy CSRF token mới và thử lại
-        await axios.get('/sanctum/csrf-cookie')
-        return login(credentials)
-      }
       if (error.response?.status === 403 && error.response?.data?.needs_verification) {
         return error.response.data
       }
@@ -48,18 +45,14 @@ export const useAuthStore = () => {
 
   const logout = async () => {
     try {
-      const response = await axios.post('/api/logout')
+      await axios.post('/api/logout')
       user.value = null
-      window.location.href = '/login'
+      //localStorage.removeItem('token')
+      router.push('/login') 
     } catch (error) {
-      if (error.response?.status === 419) {
-        window.location.reload()
-      } else {
-        console.error('Lỗi khi đăng xuất:', error)
-      }
+      console.error('Lỗi khi đăng xuất:', error)
     }
-  }
-
+}
   return {
     user,
     isAuthenticated,

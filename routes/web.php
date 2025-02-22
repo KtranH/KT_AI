@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Redis;
 */
 
 // API Routes
-Route::middleware(['web', 'api'])->prefix('api')->group(function () {
+Route::prefix('api')->group(function () {
     
     // Auth Routes
     Route::get('/check', [AuthController::class, 'check']);
@@ -26,14 +26,16 @@ Route::middleware(['web', 'api'])->prefix('api')->group(function () {
         
     // Public API Routes
     Route::get('/features', [FeatureController::class, 'load_feature']);
-    Route::post('/logout', [AuthController::class, 'logout']);
 
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
+        //Route::post('/logout', [AuthController::class, 'logout']);
     });
+    Route::post('/logout', [AuthController::class, 'logout']);
+
 });
 
 // Google OAuth Routes
