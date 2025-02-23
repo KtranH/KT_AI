@@ -13,9 +13,9 @@ class GoogleController extends Controller
 {
     public function redirectUrl()
     {
-        return Socialite::driver('google')->redirect();
+        $redirectUrl = Socialite::driver('google')->redirect()->getTargetUrl();
+        return response()->json(['url' => $redirectUrl]);
     }
-
     public function handleCallback(Request $request)
     {
         try {
@@ -37,10 +37,30 @@ class GoogleController extends Controller
             );
 
             Auth::login($user);
-            
-            return redirect('/dashboard')->with('success', 'Đăng nhập thành công!');
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return "
+            <script>
+                window.opener.postMessage({
+                    success: true,
+                    message: 'Đăng nhập thành công',
+                    user: " . json_encode($user) . ",
+                    token: '" . $token . "'
+                }, '*');
+                window.close();
+            </script>
+        ";
         } catch (\Exception $e) {
-            return redirect('/login')->with('error', 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
+            return "
+                <script>
+                    window.opener.postMessage({
+                        success: false,
+                        message: 'Đăng nhập thất bại',
+                        error: '" . $e->getMessage() . "'
+                    }, '*');
+                    window.close();
+                </script>
+            ";
         }
     }
 } 

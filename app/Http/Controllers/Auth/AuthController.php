@@ -198,11 +198,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        $user = $request->user();
+        if (method_exists($user, 'tokens')) {
+            // Nếu dùng token-based, xoá toàn bộ token
+            $user->tokens()->delete();
+        }
 
-            return response()->json(['message' => 'Đã đăng xuất thành công']);
+        // Nếu dùng session-based (Google OAuth), logout session
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['message' => 'Đã đăng xuất thành công']);
     }
 
     /*public function user(Request $request)

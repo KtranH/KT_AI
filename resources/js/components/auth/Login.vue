@@ -138,13 +138,13 @@
           </div>
 
           <div class="mt-6">
-            <a
-              href="/auth/google/url"
+            <button
+              @click="handleLoginByGoogle"
               class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
               <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
               Google
-            </a>
+            </button>
           </div>
         </div>
       </form>
@@ -179,7 +179,7 @@ export default {
         query: { email: form.email }
       })
     }
-
+    const { handleLoginByGoogle } = useAuthStore();
     const handleSubmit = async () => {
       try {
         loading.value = true
@@ -206,7 +206,8 @@ export default {
       error,
       needsVerification,
       handleSubmit,
-      goToVerification
+      goToVerification,
+      handleLoginByGoogle
     }
   }
 }
