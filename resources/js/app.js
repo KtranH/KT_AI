@@ -40,4 +40,4 @@ AOS.init(
         easing: 'ease-in-sine',
     }
 )
-
+app.use(AOS.init)
