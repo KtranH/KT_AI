@@ -2,20 +2,59 @@
   <div class="min-h-screen bg-gray-100 pt-24">
     <!-- Ảnh background và avtar -->
     <!-- Container chính -->
-    <div class="max-w-[80%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
-        <!-- Ảnh bìa -->
-        <div class="h-[300px] bg-purple-600 rounded-t-lg relative">
-            <!-- Có thể thay bg-blue-600 bằng ảnh thật -->
-            <img :src="coverImage" loading="lazy" class="w-full h-[300px] object-cover rounded-t-lg">
-        </div>
-
-        <!-- Avatar section -->
-        <div class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div class="max-w-[90%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
+        <div class="relative">
+          <!-- Cover Image section -->
+          <div class="h-[300px] bg-purple-600 rounded-t-lg relative">
+            <img 
+              :src="coverImage" 
+              loading="lazy" 
+              class="w-full h-[300px] object-cover rounded-t-lg cursor-pointer" 
+              @click="openPreview(coverImage, 'cover')"
+            >
+          </div>
+          
+          <!-- Avatar section -->
+          <div class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div class="relative">
-                <img :src="avatar" loading="lazy" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
-                <!-- Badge online -->
-                <!--<div class="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>-->
+              <img 
+                :src="avatar" 
+                loading="lazy" 
+                class="w-32 h-32 rounded-full border-4 border-white shadow-lg cursor-pointer" 
+                @click="openPreview(avatar, 'avatar')"
+              >
+              <!-- Badge online -->
+              <!-- <div class="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div> -->
             </div>
+          </div>
+          
+          <!-- Full-screen preview modal -->
+          <div 
+            v-if="previewVisible" 
+            class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+            @click="previewVisible = false"
+          >
+            <div class="relative max-w-6xl max-h-screen p-4">
+              <button 
+                class="absolute top-4 right-4 text-white z-10"
+                @click.stop="previewVisible = false"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <div class="relative">
+                <img 
+                  :src="currentPreviewImage" 
+                  :class="[
+                    'max-h-screen object-contain transition-all duration-300',
+                    previewType === 'avatar' ? 'max-w-lg rounded-full' : 'max-w-6xl'
+                  ]"
+                >
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Content section -->
@@ -55,62 +94,24 @@
         </div>
       <div class="container mx-auto px-4">
         <!-- Xin chào -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-4">
-            Xin chào, {{ user?.name || 'Người dùng' }}!
-          </h1>
-          <p class="text-gray-600">
-            Chào mừng bạn đến với bảng điều khiển của KT_AI. Tại đây bạn có thể quản lý tài khoản và sử dụng các tính năng tạo ảnh AI.
-          </p>
+        <div class="bg-gradient-text rounded-lg shadow-md p-6 flex justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-white mb-4">
+              Xin chào, {{ user?.name || 'Người dùng' }}!
+            </h1>
+            <p class="text-gray-100">
+              Chào mừng bạn đến với bảng điều khiển của KT_AI. Tại đây bạn có thể quản lý tài khoản và sử dụng các tính năng tạo ảnh AI.
+            </p>
+          </div>
+          <img :src="logo_fun" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
         </div>
-
-        <!--
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-6">
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Hoạt động gần đây</h2>
-            <div class="space-y-4">
-              <template v-if="active.length > 0">
-                <div v-for="action in active" :key="action.id" class="flex justify-between items-center">
-                  <span class="text-gray-600"><span class="font-medium">Thời gian: </span>{{ formatDate(action.timestamp) }}</span>
-                  <span class="font-medium">{{ action.action }}</span>
-                </div>
-              </template>
-              <div v-else class="text-gray-600 text-center py-8">
-                  Chưa có hoạt động nào
-              </div>
-            </div>
-          </div>
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Tài khoản</h2>
-            <div class="space-y-4">
-              <div class="flex justify-between items-center">
-                <span class="text-gray-600">Email:</span>
-                <span class="font-medium">{{ user?.email }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-gray-600">Ngày tham gia:</span>
-                <span class="font-medium">{{ formatDate(user?.created_at) }}</span>
-              </div>
-              <div class="mt-6">
-                <button 
-                  @click="logout"
-                  class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
-                >
-                  Đăng xuất
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>-->
       </div>
       <!-- Ảnh nổi bật -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+      <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Ảnh nổi bật</h2>
       </div>
       <!-- Danh sách ảnh -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh</h2>
-      </div>
+      <ImageGalleryVue />
     </div>
   </div>
 </template>
@@ -119,11 +120,14 @@
 import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import ImageGalleryVue from '@/components/layout/ImageGallery.vue'
 import AOS from 'aos'
 
 export default {
   name: 'Dashboard',
-  
+  components: {
+    ImageGalleryVue
+  },
   setup() {
     const router = useRouter()
     const auth = useAuthStore()
@@ -131,11 +135,12 @@ export default {
     const active = ref([])
     const avatar = user.avatar_url
     const coverImage = user.cover_image_url
+    const logo_fun = ref("/img/humanoid.png")
+    // Preview state
+    const previewVisible = ref(false);
+    const currentPreviewImage = ref("");
+    const previewType = ref("");
 
-    const loadActivities = async () => {
-      let actions = JSON.parse(user.activities)
-      active.value = actions
-    }
     const formatDate = (date) => {
       if (!date) return 'N/A'
       return new Date(date).toLocaleDateString('vi-VN')
@@ -152,9 +157,15 @@ export default {
       }
     }
 
+    // Open preview mode
+    const openPreview = (imageUrl, type) => {
+      currentPreviewImage.value = imageUrl;
+      previewType.value = type;
+      previewVisible.value = true;
+    };
+
     onMounted(() => {
       auth.checkAuth()
-      loadActivities()
       setTimeout(() => {
         AOS.refresh()
       }, 100)
@@ -166,8 +177,33 @@ export default {
       logout,
       active,
       avatar,
-      coverImage
+      coverImage,
+      logo_fun,
+      openPreview,
+      previewVisible,
+      currentPreviewImage,
+      previewType,
     }
   }
 }
 </script> 
+<style scoped>
+.bg-gradient-text {
+  background: linear-gradient(
+    -45deg,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    #3b82f6
+  );
+  background-size: 400%;
+  animation: gradient-animation 8s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+</style>

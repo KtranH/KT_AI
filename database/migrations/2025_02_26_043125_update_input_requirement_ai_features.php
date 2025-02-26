@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('images', function (Blueprint $table) {
+        Schema::table('ai_features', function (Blueprint $table) {
             //
-            $table->json('image_url')->nullable()->change();
+            $table->integer('input_requirements')->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('images', function (Blueprint $table) {
+        Schema::table('ai_features', function (Blueprint $table) {
             //
         });
     }
