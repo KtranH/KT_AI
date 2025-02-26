@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-100 pt-24">
     <!-- Ảnh background và avtar -->
     <!-- Container chính -->
-    <div class="max-w-[80%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="fade-up">
+    <div class="max-w-[80%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
         <!-- Ảnh bìa -->
         <div class="h-[300px] bg-purple-600 rounded-t-lg relative">
             <!-- Có thể thay bg-blue-600 bằng ảnh thật -->
@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AOS from 'aos'
@@ -125,15 +125,6 @@ export default {
   name: 'Dashboard',
   
   setup() {
-    AOS.init(
-      {
-        duration: 800,
-        deplay: 500,
-        once: false,
-        offset: 150,
-        easing: 'ease-in-sine',
-      }
-    )
     const router = useRouter()
     const auth = useAuthStore()
     const user = auth.user.value
@@ -164,6 +155,9 @@ export default {
     onMounted(() => {
       auth.checkAuth()
       loadActivities()
+      setTimeout(() => {
+        AOS.refresh()
+      }, 100)
     })
 
     return {

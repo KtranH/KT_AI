@@ -21,23 +21,28 @@ axios.interceptors.request.use(config => {
     return Promise.reject(error)
 })
 
+// Tạo chỉ một Vue app instance duy nhất
 const app = createApp(App)
 
 // Use plugins
 app.use(router)
 app.use(VueFullPage)
 
-// Mount app
-app.mount("#app")
+// Khởi tạo AOS với cấu hình mặc định
+AOS.init({
+    duration: 300,
+    delay: 100,
+    once: true,
+    offset:150,
+    easing: 'ease-in-sine',
+})
 
-// Initialize AOS
-AOS.init(
-    {
-        duration: 800,
-        deplay: 500,
-        once: false,
-        offset: 150,
-        easing: 'ease-in-sine',
-    }
-)
-app.use(AOS.init)
+// Thêm sự kiện để refresh AOS khi chuyển trang
+router.afterEach(() => {
+    setTimeout(() => {
+        AOS.refresh()
+    }, 100)
+})
+
+// Đảm bảo app chỉ được mount một lần
+app.mount("#app")

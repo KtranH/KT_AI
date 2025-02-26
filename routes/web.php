@@ -34,7 +34,8 @@ Route::prefix('api')->group(function () {
         });
         Route::post('/logout', [AuthController::class, 'logout']);
     });
-    //Route::post('/logout', [AuthController::class, 'logout']);
+    // Tránh trùng lặp route logout
+    // Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 // Google OAuth Routes

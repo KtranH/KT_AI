@@ -1,18 +1,23 @@
 <template>
   <!-- Template code remains the same until the feature card div -->
-  <div class="min-h-screen bg-gray-100 pt-24">
+  <div class="min-h-screen bg-gray-100 pt-24" data-aos = "zoom-out">
     <div class="max-w-[80%] mx-auto my-4">
       <h1 
-        class="text-4xl font-bold text-center mb-2 animate-gradient-text"
-        data-aos="zoom-in"
-        data-aos-duration="1000"
+        class="text-4xl font-bold text-center animate-gradient-text w-full"
       >
-        <span class="bg-gradient-text rounded-full items-center"><span class="text-white p-4 text-3xl">Các Chức Năng Tạo Ảnh AI</span></span>
+      <div class="flex items-center justify-center">
+        <span class="text-3xl font-bold feature-title bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>
+        <span class="bg-gradient-text rounded-full flex items-center justify-center p-2">
+          <span class="text-white text-3xl ml-2 mr-2">bằng AI</span>
+        </span>
+        <img :src="icon_title" loading = "lazy" class="w-12 h-12 ml-2" alt="">
+      </div>
       </h1>
+      <h1 v-if="error_message === true" class="text-2xl font-bold text-center mb-2 text-red-600 bg-red-100 p-4 rounded-full">Đã có lỗi xảy ra</h1>
       
       <div class="relative">
         <div 
-          class="snap-container h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth" 
+          class="snap-container h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth mt-[-30px]" 
           ref="snapContainer"
         >
           <div 
@@ -22,7 +27,7 @@
             :class="{'opacity-0': isScrolling}"
           >
             <div 
-              class="feature-card bg-white rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-700 hover:scale-[1.02] relative min-h-[600px] group"
+              class="feature-card bg-white rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-700 hover:scale-[1.02] relative h-[600px] w-[1200px] group"
               :class="{'feature-active': currentFeatureIndex === index}"
             >
               <!-- Animated gradient background -->
@@ -43,48 +48,56 @@
               <div class="md:w-1/2 p-12 flex flex-col justify-center relative z-10 transform transition-transform duration-700 hover:translate-x-2 bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:from-blue-50/50 group-hover:via-purple-50/50 group-hover:to-pink-50/50">
                 <!-- Content remains the same -->
                 <span class="inline-block feature-number bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text font-semibold mb-2 transform transition-all duration-500">
-                  #{{ (index + 1).toString().padStart(2, '0') }}
+                  #{{ (index + 1).toString().padStart(2, '0') }} - Tổng số ảnh đã tạo ({{ feature.sum_img }})
                 </span>
                 <h2 class="text-3xl font-bold feature-title bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-6 transform transition-all duration-500">
                   {{ feature.title }}
                 </h2>
-                <p class="text-gray-600 mb-8 leading-relaxed text-lg feature-description opacity-0 transform translate-y-4 transition-all duration-700">
-                  {{ feature.description }}
+                <p class="text-gray-600 mb-4 leading-relaxed text-lg feature-description opacity-0 transform translate-y-4 transition-all duration-700">
+                  {{ feature.description }}.
                 </p>
+                <hr class="mb-4">
+                <h2 class="text-3xl font-bold feature-title bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-6 transform transition-all duration-500">Thông tin</h2>
+                <ul class="text-gray-600 mb-8 leading-relaxed text-lg feature-description opacity-0 transform translate-y-4 transition-all duration-700 list-disc pl-6">
+                  <li class="mb-2"><span class="font-semibold">Lời nhắc khuyến nghị:</span> {{ feature.prompt_template }}</li>
+                  <li class="mb-2"><span class="font-semibold">Yêu cầu đầu vào: </span>{{ feature.input_requirements ? feature.input_requirements : 'Không' }}.</li>
+                  <li class="mb-2"><span class="font-semibold">Thể loại: </span>{{ feature.category }}.</li>
+                  <li class="mb-2"><span class="font-semibold">Thời gian tạo ảnh: </span>{{ feature.average_processing_time }}.</li>
+                  <li class="mb-2"><span class="font-semibold">Chi phí: </span>{{ feature.creadit_cost }}.</li>
+                </ul>
                 <button class="relative overflow-hidden w-fit px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full transition-all duration-500 hover:scale-105 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 group">
                   <span class="relative z-10">Thử ngay</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                   <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-20 blur-lg transition-all duration-500"></div>
                 </button>
               </div>
-
               <!-- Image section with enhanced background -->
               <div class="md:w-1/2 relative h-96 md:h-auto overflow-hidden bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:from-blue-50/30 group-hover:via-purple-50/30 group-hover:to-pink-50/30">
+                <img 
+                  :src="feature.thumbnail_url"
+                  class="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                />
                 <!-- Rest of the image section remains the same -->
-                <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40 z-10 transition-opacity duration-500"></div>
+                <!--<div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40 z-10 transition-opacity duration-500"></div>
                 <transition-group 
                   name="slide-fade" 
                   tag="div" 
                   class="h-full"
                 >
                   <img 
-                    v-for="(img, imgIndex) in feature.images" 
+                    v-for="(feature, imgIndex) in features"
                     :key="imgIndex"
-                    :src="img"
-                    v-show="currentSlides[index] === imgIndex"
+                    :src="feature.thumbnail_url"
                     class="absolute inset-0 w-full h-full object-cover transition-all duration-1000 transform"
-                    :class="{ 
-                      'scale-105 opacity-100': currentSlides[index] === imgIndex,
-                      'scale-95 opacity-0': currentSlides[index] !== imgIndex
-                    }"
                     loading="lazy"
-                  >
-                </transition-group>
+                  />
+                </transition-group>-->
                 
                 <!-- Navigation dots -->
-                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+                <!--<div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
                   <button
-                    v-for="(img, imgIndex) in feature.images"
+                    v-for="(img, imgIndex) in features"
                     :key="imgIndex"
                     @click="currentSlides[index] = imgIndex"
                     class="w-3 h-3 rounded-full transition-all duration-300 hover:scale-150 relative group"
@@ -97,7 +110,7 @@
                       class="absolute inset-0 rounded-full bg-white transform scale-0 opacity-0 transition-all duration-300 group-hover:scale-150 group-hover:opacity-30 blur"
                     ></span>
                   </button>
-                </div>
+                </div>-->
               </div>
             </div>
           </div>
@@ -146,46 +159,49 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AOS from 'aos'
+import axios from 'axios';
 
 export default {
   name: 'Features',
   setup() {
-    AOS.init({
-      duration: 1200,
-      delay: 100,
-      once: false,
-      offset: 300,
-      easing: 'ease-out-cubic',
-      mirror: true
-    })
-
     const router = useRouter()
-    const auth = useAuthStore()
-    const user = auth.user
-
-    // Tạo 21 chức năng
-    const features = ref(Array.from({ length: 21 }, (_, i) => ({
-      title: `Chức năng ${i + 1}`,
-      description: `Đây là mô tả cho chức năng ${i + 1}. AI sẽ giúp bạn thực hiện những điều tuyệt vời với công nghệ tiên tiến.`,
-      images: [
-        `https://picsum.photos/600/400?random=${i * 3 + 1}`,
-        `https://picsum.photos/600/400?random=${i * 3 + 2}`,
-        `https://picsum.photos/600/400?random=${i * 3 + 3}`
-      ]
-    })))
+    const features = ref([])
+    const error_message = ref(false)
+    const icon_title = ref("/img/ai.png")
 
     const currentFeatureIndex = ref(0)
-    const currentSlides = ref(features.value.map(() => 0)) // Trạng thái slide cho từng tính năng
     const scrollProgress = ref(0)
     const showBackToTop = ref(false)
     const snapContainer = ref(null)
     const isScrolling = ref(false)
     let scrollTimeout
 
+    const fetchFeatures = async () => {
+      try {
+        const response = await axios.get('/api/features', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+         if (response.data && response.data.success) {
+          features.value = response.data.data
+        }
+        else
+        {
+          error_message.value = 'Failed to fetch features'
+          console.error('Error:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Error fetching features:', error)
+        error_message.value = true
+      }
+    }
     const scrollToFeature = (index) => {
       currentFeatureIndex.value = index
       const featureElement = document.querySelector(`.snap-start:nth-child(${index + 1})`)
@@ -198,6 +214,8 @@ export default {
 
     const updateScrollProgress = () => {
       const container = snapContainer.value
+      if (!container) return
+      
       const scrollTop = container.scrollTop
       const scrollHeight = container.scrollHeight - container.clientHeight
       scrollProgress.value = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0
@@ -210,6 +228,7 @@ export default {
         currentFeatureIndex.value = newIndex
       }
     }
+    
     const handleScroll = () => {
       isScrolling.value = true
       updateScrollProgress()
@@ -219,31 +238,33 @@ export default {
         isScrolling.value = false
       }, 150)
     }
+    
     onMounted(() => {
-      // Tự động chuyển đổi hình ảnh trong từng tính năng
-      setInterval(() => {
-        currentSlides.value = currentSlides.value.map((slide, index) => 
-          (slide + 1) % features.value[index].images.length
-        )
+      AOS.refresh()
+      fetchFeatures()   
+      if (snapContainer.value) {
         snapContainer.value.addEventListener('scroll', handleScroll)
-      }, 5000)
-
-      // Theo dõi vị trí cuộn
-      snapContainer.value.addEventListener('scroll', updateScrollProgress)
+      }
+    })
+    onUnmounted(() => {
+      if (snapContainer.value) {
+        snapContainer.value.removeEventListener('scroll', handleScroll)
+      }
+      clearTimeout(scrollTimeout)
     })
 
     return {
       features,
       currentFeatureIndex,
-      currentSlides,
       scrollToFeature,
       scrollToTop,
       scrollProgress,
       showBackToTop,
       snapContainer,
-      user,
       router,
-      isScrolling
+      isScrolling,
+      error_message,
+      icon_title
     }
   }
 }

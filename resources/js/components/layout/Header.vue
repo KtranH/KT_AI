@@ -16,12 +16,12 @@
         <!-- Navigation -->
         <nav class="hidden md:flex items-center ml-24 space-x-6" v-if="shouldShowHeader">
           <router-link 
-            v-for="item in menuItems" 
-            :key="item.path" 
-            :to="item.path"
-            class="px-3 py-2 rounded-md text-sm font-medium transition"
-          >
-            {{ item.name }}
+              v-for="item in menuItems" 
+              :key="item.path" 
+              :to="item.path"
+              class="px-3 py-2 rounded-md text-sm font-medium transition"
+            >
+              {{ item.name }}
           </router-link>
         </nav>
 
@@ -113,7 +113,7 @@ export default {
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard' },
       { name: 'Tạo ảnh', path: '/features' },
-      { name: 'Thông tin', path: '/contact' },
+      { name: 'Thông tin', path: '/' },
     ]
 
     const toggleUserMenu = () => {

@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 import router from '../router'
 
+// Tạo một reactive state duy nhất
 const user = ref(null)
 const isAuthenticated = computed(() => !!user.value)
 
@@ -16,6 +17,7 @@ export const useAuthStore = () => {
       }
       return response.data
     } catch (error) {
+      console.error('Error checking auth:', error)
       user.value = null
       throw error
     }
@@ -45,14 +47,17 @@ export const useAuthStore = () => {
 
   const logout = async () => {
     try {
-      await axios.post('/api/logout')
+      const response = await axios.post('/api/logout')
       user.value = null
       localStorage.removeItem('token')
-      router.push('/login') 
+      router.push('/login')
+      return { success: true }
     } catch (error) {
       console.error('Lỗi khi đăng xuất:', error)
+      return { success: false, error }
     }
   }
+  
   const handleLoginByGoogle = async () => {
     try {
       const response = await axios.get('/auth/google/url');
@@ -64,13 +69,17 @@ export const useAuthStore = () => {
       window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin) return; // Đảm bảo cùng origin
   
-        const { success, token, user } = event.data;
+        const { success, token, user: userData } = event.data;
   
         if (success) {
           localStorage.setItem('token', token);
-          console.log('Đăng nhập thành công:', user);
+          user.value = userData; // Cập nhật dữ liệu người dùng
+          console.log('Đăng nhập thành công:', userData);
+          
+          // Sử dụng router.push thay vì window.location.reload
           router.push('/dashboard');
-          window.location.reload(); 
+          // KHÔNG làm điều này để tránh render component hai lần
+          // window.location.reload(); 
         } else {
           console.error('Đăng nhập thất bại:', event.data.message);
         }
@@ -79,12 +88,19 @@ export const useAuthStore = () => {
       console.error('Lỗi trong quá trình đăng nhập:', error);
     }
   }
+  
+  // Thêm hàm để tải lại dữ liệu người dùng
+  const refreshUserData = async () => {
+    return await checkAuth()
+  }
+  
   return {
     user,
     isAuthenticated,
     checkAuth,
     login,
     logout,
-    handleLoginByGoogle
+    handleLoginByGoogle,
+    refreshUserData
   }
 } 

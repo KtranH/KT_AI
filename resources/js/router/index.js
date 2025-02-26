@@ -42,8 +42,7 @@ const routes = [
   {
     path: '/features',
     name: 'features',
-    component: Features,
-    meta: { requiresAuth: true }
+    component: Features
   }
 ]
 
@@ -53,52 +52,30 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  // Kiểm tra xem route có yêu cầu auth không
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    // Gọi API kiểm tra auth status
-    try {
-      const response = await axios.get('/api/check', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.data.authenticated) {
-        next({
-          path: '/login',
-          query: { redirect: to.fullPath }
-        })
-      } else {
-        next()
-      }
-    } catch (error) {
-      next({
-        path: '/login',
-        query: { redirect: to.fullPath }
-      })
-    }
-  } else if (to.matched.some(record => record.meta.guest)) {
-    // Kiểm tra guest routes
-    try {
-      const response = await axios.get('/api/check', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.data.authenticated) {
-        next('/dashboard')
-      } else {
-        next()
-      }
-    } catch (error) {
+  try {
+    const { data } = await axios.get('/api/check')
+    const isAuthenticated = data.authenticated
+
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+    } else if (to.meta.guest && isAuthenticated) {
+      next('/dashboard')
+    } else {
       next()
     }
-  } else {
-    next()
+  } catch (error) {
+    console.error('Auth check failed:', error)
+    if (to.meta.requiresAuth) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+    } else {
+      next()
+    }
   }
+})
+
+router.afterEach(() => {
+  // Đảm bảo không delay re-render
+  window.dispatchEvent(new Event('router-changed'))
 })
 
 export default router 
