@@ -108,7 +108,7 @@
       </div>
       <!-- Ảnh nổi bật -->
       <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Ảnh nổi bật</h2>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Ảnh đã bật chia sẻ</h2>
       </div>
       <!-- Danh sách ảnh -->
       <ImageGalleryVue />
