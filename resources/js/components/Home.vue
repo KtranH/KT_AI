@@ -125,7 +125,7 @@ export default {
       
       try {
         console.log('Đang tải dữ liệu chức năng...');
-        const response = await axios.get('/api/features', {
+        const response = await axios.get('/api/load_features', {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

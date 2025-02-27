@@ -10,7 +10,7 @@ export const usefeaturesStore = defineStore('features', {
     {
         async fetchFeatures() {
             try {
-              const response = await axios.get('/api/features', {
+              const response = await axios.get('/api/load_features', {
                 headers: {
                   'Accept': 'application/json',
                   'Content-Type': 'application/json',

@@ -25,7 +25,8 @@ Route::prefix('api')->group(function () {
     Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
         
     // Public API Routes
-    Route::get('/features', [FeatureController::class, 'load_feature']);
+    Route::get('/load_features', [FeatureController::class, 'load_feature']);
+    Route::get('/load_features/{id}', [FeatureController::class, 'get_feature']);
 
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {

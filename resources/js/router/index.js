@@ -20,37 +20,37 @@ const routes = [
     path: '/login',
     name: 'login',
     component: Login,
-    meta: { guest: true }
+    meta: { guest: true, title: 'KT_AI - Đăng nhập' }
   },
   {
     path: '/register',
     name: 'register',
     component: Register,
-    meta: { guest: true }
+    meta: { guest: true, title: 'KT_AI - Đăng ký' }
   },
   {
     path: '/verify-email',
     name: 'verify-email',
     component: VerifyEmail,
-    meta: { guest: true }
+    meta: { guest: true, title: 'KT_AI - Xác thực email' }
   },
   {
     path: '/dashboard',
     name: 'dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ' }
   },
   {
     path: '/features',
     name: 'features',
     component: Features,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, title: 'KT_AI - Tính năng' }
   },
   {
-    path: '/create_image',
-    name: 'create_image',
+    path: '/createimage/:encodedID',
+    name: 'createimage',
     component: CreateImage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, title: 'KT_AI - Tạo ảnh' }
   }
 ]
 
@@ -60,6 +60,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  document.title = to.meta.title || 'KT_AI - Sáng tạo ảnh với AI';
   try {
     const { data } = await axios.get('/api/check')
     const isAuthenticated = data.authenticated

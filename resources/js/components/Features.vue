@@ -48,7 +48,7 @@
               <div class="md:w-1/2 p-12 flex flex-col justify-center relative z-10 transform transition-transform duration-700 hover:translate-x-2 bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:from-blue-50/50 group-hover:via-purple-50/50 group-hover:to-pink-50/50">
                 <!-- Content remains the same -->
                 <span class="inline-block feature-number bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text font-semibold mb-2 transform transition-all duration-500">
-                  #{{ (index + 1).toString().padStart(2, '0') }} - Tổng số ảnh đã tạo ({{ feature.sum_img }})
+                  #{{ feature.id }} - Tổng số ảnh đã tạo ({{ feature.sum_img }})
                 </span>
                 <h2 class="text-3xl font-bold feature-title bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-6 transform transition-all duration-500">
                   {{ feature.title }}
@@ -66,7 +66,7 @@
                   <li class="mb-2"><span class="font-semibold">Chi phí: </span>{{ feature.creadit_cost }}.</li>
                 </ul>
                 <button class="relative overflow-hidden w-fit px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full transition-all duration-500 hover:scale-105 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 group">
-                  <span class="relative z-10 font-semibold">Thử ngay</span>
+                  <router-link :to="{ name: 'createimage', params: { encodedID: encodeID(feature.id) }}" class="relative z-10 font-semibold">Thử ngay</router-link>
                   <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                   <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-20 blur-lg transition-all duration-500"></div>
                 </button>
@@ -182,6 +182,11 @@ export default {
         isScrolling.value = false
       }, 150)
     }
+
+    //Encode ID
+    const encodeID = (id) => {
+      return btoa(id)
+    }
     
     onMounted(() => {
       if (storeFeatures.features.length === 0) {
@@ -210,7 +215,8 @@ export default {
       router,
       isScrolling,
       error_message,
-      icon_title
+      icon_title,
+      encodeID
     }
   }
 }
