@@ -84,7 +84,7 @@
 
             <!-- Action buttons -->
             <div class="flex justify-center gap-4 mt-6">
-                <button class="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-blue-700 transition">
+                <button class="px-6 py-2 bg-gradient-text text-white rounded-full">
                     Cập nhật ảnh đại diện
                 </button>
                 <button class="px-6 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition">
@@ -134,7 +134,7 @@
 <script>
 import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth'
 import ImageListVue from '@/components/layout/ImageList.vue'
 import AOS from 'aos'
 

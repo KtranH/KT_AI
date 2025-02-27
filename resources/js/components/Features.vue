@@ -66,7 +66,7 @@
                   <li class="mb-2"><span class="font-semibold">Chi phí: </span>{{ feature.creadit_cost }}.</li>
                 </ul>
                 <button class="relative overflow-hidden w-fit px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full transition-all duration-500 hover:scale-105 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 group">
-                  <span class="relative z-10">Thử ngay</span>
+                  <span class="relative z-10 font-semibold">Thử ngay</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                   <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-20 blur-lg transition-all duration-500"></div>
                 </button>
@@ -78,39 +78,6 @@
                   class="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
                 />
-                <!-- Rest of the image section remains the same -->
-                <!--<div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40 z-10 transition-opacity duration-500"></div>
-                <transition-group 
-                  name="slide-fade" 
-                  tag="div" 
-                  class="h-full"
-                >
-                  <img 
-                    v-for="(feature, imgIndex) in features"
-                    :key="imgIndex"
-                    :src="feature.thumbnail_url"
-                    class="absolute inset-0 w-full h-full object-cover transition-all duration-1000 transform"
-                    loading="lazy"
-                  />
-                </transition-group>-->
-                
-                <!-- Navigation dots -->
-                <!--<div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
-                  <button
-                    v-for="(img, imgIndex) in features"
-                    :key="imgIndex"
-                    @click="currentSlides[index] = imgIndex"
-                    class="w-3 h-3 rounded-full transition-all duration-300 hover:scale-150 relative group"
-                  >
-                    <span 
-                      class="absolute inset-0 rounded-full transition-all duration-300"
-                      :class="currentSlides[index] === imgIndex ? 'bg-white scale-100' : 'bg-white/50 group-hover:bg-white/70'"
-                    ></span>
-                    <span 
-                      class="absolute inset-0 rounded-full bg-white transform scale-0 opacity-0 transition-all duration-300 group-hover:scale-150 group-hover:opacity-30 blur"
-                    ></span>
-                  </button>
-                </div>-->
               </div>
             </div>
           </div>
@@ -159,20 +126,19 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { usefeaturesStore } from '@/stores/features'
 import AOS from 'aos'
-import axios from 'axios';
 
 export default {
   name: 'Features',
   setup() {
     const router = useRouter()
-    const features = ref([])
+    const storeFeatures = usefeaturesStore()
     const error_message = ref(false)
     const icon_title = ref("/img/ai.png")
-
+    const features = computed(() => storeFeatures.features);
     const currentFeatureIndex = ref(0)
     const scrollProgress = ref(0)
     const showBackToTop = ref(false)
@@ -180,28 +146,6 @@ export default {
     const isScrolling = ref(false)
     let scrollTimeout
 
-    const fetchFeatures = async () => {
-      try {
-        const response = await axios.get('/api/features', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-         if (response.data && response.data.success) {
-          features.value = response.data.data
-        }
-        else
-        {
-          error_message.value = 'Failed to fetch features'
-          console.error('Error:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching features:', error)
-        error_message.value = true
-      }
-    }
     const scrollToFeature = (index) => {
       currentFeatureIndex.value = index
       const featureElement = document.querySelector(`.snap-start:nth-child(${index + 1})`)
@@ -240,8 +184,10 @@ export default {
     }
     
     onMounted(() => {
+      if (storeFeatures.features.length === 0) {
+        storeFeatures.fetchFeatures();
+      }
       AOS.refresh()
-      fetchFeatures()   
       if (snapContainer.value) {
         snapContainer.value.addEventListener('scroll', handleScroll)
       }

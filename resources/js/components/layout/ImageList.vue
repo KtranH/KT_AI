@@ -114,6 +114,7 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue'
+import { usefeaturesStore } from '@/stores/features'
 
 export default {
   name: 'ImageList',

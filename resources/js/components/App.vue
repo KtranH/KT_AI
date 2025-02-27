@@ -1,21 +1,38 @@
 <template>
-  <div>
+  <div v-if="isLoading">
+    <Loading />
+  </div>
+  <div v-else>
     <Header />
-      <router-view v-slot="{ Component }" :key="$route.fullPath">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+    <router-view v-slot="{ Component }" :key="$route.fullPath">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </div>
 </template>
 
 <script>
-import Header from './layout/Header.vue'
+import { ref, onMounted } from 'vue';
+import Header from './layout/Header.vue';
+import Loading from './layout/Loading.vue';
 
 export default {
   name: 'App',
   components: {
-    Header
+    Header,
+    Loading
+  },
+  setup() {
+    const isLoading = ref(true);
+
+    onMounted(() => {
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 1000);
+    });
+
+    return { isLoading };
   }
 }
 </script>

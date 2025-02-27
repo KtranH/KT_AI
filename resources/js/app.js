@@ -5,6 +5,7 @@ import VueFullPage from 'vue-fullpage.js'
 import router from './router'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+import { createPinia } from 'pinia';
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -23,6 +24,8 @@ axios.interceptors.request.use(config => {
 
 // Tạo chỉ một Vue app instance duy nhất
 const app = createApp(App)
+// Tạo pinia 
+const pinia = createPinia()
 
 // Use plugins
 app.use(router)
@@ -46,3 +49,5 @@ router.afterEach(() => {
 
 // Đảm bảo app chỉ được mount một lần
 app.mount("#app")
+// Sử dụng pinia
+app.use(pinia);

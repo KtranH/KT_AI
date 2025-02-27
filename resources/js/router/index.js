@@ -8,6 +8,7 @@ import Register from '../components/auth/Register.vue'
 import Dashboard from '../components/Dashboard.vue'
 import VerifyEmail from '../components/auth/VerifyEmail.vue'
 import Features from '../components/Features.vue'
+import CreateImage from '../components/features/CreateImage.vue'
 
 const routes = [
   {
@@ -42,7 +43,14 @@ const routes = [
   {
     path: '/features',
     name: 'features',
-    component: Features
+    component: Features,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/create_image',
+    name: 'create_image',
+    component: CreateImage,
+    meta: { requiresAuth: true }
   }
 ]
 

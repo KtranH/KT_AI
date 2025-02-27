@@ -1,106 +1,82 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import router from '../router'
 
-// Tạo một reactive state duy nhất
-const user = ref(null)
+// Reactive state
+const user = ref(JSON.parse(localStorage.getItem('user')) || null)
+const token = ref(localStorage.getItem('token') || null)
 const isAuthenticated = computed(() => !!user.value)
 
 export const useAuthStore = () => {
+  
+  const saveAuthData = (userData, userToken) => {
+    user.value = userData
+    token.value = userToken
+    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('token', userToken)
+  }
+
+  const clearAuthData = () => {
+    user.value = null
+    token.value = null
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+  }
+
   const checkAuth = async () => {
+    if (!token.value || user.value) return
+
     try {
-      const response = await axios.get('/api/check')
+      const response = await axios.get('/api/check', {
+        headers: { Authorization: `Bearer ${token.value}` }
+      })
       if (response.data.authenticated) {
-        user.value = response.data.user
+        saveAuthData(response.data.user, token.value)
       } else {
-        user.value = null
+        clearAuthData()
       }
-      return response.data
     } catch (error) {
+      clearAuthData()
       console.error('Error checking auth:', error)
-      user.value = null
-      throw error
     }
   }
 
   const login = async (credentials) => {
-    try {      
+    try {
       const response = await axios.post('/api/login', credentials)
-      
       if (response.data.needs_verification) {
         return response.data
       }
-      
-      user.value = response.data.user
-      localStorage.setItem('token', response.data.token) // Lưu token
-
-      const redirect = router.currentRoute.value.query.redirect || '/dashboard'
-      router.push(redirect)
+      saveAuthData(response.data.user, response.data.token)
+      router.push(router.currentRoute.value.query.redirect || '/dashboard')
       return response.data
     } catch (error) {
-      if (error.response?.status === 403 && error.response?.data?.needs_verification) {
-        return error.response.data
-      }
       throw error
     }
   }
 
   const logout = async () => {
     try {
-      const response = await axios.post('/api/logout')
-      user.value = null
-      localStorage.removeItem('token')
+      await axios.post('/api/logout', {
+        headers: { Authorization: `Bearer ${token.value}` }
+      })
+      clearAuthData()
       router.push('/login')
-      return { success: true }
     } catch (error) {
-      console.error('Lỗi khi đăng xuất:', error)
-      return { success: false, error }
+      console.error('Logout error:', error)
     }
   }
-  
-  const handleLoginByGoogle = async () => {
-    try {
-      const response = await axios.get('/auth/google/url');
-      const googleAuthUrl = response.data.url;
-  
-      const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600');
-  
-      // Lắng nghe phản hồi từ popup
-      window.addEventListener('message', (event) => {
-        if (event.origin !== window.location.origin) return; // Đảm bảo cùng origin
-  
-        const { success, token, user: userData } = event.data;
-  
-        if (success) {
-          localStorage.setItem('token', token);
-          user.value = userData; // Cập nhật dữ liệu người dùng
-          console.log('Đăng nhập thành công:', userData);
-          
-          // Sử dụng router.push thay vì window.location.reload
-          router.push('/dashboard');
-          // KHÔNG làm điều này để tránh render component hai lần
-          // window.location.reload(); 
-        } else {
-          console.error('Đăng nhập thất bại:', event.data.message);
-        }
-      }, { once: true });
-    } catch (error) {
-      console.error('Lỗi trong quá trình đăng nhập:', error);
-    }
-  }
-  
-  // Thêm hàm để tải lại dữ liệu người dùng
-  const refreshUserData = async () => {
-    return await checkAuth()
-  }
-  
+
+  onMounted(() => {
+    checkAuth() // Chỉ gọi API nếu chưa có user
+  })
+
   return {
     user,
+    token,
     isAuthenticated,
     checkAuth,
     login,
-    logout,
-    handleLoginByGoogle,
-    refreshUserData
+    logout
   }
-} 
+}
