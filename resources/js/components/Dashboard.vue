@@ -92,7 +92,7 @@
                 </button>
             </div>
         </div>
-      <div class="container mx-auto px-4">
+      <div class="container mx-auto px-4" data-aos="zoom-in" data-aos-delay="300">
         <!-- Xin chào -->
         <div class="bg-gradient-text rounded-lg shadow-md p-6 flex justify-between">
           <div>
@@ -106,12 +106,27 @@
           <img :src="logo_fun" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
         </div>
       </div>
-      <!-- Ảnh nổi bật -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Ảnh đã bật chia sẻ</h2>
+      <hr class="mt-4 mb-4">
+      <!-- Tabs navigation -->
+      <div class="flex justify-center space-x-4 mb-6"  data-aos="zoom-out">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          class="px-6 py-2 rounded-full transition-all duration-300"
+          :class="[
+            activeTab === tab.id 
+              ? 'bg-gradient-text text-white shadow-lg' 
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          ]"
+        >
+          {{ tab.name }}
+        </button>
       </div>
       <!-- Danh sách ảnh -->
-      <ImageGalleryVue />
+      <div data-aos="zoom-in-down" data-aos-delay="200">
+        <ImageListVue :filter="activeTab" />
+      </div>
     </div>
   </div>
 </template>
@@ -120,13 +135,13 @@
 import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import ImageGalleryVue from '@/components/layout/ImageGallery.vue'
+import ImageListVue from '@/components/layout/ImageList.vue'
 import AOS from 'aos'
 
 export default {
   name: 'Dashboard',
   components: {
-    ImageGalleryVue
+    ImageListVue
   },
   setup() {
     const router = useRouter()
@@ -140,6 +155,13 @@ export default {
     const previewVisible = ref(false);
     const currentPreviewImage = ref("");
     const previewType = ref("");
+    const activeTab = ref('created'); // Default active tab
+
+    const tabs = [
+      { id: 'created', name: 'Ảnh đã tạo' },
+      { id: 'uploaded', name: 'Ảnh tải lên' },
+      { id: 'liked', name: 'Ảnh đã thích' }
+    ];
 
     const formatDate = (date) => {
       if (!date) return 'N/A'
@@ -183,6 +205,8 @@ export default {
       previewVisible,
       currentPreviewImage,
       previewType,
+      activeTab,
+      tabs
     }
   }
 }
