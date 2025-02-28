@@ -67,6 +67,33 @@ export const useAuthStore = () => {
     }
   }
 
+  const handleLoginByGoogle = async () => {
+    try {
+      const response = await axios.get('/auth/google/url');
+      const googleAuthUrl = response.data.url;
+  
+      const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600');
+  
+      // Lắng nghe phản hồi từ popup
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+  
+        const { success, token, user } = event.data;
+  
+        if (success) {
+          console.log('Đăng nhập thành công:', user);
+          router.push('/dashboard');
+          saveAuthData(user, token);
+          window.location.reload(); 
+        } else {
+          console.error('Đăng nhập thất bại:', event.data.message);
+        }
+      }, { once: true });
+    } catch (error) {
+      console.error('Lỗi trong quá trình đăng nhập:', error);
+    }
+  }
+
   onMounted(() => {
     checkAuth() // Chỉ gọi API nếu chưa có user
   })
@@ -77,6 +104,7 @@ export const useAuthStore = () => {
     isAuthenticated,
     checkAuth,
     login,
-    logout
+    logout,
+    handleLoginByGoogle
   }
 }

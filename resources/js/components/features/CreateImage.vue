@@ -9,6 +9,9 @@
                     <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
                     <img :src="icon_title" loading = "lazy" class="w-12 h-12 ml-2" alt="">
                 </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h1 class="text-xl font-semibold text-gray-700 mb-6">Hướng dẫn sử dụng</h1>
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Phần nhập thông tin bên trái -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
@@ -150,9 +153,6 @@
                             </button>-->
                         </div>
                     </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
-                    <h1 class="text-xl font-semibold text-gray-700 mb-6">Hướng dẫn sử dụng</h1>
                 </div>
             </div>
         </div>
