@@ -65,7 +65,7 @@
                     to="/dashboard" 
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Bảng điều khiển
+                    Trang chủ
                   </router-link>
                   <router-link 
                     to="/settings" 
@@ -161,10 +161,25 @@ export default {
 </script>
 
 <style scoped>
+/* Enhanced gradient animation */
 .router-link-active {
-  background-color: #7c3aed;
-  border-radius: 20px;
-  border: none;
+  background: linear-gradient(
+    -45deg,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    #3b82f6
+  );
+  background-size: 400%;
+  animation: gradient-animation 8s ease infinite;
   color: white;
+  border-radius: 20px;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 </style> 

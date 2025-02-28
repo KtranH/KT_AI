@@ -6,7 +6,7 @@
         class="text-4xl font-bold text-center animate-gradient-text w-full"
       >
       <div class="flex items-center justify-center">
-        <span class="text-3xl font-bold feature-title bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>
+        <span class="text-3xl font-bold feature-title bg-gradient-text-v2 from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>
         <span class="bg-gradient-text rounded-full flex items-center justify-center p-2">
           <span class="text-white text-3xl ml-2 mr-2">bằng AI</span>
         </span>
@@ -223,22 +223,6 @@ export default {
 </script>
 
 <style scoped>
-/* Enhanced title gradient animation */
-.bg-gradient-text {
-  background: linear-gradient(-45deg, #3b82f6, #6366f1, #8b5cf6, #3b82f6);
-  background-size: 300%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-animation 6s ease infinite;
-}
-
-@keyframes gradient-animation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* Enhanced feature card animations */
 .feature-card {
   transform-style: preserve-3d;
@@ -358,6 +342,23 @@ export default {
   100% {
     transform: translateY(100%) rotate(45deg);
   }
+}
+
+/* Gradient text effect */
+.bg-gradient-text-v2 {
+  background: linear-gradient(
+    -45deg,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    #3b82f6
+  );
+  background-size: 400%;
+  animation: gradient-animation 8s ease infinite;
+  
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Enhanced gradient animation */

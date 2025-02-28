@@ -69,15 +69,15 @@
             <!-- Stats -->
             <div class="flex justify-center gap-8 mt-6">
                 <div class="text-center">
-                    <div class="text-xl font-bold text-purple-600">{{user.sum_like? user.sum_like : 0}}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{user.sum_like? user.sum_like : 0}}</div>
                     <div class="text-gray-500 text-sm">Lượt thích</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-xl font-bold text-purple-600">{{ user.sum_img? user.sum_img : 0 }}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user.sum_img? user.sum_img : 0 }}</div>
                     <div class="text-gray-500 text-sm">Số ảnh</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-xl font-bold text-purple-600">{{ user.created_at? formatDate(user.created_at): "01/01/2025" }}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user.created_at? formatDate(user.created_at): "01/01/2025" }}</div>
                     <div class="text-gray-500 text-sm">Tham gia</div>
                 </div>
             </div>
@@ -212,6 +212,24 @@ export default {
 }
 </script> 
 <style scoped>
+/* Gradient text effect */
+.bg-gradient-text-v2 {
+  background: linear-gradient(
+    -45deg,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    #3b82f6
+  );
+  background-size: 400%;
+  animation: gradient-animation 8s ease infinite;
+  
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gradient background effect */
 .bg-gradient-text {
   background: linear-gradient(
     -45deg,
