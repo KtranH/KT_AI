@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import axios from 'axios'
+import { useAuthStore } from '../stores/auth'
 
 // Components
 import Home from '../components/Home.vue'
@@ -61,24 +62,22 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title || 'KT_AI - Sáng tạo ảnh với AI';
-  try {
-    const { data } = await axios.get('/api/check')
-    const isAuthenticated = data.authenticated
-
-    if (to.meta.requiresAuth && !isAuthenticated) {
-      next({ path: '/login', query: { redirect: to.fullPath } })
-    } else if (to.meta.guest && isAuthenticated) {
-      next('/dashboard')
+  const auth = useAuthStore()
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  
+  if (requiresAuth) {
+    const isAuthenticated = await auth.checkAuth()
+    
+    if (!isAuthenticated) {
+      next({ 
+        path: '/login', 
+        query: { redirect: to.fullPath } 
+      })
     } else {
       next()
     }
-  } catch (error) {
-    console.error('Auth check failed:', error)
-    if (to.meta.requiresAuth) {
-      next({ path: '/login', query: { redirect: to.fullPath } })
-    } else {
-      next()
-    }
+  } else {
+    next()
   }
 })
 

@@ -187,12 +187,25 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Tạo token Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Tạo token Sanctum với thời hạn phù hợp với lựa chọn remember_me
+        $tokenName = 'auth_token';
+        $tokenExpiration = null;
+        
+        if ($request->boolean('remember')) {
+            // Nếu người dùng chọn remember_me, token sẽ hết hạn sau 7 ngày (được cấu hình trong sanctum.php)
+            $tokenName = 'auth_token_remember';
+        } else {
+            // Nếu không chọn remember_me, token sẽ hết hạn khi đóng trình duyệt (session->expire_on_close = true)
+            $tokenName = 'auth_token_session';
+        }
+        
+        $token = $user->createToken($tokenName)->plainTextToken;
+        
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user' => $user,
-            'token' => $token
+            'token' => $token,
+            'remember' => $request->boolean('remember')
         ]);
     }
 

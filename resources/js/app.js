@@ -2,6 +2,7 @@ import './bootstrap';
 import { createApp } from 'vue'
 import App from './components/App.vue'
 import VueFullPage from 'vue-fullpage.js'
+import 'fullpage.js/dist/fullpage.css'
 import router from './router'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
@@ -29,7 +30,12 @@ const pinia = createPinia()
 
 // Use plugins
 app.use(router)
-app.use(VueFullPage)
+app.use(VueFullPage, {
+  licenseKey: 'OPEN-SOURCE-GPLV3-LICENSE',
+  scrollOverflow: true,
+  css3: true,
+  credits: { enabled: false }
+})
 
 // Khởi tạo AOS với cấu hình mặc định
 AOS.init({

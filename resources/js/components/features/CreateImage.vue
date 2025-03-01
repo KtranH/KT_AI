@@ -21,7 +21,7 @@
                             <li class="mb-2">🎨 Kích thướt ảnh càng lớn tạo ảnh càng lâu. Khuyến nghị là chiều rộng 512px và chiều cao là 768px.</li>
                             <li class="mb-2">🤹 Bạn có thể chọn thể loại sẽ tạo ảnh nếu có trong ô thể loại.</li>
                             <li class="mb-2">🖌 Thông số Seed. Nếu bạn dùng chung 1 Seed hình ảnh sẽ giống nhau, nếu không có sẵn Seed. Nhấp vào nút tạo random. </li>
-                            <li class="mb-2">❌ Vui lòng không bỏ trống ô thông tin đầu vào.</li>
+                            <li class="mb-2">❌ Vui lòng không bỏ trống ô thông tin đầu vào cũng như tải ảnh đầy đủ vào các ô tải ảnh lên.</li>
                             <li class="mb-2">🚻 Không được nhập các từ ngữ nhạy cảm để tạo ảnh.</li>
                         </ul>
                         <img :src="feature?.thumbnail_url ? feature.thumbnail_url : 'https://balico.com.vn/wp-content/uploads/2020/09/loi-404-tren-cyber-panel.jpg'" loading = "lazy" alt="" class="w-64 h-64 ml-4 rounded-lg shadow-md">
@@ -130,23 +130,22 @@
                     
                     <!-- Phần kéo thả/tải ảnh lên bên phải -->
                     <div v-if="feature?.input_requirements != null">
-                        <div v-for="sectionImage in feature.input_requirements" class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                            <h2 class="text-xl font-semibold text-gray-700 mb-6">Xem trước & Tải lên</h2>   
+                        <div v-for="sectionImage in feature.input_requirements" :key="sectionImage" class="bg-white rounded-xl shadow-lg p-6 flex flex-col" :class="sectionImage == 2 || feature.input_requirements == 2? 'mt-8' : 'h-full'">
+                            <h2 class="text-xl font-semibold text-gray-700 mb-6">{{ sectionImage == 1 ? "Xem trước & Tải lên ảnh chính" : "Xem trước & Tải lên ảnh phụ" }}</h2>   
                             <div
                                 class="flex-1 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 transition-all duration-150"
                                 :class="{ 'border-indigo-400 bg-indigo-50': isDragging }"
                                 @dragover.prevent="isDragging = true"
                                 @dragleave.prevent="isDragging = false"
-                                @drop.prevent="onDrop"
-                            >
-                                <div v-if="imagePreview" class="w-full h-full flex items-center justify-center">
-                                    <img :src="imagePreview" alt="Preview" class="max-w-full max-h-full rounded-lg shadow-md" />
-                                </div>
+                                @drop.prevent="onDrop">
+                                    <div v-if="imagePreview" class="w-full h-full flex items-center justify-center">
+                                        <img :src="imagePreview" alt="Preview" class="max-w-full max-h-full rounded-lg shadow-md" />
+                                    </div>
                                     <div v-else class="text-center">
                                         <svg class="mx-auto h-16 w-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        
+                                            
                                         <h3 class="mt-2 text-sm font-medium text-gray-700">
                                             Kéo thả hình ảnh vào đây
                                         </h3>
@@ -172,7 +171,6 @@
                                     </svg>
                                     Xóa
                                     </button>
-                                    
                                     <!--<button
                                     class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     @click="downloadImage"
@@ -182,6 +180,7 @@
                                     </svg>
                                     Tải xuống
                                     </button>-->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -189,7 +188,6 @@
             </div>
         </div>
     </div>
-  </div>
 </template>
 <script>
 import { ref, onMounted } from 'vue'

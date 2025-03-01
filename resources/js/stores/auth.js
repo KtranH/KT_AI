@@ -5,39 +5,75 @@ import router from '../router'
 // Reactive state
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)
 const token = ref(localStorage.getItem('token') || null)
+const isRemembered = ref(localStorage.getItem('remember') === 'true')
 const isAuthenticated = computed(() => !!user.value)
 
 export const useAuthStore = () => {
   
-  const saveAuthData = (userData, userToken) => {
+  const saveAuthData = (userData, userToken, remember = false) => {
     user.value = userData
     token.value = userToken
+    isRemembered.value = remember
+    
     localStorage.setItem('user', JSON.stringify(userData))
     localStorage.setItem('token', userToken)
+    localStorage.setItem('remember', remember)
+    
+    // Nếu không remember, dữ liệu sẽ bị xóa khi đóng trình duyệt
+    if (!remember) {
+      sessionStorage.setItem('user', JSON.stringify(userData))
+      sessionStorage.setItem('token', userToken)
+    }
   }
 
   const clearAuthData = () => {
     user.value = null
     token.value = null
+    isRemembered.value = false
     localStorage.removeItem('user')
     localStorage.removeItem('token')
+    localStorage.removeItem('remember')
+    sessionStorage.removeItem('user')
+    sessionStorage.removeItem('token')
   }
 
   const checkAuth = async () => {
-    if (!token.value || user.value) return
-
     try {
+      // Nếu không remember, kiểm tra trong sessionStorage
+      if (!isRemembered.value) {
+        const sessionToken = sessionStorage.getItem('token')
+        const sessionUser = sessionStorage.getItem('user')
+        
+        if (!sessionToken || !sessionUser) {
+          clearAuthData()
+          return false
+        }
+        
+        token.value = sessionToken
+        user.value = JSON.parse(sessionUser)
+      }
+      
+      if (!token.value || !user.value) return false
+
       const response = await axios.get('/api/check', {
         headers: { Authorization: `Bearer ${token.value}` }
       })
+      
       if (response.data.authenticated) {
-        saveAuthData(response.data.user, token.value)
+        if (isRemembered.value) {
+          saveAuthData(response.data.user, token.value, true)
+        } else {
+          saveAuthData(response.data.user, token.value, false)
+        }
+        return true
       } else {
         clearAuthData()
+        return false
       }
     } catch (error) {
       clearAuthData()
       console.error('Error checking auth:', error)
+      return false
     }
   }
 
@@ -47,7 +83,7 @@ export const useAuthStore = () => {
       if (response.data.needs_verification) {
         return response.data
       }
-      saveAuthData(response.data.user, response.data.token)
+      saveAuthData(response.data.user, response.data.token, response.data.remember)
       router.push(router.currentRoute.value.query.redirect || '/dashboard')
       return response.data
     } catch (error) {
@@ -82,9 +118,11 @@ export const useAuthStore = () => {
   
         if (success) {
           console.log('Đăng nhập thành công:', user);
+          // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
+          saveAuthData(user, token, true);
+          
+          // Sử dụng router.push() thay vì window.location.reload()
           router.push('/dashboard');
-          saveAuthData(user, token);
-          window.location.reload(); 
         } else {
           console.error('Đăng nhập thất bại:', event.data.message);
         }
