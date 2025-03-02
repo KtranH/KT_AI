@@ -74,10 +74,23 @@
           </div>
         </div>
 
+        <!-- Thêm Cloudflare Turnstile -->
+        <div class="flex justify-center">
+          <div 
+            ref="turnstileWidget"
+            class="cf-turnstile" 
+            :data-sitekey="turnstileSiteKey"
+            data-callback="handleTurnstileCallback">
+          </div>
+        </div>
+        <div v-if="turnstileError" class="text-red-500 text-sm text-center">
+          {{ turnstileError }}
+        </div>
+
         <div>
           <button 
             type="submit" 
-            :disabled="loading"
+            :disabled="loading || !form.turnstileToken"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
           >
             <span class="absolute left-0 inset-y-0 flex items-center pl-3">
@@ -149,7 +162,7 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
@@ -161,27 +174,69 @@ export default {
     const loading = ref(false)
     const error = ref(null)
     const showPassword = ref(false)
+    const turnstileWidget = ref(null)
+    const turnstileError = ref(null)
+    const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
 
     const form = reactive({
       name: '',
       email: '',
       password: '',
-      password_confirmation: ''
+      password_confirmation: '',
+      turnstileToken: ''
     })
 
-    const togglePassword = () => {
-      showPassword.value =!showPassword.value
+    // Hàm xử lý callback từ Turnstile
+    window.handleTurnstileCallback = (token) => {
+      form.turnstileToken = token
+      turnstileError.value = null
     }
+
+    const loadTurnstileScript = () => {
+      // Nếu script đã tồn tại, không cần load lại
+      if (document.querySelector('script[src*="turnstile.js"]')) {
+        return
+      }
+      
+      const script = document.createElement('script')
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+      
+      script.onload = () => {
+        if (window.turnstile && turnstileWidget.value) {
+          window.turnstile.render(turnstileWidget.value, {
+            sitekey: turnstileSiteKey,
+            callback: 'handleTurnstileCallback'
+          })
+        }
+      }
+    }
+
+    const togglePassword = () => {
+      showPassword.value = !showPassword.value
+    }
+
     const handleSubmit = async () => {
-      if(password.value !== password_confirmation.value) {
+      if (form.password !== form.password_confirmation) {
         error.value = 'Mật khẩu không khớp nhau'
         return
       }
+
+      if (!form.turnstileToken) {
+        turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
+        return
+      }
+
       try {
         loading.value = true
         error.value = null
         
-        const response = await axios.post('/api/register', form, {
+        const response = await axios.post('/api/register', {
+          ...form,
+          'cf-turnstile-response': form.turnstileToken
+        }, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -190,16 +245,30 @@ export default {
 
         if (response.data.success) {
           // Chuyển hướng sau khi đăng ký thành công
-          router.push({path:'/verify-email', query:{email:email.value, message:response.data.message}})
+          router.push({
+            path: '/verify-email',
+            query: {
+              email: form.email,
+              message: response.data.message
+            }
+          })
         } else {
           throw new Error(response.data.message || 'Đã có lỗi xảy ra')
         }
       } catch (err) {
         error.value = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra'
+        // Reset Turnstile widget nếu xác thực không thành công
+        if (window.turnstile) {
+          window.turnstile.reset()
+        }
       } finally {
         loading.value = false
       }
     }
+
+    onMounted(() => {
+      loadTurnstileScript()
+    })
 
     return {
       form,
@@ -207,7 +276,10 @@ export default {
       error,
       handleSubmit,
       showPassword,
-      togglePassword
+      togglePassword,
+      turnstileSiteKey,
+      turnstileWidget,
+      turnstileError
     }
   }
 }

@@ -138,7 +138,7 @@ export default {
     const storeFeatures = usefeaturesStore()
     const error_message = ref(false)
     const icon_title = ref("/img/ai.png")
-    const features = computed(() => storeFeatures.features);
+    const features = computed(() => storeFeatures.features)
     const currentFeatureIndex = ref(0)
     const scrollProgress = ref(0)
     const showBackToTop = ref(false)

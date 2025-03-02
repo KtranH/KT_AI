@@ -14,6 +14,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -31,7 +32,17 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'cf-turnstile-response' => ['required', 'string'],
         ]);
+
+        // Xác thực Turnstile
+        $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        if (!$turnstileResponse['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Xác thực không thành công. Vui lòng thử lại.'
+            ], 400);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -55,12 +66,7 @@ class AuthController extends Controller
             'code' => $verificationcode
         ];
         Mail::to($request->email)->send(new VerificationMail($detail));
-        /*Auth::login($user);
-
-        return response()->json([
-            'message' => 'Đăng ký thành công',
-            'user' => $user
-        ]);*/
+        
         return response()->json([
             'success' => true,
             'message' => 'Đã gửi mã xác thực'],
@@ -168,7 +174,16 @@ class AuthController extends Controller
         $request->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'cf-turnstile-response' => ['required', 'string'],
         ]);
+
+        // Xác thực Turnstile
+        $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        if (!$turnstileResponse['success']) {
+            throw ValidationException::withMessages([
+                'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
+            ]);
+        }
 
         if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -229,4 +244,16 @@ class AuthController extends Controller
     {
         return response()->json(Auth::user());
     }*/
+
+    // Thêm phương thức mới để xác thực Turnstile
+    private function verifyTurnstile($token, $remoteip)
+    {
+        $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => env('TURNSTILE_SECRET_KEY'),
+            'response' => $token,
+            'remoteip' => $remoteip,
+        ]);
+
+        return $response->json();
+    }
 } 

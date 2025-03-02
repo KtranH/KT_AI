@@ -9,6 +9,9 @@ export const usefeaturesStore = defineStore('features', {
     actions:
     {
         async fetchFeatures() {
+            if(this.features.length > 0) return
+            this.error_message = null;
+            
             try {
               const response = await axios.get('/api/load_features', {
                 headers: {
