@@ -10,6 +10,7 @@ import Dashboard from '../components/Dashboard.vue'
 import VerifyEmail from '../components/auth/VerifyEmail.vue'
 import Features from '../components/Features.vue'
 import CreateImage from '../components/features/CreateImage.vue'
+import Detail from '../components/image/Detail.vue'
 
 const routes = [
   {
@@ -52,7 +53,13 @@ const routes = [
     name: 'createimage',
     component: CreateImage,
     meta: { requiresAuth: true, title: 'KT_AI - Tạo ảnh' }
-  }
+  },
+  {
+    path: '/image/detail',
+    name: 'detail',
+    component: Detail,
+    meta: { requiresAuth: true, title: 'KT_AI - Chi tiết ảnh' }
+  },
 ]
 
 const router = createRouter({
