@@ -92,14 +92,14 @@ export default {
         type: 'uploaded',
         images: [
           { url: "https://picsum.photos/id/240/400/400", id: 4 },
-          { url: "https://picsum.photos/id/241/400/400", id: 5 }
         ]
       },
       {
         currentIndex: 0,
         type: 'liked',
         images: [
-          { url: "https://picsum.photos/id/242/400/400", id: 6 }
+          { url: "https://picsum.photos/id/242/400/400", id: 5 },
+          { url: "https://picsum.photos/id/243/400/400", id: 6 }
         ]
       }
     ])
@@ -121,7 +121,7 @@ export default {
 
     // Navigate between images in a group
     const navigateImages = (groupIndex, direction) => {
-      const group = imageGroups.value[groupIndex]
+      const group = filteredImageGroups.value[groupIndex]
       if (direction === 'next' && group.currentIndex < group.images.length - 1) {
         group.currentIndex++
       } else if (direction === 'prev' && group.currentIndex > 0) {
