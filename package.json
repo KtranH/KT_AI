@@ -17,11 +17,13 @@
     "dependencies": {
         "@vitejs/plugin-vue": "^5.2.1",
         "aos": "^2.3.4",
+        "emoji-picker-element": "^1.26.1",
         "fullpage.js": "^4.0.33",
         "pinia": "^3.0.1",
         "vue": "^3.5.13",
         "vue-fullpage.js": "^0.2.21",
         "vue-router": "^4.5.0",
+        "vue3-emoji-picker": "^1.1.8",
         "vuex": "^4.1.0"
     }
 }

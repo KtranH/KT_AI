@@ -2,15 +2,16 @@
 <div class="min-h-screen bg-gray-100 pt-24" data-aos = "zoom-out">
     <div class="max-w-[90%] mx-auto my-4">        
         <!-- Container with responsive design -->
-        <div class="bg-white md:rounded-lg md:shadow-lg md:overflow-hidden md:max-w-6xl md:mx-auto md:my-8">
+        <div class="bg-white md:rounded-lg md:shadow-lg md:overflow-hidden md:max-w-8xl md:mx-auto md:my-8">
             <!-- Instagram-like layout: post image on left, details on right -->
             <div class="flex flex-col md:flex-row">
                 <!-- Left column: Image -->
                 <div class="md:w-3/5 bg-black flex items-center justify-center">
                     <img 
                         src="https://images2.thanhnien.vn/528068263637045248/2024/1/25/e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912.jpg" 
-                        class="w-full h-auto md:h-[600px] md:object-contain" 
+                        class="w-full h-full md:h-[600px] md:object-contain cursor-pointer" 
                         alt="Fashion outfit" 
+                        @click="previewImage"
                     />
                 </div>
 
@@ -19,8 +20,8 @@
                     <!-- Header with profile info -->
                     <div class="flex items-center p-4 border-b">
                         <!-- Go back -->
-                        <div class="flex items-center">
-                            <button @click="goBack" class="flex-shrink-0 px-4 py-2 text-[12px] font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex items-center bg-gradient-text mr-2 rounded-xl">
+                            <button @click="goBack" class="flex-shrink-0 px-4 py-1 text-[12px] font-medium text-white hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
@@ -140,7 +141,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                 </svg>
                             </button>
-                            <button class="mr-4 focus:outline-none">
+                            <!--<button class="mr-4 focus:outline-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                 </svg>
@@ -154,34 +155,38 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                 </svg>
-                            </button>
+                            </button>-->
                         </div>
                         <div class="font-semibold mb-1">{{ totalLikes }} lượt thích</div>
                         <div class="text-xs text-gray-500">{{ postDate }}</div>
                     </div>
 
                     <!-- New comment input -->
-                    <div class="p-3 flex items-center">
-                        <button class="p-2">
+                    <div class="p-3 flex items-center relative">
+                        <button class="p-2" @click="toggleEmojiPicker">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clip-rule="evenodd" />
                             </svg>
                         </button>
-                        <input 
-                            type="text" 
-                            v-model="newComment" 
-                            placeholder="Thêm nhận xét..." 
+                        <input
+                            type="text"
+                            v-model="newComment"
+                            placeholder="Thêm nhận xét..."
                             class="flex-1 p-2 focus:outline-none"
                             @keyup.enter="addComment"
                         />
-                        <button 
-                            @click="addComment" 
+                        <button
+                            @click="addComment"
                             class="text-blue-500 font-semibold px-2"
                             :class="{'opacity-50 cursor-default': !newComment.trim(), 'hover:text-blue-600': newComment.trim()}"
                             :disabled="!newComment.trim()"
                         >
                             Đăng
                         </button>
+                        <!-- Emoji Picker -->
+                        <div v-if="showEmojiPicker" class="absolute bottom-14 left-0 z-50">
+                            <EmojiPicker @select="addEmoji" :style="{ height: '400px', width: '300px' }" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -193,13 +198,17 @@
 <script>
 import { ref } from 'vue'
 import CommentReply from '@/components/layout/Reply.vue'
+import EmojiPicker from 'vue3-emoji-picker';
+import 'vue3-emoji-picker/css';
 
 export default {
     name: 'Detail',
     components: {
-        CommentReply
+        CommentReply,
+        EmojiPicker,
     },
     setup() {
+        const showEmojiPicker = ref(false)
         // State
         const newComment = ref('')
         const replyingToIndex = ref(-1)
@@ -282,6 +291,13 @@ export default {
         }
         ])
         // Methods
+        const toggleEmojiPicker = () => showEmojiPicker.value =!showEmojiPicker.value
+
+        const addEmoji = (emoji) => {
+            newComment.value += emoji.i;
+            showEmojiPicker.value = false;
+        }
+
         const likeComment = (comment) => {
             if (comment.isLiked) {
                 comment.likes--
@@ -379,6 +395,13 @@ export default {
             comments.value[commentId].showAllReplies = true
             cancelReply()
         }
+
+        const previewImage = (event) =>
+        {
+            const imageUrl = event.target.src
+            window.open(imageUrl, '_blank')
+        }
+
         return{
             newComment,
             replyingToIndex,
@@ -397,7 +420,11 @@ export default {
             startNestedReply,
             cancelReply,
             handleReplySubmit,
-            handleNestedReplySubmit
+            handleNestedReplySubmit,
+            previewImage,
+            toggleEmojiPicker,
+            addEmoji,
+            showEmojiPicker
         }
     }
 }
@@ -420,5 +447,29 @@ div::-webkit-scrollbar-thumb {
 
 div::-webkit-scrollbar-thumb:hover {
   background: #ccc;
+}
+/* Enhanced gradient animation */
+.bg-gradient-text {
+  background: linear-gradient(
+    -45deg,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    #3b82f6
+  );
+  background-size: 400%;
+  animation: gradient-animation 8s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+emoji-picker {
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>

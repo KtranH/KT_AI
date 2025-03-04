@@ -20,7 +20,6 @@
               <img 
                 :src="image.url" 
                 class="object-cover w-full h-full cursor-pointer"
-                @click="openPreview(imageGroup.images, imgIndex)"
                 loading = "lazy"
               >
             </div>
@@ -60,53 +59,6 @@
               ></div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Full-screen preview modal -->
-    <div 
-      v-if="previewVisible" 
-      class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
-      @click="previewVisible = false"
-    >
-      <div class="relative max-w-4xl max-h-screen p-4">
-        <button 
-          class="absolute top-4 right-4 text-white z-10"
-          @click.stop="previewVisible = false"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        
-        <div class="relative">
-          <img 
-            :src="previewImages[previewIndex]?.url" 
-            class="max-h-screen max-w-full object-contain"
-          >
-          
-          <!-- Preview navigation arrows -->
-          <button 
-            v-if="previewImages.length > 1" 
-            class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
-            @click.stop="navigatePreview('prev')"
-            v-show="previewIndex > 0"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button 
-            v-if="previewImages.length > 1" 
-            class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
-            @click.stop="navigatePreview('next')"
-            v-show="previewIndex < previewImages.length - 1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>
@@ -176,23 +128,7 @@ export default {
         group.currentIndex--
       }
     }
-
-    // Open preview mode
-    const openPreview = (images, startIndex) => {
-      previewImages.value = images
-      previewIndex.value = startIndex
-      previewVisible.value = true
-    }
-
-    // Navigate in preview mode
-    const navigatePreview = (direction) => {
-      if (direction === 'next' && previewIndex.value < previewImages.value.length - 1) {
-        previewIndex.value++
-      } else if (direction === 'prev' && previewIndex.value > 0) {
-        previewIndex.value--
-      }
-    }
-
+    
     // Example of how you would fetch images from your Laravel backend
     const fetchImages = async () => {
       try {
@@ -214,8 +150,6 @@ export default {
         fileInput,
         openFileSelector,
         navigateImages,
-        openPreview,
-        navigatePreview,
         previewVisible,
         previewImages,
         previewIndex
