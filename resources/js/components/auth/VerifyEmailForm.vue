@@ -42,7 +42,7 @@
           <div class="text-sm">
             <button 
               type="button" 
-              @click="resendCode" 
+              @click="handleResendCode" 
               :disabled="resendTimer > 0 || resendCount >= 2"
               class="font-medium text-purple-600 hover:text-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -108,13 +108,13 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
+import { resendCode } from '@/services/codeService'
 
 export default {
   name: 'VerifyEmail',
   
   setup() {
-    //State
+    // State
     const route = useRoute()
     const router = useRouter()
     const loading = ref(false)
@@ -128,12 +128,12 @@ export default {
     const verifyAttempts = ref(0)
     const lastVerifyTime = ref(0)
 
-    //Computed
+    // Computed
     const isCodeComplete = computed(() => {
       return verificationCode.value.every(digit => digit.length === 1)
     })
 
-    //Methods
+    // Methods
     const startResendTimer = () => {
       resendTimer.value = 60
       const timer = setInterval(() => {
@@ -145,33 +145,19 @@ export default {
       }, 1000)
     }
 
-    const handleInput = (event, index) => {
-      const value = event.target.value
-      if (value.length > 0 && index < 5) {
-        codeInputs.value[index + 1].focus()
-      }
-    }
-
-    const handleKeydown = (event, index) => {
-      if (event.key === 'Backspace' && index > 0 && !verificationCode.value[index]) {
-        codeInputs.value[index - 1].focus()
-      }
-    }
-
-    const resendCode = async () => {
+    const handleResendCode = async () => {
       if (resendCount.value >= 2) return
 
       try {
         loading.value = true
         error.value = null
         
-        const response = await axios.post('/api/resend-verification', { email: email.value })
-        
+        await resendCode(email.value)
         resendCount.value++
         startResendTimer()
         success.value = 'Mã xác thực mới đã được gửi đến email của bạn'
       } catch (err) {
-        error.value = err.response?.data?.message || 'Không thể gửi lại mã xác thực'
+        error.value = err
       } finally {
         loading.value = false
       }
@@ -211,7 +197,7 @@ export default {
       }
     }
 
-    //Mounted hooks
+    // Lifecycle hooks
     onMounted(() => {
       if (!email.value) {
         router.push('/register')
@@ -229,11 +215,9 @@ export default {
       resendTimer,
       resendCount,
       isCodeComplete,
-      handleInput,
-      handleKeydown,
-      resendCode,
+      handleResendCode,
       handleSubmit
     }
   }
 }
-</script> 
+</script>
