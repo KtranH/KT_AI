@@ -1,12 +1,13 @@
 import './bootstrap';
 import { createApp } from 'vue'
-import App from './components/App.vue'
+import App from './App.vue'
 import VueFullPage from 'vue-fullpage.js'
 import 'fullpage.js/dist/fullpage.css'
 import router from './router'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 import { createPinia } from 'pinia';
+import piniaPersist from 'pinia-plugin-persistedstate';
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -27,6 +28,7 @@ axios.interceptors.request.use(config => {
 const app = createApp(App)
 // Tạo pinia 
 const pinia = createPinia()
+pinia.use(piniaPersist);
 
 // Use plugins
 app.use(router)

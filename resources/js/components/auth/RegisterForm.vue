@@ -3,15 +3,15 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <router-link to="/" class="flex justify-center">
-          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12" data-aos="fade-up">
+          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12">
         </router-link>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900" data-aos="fade-up" data-aos-delay="200">
-          Đăng nhập vào tài khoản
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Đăng ký tài khoản mới
         </h2>
-        <p class="mt-2 text-center text-sm text-gray-600" data-aos="fade-up" data-aos-delay="400">
+        <p class="mt-2 text-center text-sm text-gray-600">
           Hoặc
-          <router-link to="/register" class="font-medium text-purple-600 hover:text-purple-500">
-            đăng ký tài khoản mới
+          <router-link to="/login" class="font-medium text-purple-600 hover:text-purple-500">
+            đăng nhập nếu đã có tài khoản
           </router-link>
         </p>
       </div>
@@ -20,20 +20,19 @@
         {{ error }}
       </div>
 
-      <div v-if="needsVerification" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded relative" role="alert">
-        <p>Tài khoản của bạn chưa được xác thực.</p>
-        <div class="mt-2">
-          <button 
-            @click="goToVerification" 
-            class="text-sm font-medium text-yellow-800 underline hover:text-yellow-900"
-          >
-            Xác thực ngay
-          </button>
-        </div>
-      </div>
-
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" data-aos="zoom-in" data-aos-delay="600">
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="rounded-md shadow-sm -space-y-px">
+          <div>
+            <label for="name" class="sr-only">Họ tên</label>
+            <input 
+              id="name" 
+              v-model="form.name"
+              type="text" 
+              required 
+              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
+              placeholder="Họ tên"
+            >
+          </div>
           <div>
             <label for="email" class="sr-only">Email</label>
             <input 
@@ -41,43 +40,41 @@
               v-model="form.email"
               type="email" 
               required 
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
+              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
               placeholder="Email"
             >
           </div>
-          <div>
-            <label for="password" class="sr-only">Mật khẩu</label>
+          <div class="relative w-full">
             <input 
-              id="password" 
+              id="password"
               v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              required
+              class="appearance-none rounded relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+              placeholder="Mật khẩu"
+            >
+            <button 
+              type="button"
+              @click="togglePassword"
+              class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+            >
+              {{ showPassword ? '🙈' : '👁' }}
+            </button>
+          </div>
+          <div>
+            <label for="password_confirmation" class="sr-only">Xác nhận mật khẩu</label>
+            <input 
+              id="password_confirmation" 
+              v-model="form.password_confirmation"
               type="password" 
               required 
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
-              placeholder="Mật khẩu"
+              placeholder="Xác nhận mật khẩu"
             >
           </div>
         </div>
 
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input 
-              id="remember" 
-              v-model="form.remember"
-              type="checkbox" 
-              class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-            >
-            <label for="remember" class="ml-2 block text-sm text-gray-900">
-              Ghi nhớ đăng nhập
-            </label>
-          </div>
-
-          <div class="text-sm">
-            <router-link to="/forgot-password" class="font-medium text-purple-600 hover:text-purple-500">
-              Quên mật khẩu?
-            </router-link>
-          </div>
-        </div>
-
+        <!-- Thêm Cloudflare Turnstile -->
         <div class="flex justify-center">
           <div 
             ref="turnstileWidget"
@@ -107,7 +104,7 @@
               >
                 <path 
                   fill-rule="evenodd" 
-                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" 
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" 
                   clip-rule="evenodd" 
                 />
               </svg>
@@ -133,7 +130,7 @@
                 ></path>
               </svg>
             </span>
-            {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+            {{ loading ? 'Đang đăng ký...' : 'Đăng ký' }}
           </button>
         </div>
 
@@ -144,19 +141,19 @@
             </div>
             <div class="relative flex justify-center text-sm">
               <span class="px-2 bg-gray-50 text-gray-500">
-                Hoặc đăng nhập với
+                Hoặc đăng ký với
               </span>
             </div>
           </div>
 
           <div class="mt-6">
-            <button
-              @click="handleLoginByGoogle"
+            <a
+              href="/api/auth/google/url"
               class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
               <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
               Google
-            </button>
+            </a>
           </div>
         </div>
       </form>
@@ -167,34 +164,38 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import axios from 'axios'
 
 export default {
-  name: 'Login',
+  name: 'Register',
   
   setup() {
+    //State
     const router = useRouter()
-    const auth = useAuthStore()
     const loading = ref(false)
     const error = ref(null)
-    const needsVerification = ref(false)
+    const showPassword = ref(false)
     const turnstileWidget = ref(null)
     const turnstileError = ref(null)
     const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
 
     const form = reactive({
+      name: '',
       email: '',
       password: '',
-      remember: false,
+      password_confirmation: '',
       turnstileToken: ''
     })
 
+    //Methods
+    // Hàm xử lý callback từ Turnstile
     window.handleTurnstileCallback = (token) => {
       form.turnstileToken = token
       turnstileError.value = null
     }
 
     const loadTurnstileScript = () => {
+      // Nếu script đã tồn tại, không cần load lại
       if (document.querySelector('script[src*="turnstile.js"]')) {
         return
       }
@@ -215,40 +216,50 @@ export default {
       }
     }
 
-    const goToVerification = () => {
-      router.push({
-        name: 'verify-email',
-        query: { email: form.email }
-      })
+    const togglePassword = () => {
+      showPassword.value = !showPassword.value
     }
-    
-    const { handleLoginByGoogle } = useAuthStore();
-    
+
     const handleSubmit = async () => {
+      if (form.password !== form.password_confirmation) {
+        error.value = 'Mật khẩu không khớp nhau'
+        return
+      }
+
       if (!form.turnstileToken) {
         turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
         return
       }
-      
+
       try {
         loading.value = true
         error.value = null
-        needsVerification.value = false
-
-        const loginData = {
+        
+        const response = await axios.post('/api/register', {
           ...form,
           'cf-turnstile-response': form.turnstileToken
-        }
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
 
-        const response = await auth.login(loginData)
-        
-        if (response?.needs_verification) {
-          needsVerification.value = true
-          error.value = response.message
+        if (response.data.success) {
+          // Chuyển hướng sau khi đăng ký thành công
+          router.push({
+            path: '/verify-email',
+            query: {
+              email: form.email,
+              message: response.data.message
+            }
+          })
+        } else {
+          throw new Error(response.data.message || 'Đã có lỗi xảy ra')
         }
       } catch (err) {
-        error.value = "Thông tin đăng nhập không đúng"
-        console.log(err)
+        error.value = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra'
+        // Reset Turnstile widget nếu xác thực không thành công
         if (window.turnstile) {
           window.turnstile.reset()
         }
@@ -257,6 +268,7 @@ export default {
       }
     }
 
+    // Mounted hooks
     onMounted(() => {
       loadTurnstileScript()
     })
@@ -265,10 +277,9 @@ export default {
       form,
       loading,
       error,
-      needsVerification,
       handleSubmit,
-      goToVerification,
-      handleLoginByGoogle,
+      showPassword,
+      togglePassword,
       turnstileSiteKey,
       turnstileWidget,
       turnstileError

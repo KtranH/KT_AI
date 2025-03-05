@@ -26,7 +26,7 @@
         <!-- Error State -->
         <div v-else-if="error" class="text-center">
           <p class="text-red-600">{{ error }}</p>
-          <button @click="fetchFeatures" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition">
+          <button @click="loadFeatures" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition">
             Thử lại
           </button>
         </div>
@@ -86,161 +86,129 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import axios from 'axios';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import 'aos/dist/aos.css'
+
+//Call API from store 
+import { usefeaturesStore } from '@/stores/features'
 
 export default {
   name: 'Home',
   setup() {
-    const features = ref([]);
-    const displayedFeatures = ref([]);
-    const countfeatures = ref(0);
-    const loading = ref(false);
-    const error = ref(null);
-    const page = ref(1);
-    const perPage = ref(4);
-    const hasMore = computed(() => displayedFeatures.value.length < features.value.length);
-    const currentSection = ref(1);
-    const isScrolling = ref(false);
-    
+    //State
+    const displayedFeatures = ref([])
+    const countfeatures = ref(4)
+    const loading = ref(false)
+    const error = ref(null)
+    const page = ref(1)
+    const perPage = ref(4)
+    const hasMore = computed(() => displayedFeatures.value.length < features.value.length)
+    const currentSection = ref(1)
+    const isScrolling = ref(false)
+    const storeFeatures = usefeaturesStore()
+    const features = computed(() => storeFeatures.features)
+
+    //Methods
     const scrollToSection = (sectionNumber) => {
-      if (isScrolling.value) return;
+      if (isScrolling.value) return
+    
+      isScrolling.value = true
+      currentSection.value = sectionNumber
       
-      isScrolling.value = true;
-      currentSection.value = sectionNumber;
-      
-      const section = document.querySelector(`.section-${sectionNumber}`);
+      const section = document.querySelector(`.section-${sectionNumber}`)
       if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
+        section.scrollIntoView({ behavior: 'smooth' })
         
         // Reset scrolling flag after animation completes
         setTimeout(() => {
-          isScrolling.value = false;
-        }, 1000);
+          isScrolling.value = false
+        }, 1000)
       }
-    };
+    }
 
     const handleWheel = (event) => {
       if (isScrolling.value) {
-        event.preventDefault();
-        return;
+        event.preventDefault()
+        return
       }
       
       // Prevent default only for the section scrolling
-      event.preventDefault();
+      event.preventDefault()
       
-      const direction = event.deltaY > 0 ? 1 : -1;
-      const nextSection = Math.min(Math.max(currentSection.value + direction, 1), 3);
+      const direction = event.deltaY > 0 ? 1 : -1
+      const nextSection = Math.min(Math.max(currentSection.value + direction, 1), 3)
       
       if (nextSection !== currentSection.value) {
-        scrollToSection(nextSection);
+        scrollToSection(nextSection)
       }
-    };
+    }
 
     const observeSections = () => {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const sectionClass = entry.target.classList[1]; // section-1, section-2, etc.
-            const sectionNumber = parseInt(sectionClass.split('-')[1]);
+            const sectionNumber = parseInt(sectionClass.split('-')[1])
             if (!isScrolling.value) {
-              currentSection.value = sectionNumber;
+              currentSection.value = sectionNumber
             }
           }
-        });
-      }, { threshold: 0.6 });
+        })
+      }, { threshold: 0.6 })
       
       document.querySelectorAll('.section').forEach(section => {
-        observer.observe(section);
-      });
+        observer.observe(section)
+      })
       
-      return observer;
-    };
+      return observer
+    }
 
-    const fetchFeatures = async () => {
-      loading.value = true;
-      error.value = null;
-      
-      try {
-        console.log('Đang tải dữ liệu chức năng...');
-        const response = await axios.get('/api/load_features', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-        
-        console.log('Phản hồi từ API:', response.data);
-        
-        if (response.data && response.data.success) {
-          features.value = response.data.data;
-          console.log('Đã tải thành công', features.value.length, 'chức năng');
-          
-          // Hiển thị chỉ 4 features đầu tiên
+    const loadFeatures = async () => {
+        loading.value = true
+        error.value = null
+
+        try {
+          await storeFeatures.fetchFeatures();
           displayedFeatures.value = features.value.slice(0, perPage.value);
-          countfeatures.value = 4;
-        } else {
-          console.error('Dữ liệu không hợp lệ:', response.data);
-          error.value = response.data?.message || 'Dữ liệu không hợp lệ';
+        } catch (err) {
+          error.value = err.response?.data?.message || 'Không thể lập dữ liệu'
+        } finally {
+          loading.value = false
         }
-      } catch (err) {
-        console.error('Lỗi khi tải dữ liệu:', err);
-        error.value = err.response?.data?.message || 'Không thể kết nối đến máy chủ';
-      } finally {
-        loading.value = false;
-      }
-    };
+    }
 
     const loadMoreFeatures = () => {
       if (!hasMore.value) {
-        return;
+        return
       }
       
       page.value++;
-      const start = (page.value - 1) * perPage.value;
-      const end = start + perPage.value;
-      const newItems = features.value.slice(start, end);
-
-      countfeatures.value += 4;
-      
-      displayedFeatures.value = [...displayedFeatures.value, ...newItems];
-    };
+      const start = (page.value - 1) * perPage.value
+      const end = start + perPage.value
+      const newItems = features.value.slice(start, end)
+      countfeatures.value += 4
+      displayedFeatures.value = [...displayedFeatures.value, ...newItems]
+    }
+    let observer
     
-    let observer;
-    
-    onMounted(() => {
-      // Khởi tạo AOS
-      AOS.init({
-        duration: 800,
-        delay: 300,
-        once: true,
-        offset: 150,
-        easing: 'ease-in-sine',
-        disable: 'mobile'
-      });
-
-      // Tải dữ liệu
-      fetchFeatures();
-      
+    // Mounted hook
+    onMounted(() => { 
+      // Load data
+      loadFeatures()
       // Thêm event listener cho wheel event
-      document.getElementById('fullpage-container').addEventListener('wheel', handleWheel, { passive: false });
-      
+      document.getElementById('fullpage-container').addEventListener('wheel', handleWheel, { passive: false })
       // Set up intersection observer
-      observer = observeSections();
-    });
-    
+      observer = observeSections()
+    })
+  
     onBeforeUnmount(() => {
       // Clean up event listener
-      document.getElementById('fullpage-container')?.removeEventListener('wheel', handleWheel);
-      
+      document.getElementById('fullpage-container')?.removeEventListener('wheel', handleWheel)
       // Clean up observer
       if (observer) {
-        observer.disconnect();
+        observer.disconnect()
       }
-    });
+    })
 
     return {
       features,
@@ -253,11 +221,11 @@ export default {
       hasMore,
       currentSection,
       scrollToSection,
-      fetchFeatures,
+      loadFeatures,
       loadMoreFeatures
-    };
+    }
   }
-};
+}
 </script>
 
 <style scoped>

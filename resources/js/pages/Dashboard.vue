@@ -135,7 +135,7 @@
 import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import ImageListVue from '@/components/layout/ImageList.vue'
+import ImageListVue from '@/layouts/ImageListLayout.vue'
 import AOS from 'aos'
 
 export default {
@@ -144,6 +144,7 @@ export default {
     ImageListVue
   },
   setup() {
+    //State
     const router = useRouter()
     const auth = useAuthStore()
     const user = auth.user.value
@@ -157,12 +158,14 @@ export default {
     const previewType = ref("");
     const activeTab = ref('created'); // Default active tab
 
+    // Fetch data
     const tabs = [
       { id: 'created', name: 'Ảnh đã tạo' },
       { id: 'uploaded', name: 'Ảnh tải lên' },
       { id: 'liked', name: 'Ảnh đã thích' }
     ];
 
+    // Methods
     const formatDate = (date) => {
       if (!date) return 'N/A'
       return new Date(date).toLocaleDateString('vi-VN')
@@ -186,6 +189,7 @@ export default {
       previewVisible.value = true;
     };
 
+    // Mounted hook
     onMounted(() => {
       auth.checkAuth()
       setTimeout(() => {

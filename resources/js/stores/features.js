@@ -9,7 +9,11 @@ export const usefeaturesStore = defineStore('features', {
     actions:
     {
         async fetchFeatures() {
-            if(this.features.length > 0) return
+            if(this.features.length > 0)
+            { 
+              console.log('Fetching features: already loaded 1');
+              return this.features
+            }
             this.error_message = null;
             
             try {
@@ -23,6 +27,7 @@ export const usefeaturesStore = defineStore('features', {
       
               if (response.data && response.data.success) {
                 this.features = response.data.data;
+                console.log('Fetching features: already loaded 2');
               } else {
                 this.error_message = 'Failed to fetch features'
                 console.error('Error:', response.statusText)
@@ -32,5 +37,6 @@ export const usefeaturesStore = defineStore('features', {
               this.error_message = 'An error occurred'
             }
         }
-    }
+    },
+    persist: true
 })

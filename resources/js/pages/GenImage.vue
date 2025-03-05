@@ -194,6 +194,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 export default {
     setup() {
+        //State
         const randomSeed = ref(Math.floor(Math.random() * 1000000000))
         const icon_title = ref("/img/ai.png")
         const feature = ref(null)
@@ -219,10 +220,12 @@ export default {
         const decodedID = ref(null)
         const error_message = ref(null)
 
+        // Decode ID
         const decodeID = (encodedID) => {
             return atob(encodedID);
         };
 
+        //Methods
         // Xử lý sự kiện kéo thả
         const onDrop = (event) => {
             isDragging.value = false
@@ -312,6 +315,7 @@ export default {
             }
         }
 
+        // Mounted Hook
         onMounted(() => {
             const encodedID = route.params.encodedID;
             decodedID.value = decodeID(encodedID);

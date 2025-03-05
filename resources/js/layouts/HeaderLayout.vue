@@ -92,12 +92,13 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 export default {
   name: 'Header',
   
   setup() {
+    //State
     const router = useRouter()
     const route = useRoute()
     const auth = useAuthStore()
@@ -106,16 +107,19 @@ export default {
     const currentSection = ref(1)
     const color = ref('white')
 
+    // Computed properties
     const shouldShowHeader = computed(() => {
       return route.path !== '/' && route.path !== '/register' && route.path !== '/login'
     })
 
+    // Data
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard' },
       { name: 'Tạo ảnh', path: '/features' },
       { name: 'Thông tin', path: '/' },
     ]
 
+    // Methods
     const toggleUserMenu = () => {
       isUserMenuOpen.value = !isUserMenuOpen.value
     }
@@ -132,6 +136,7 @@ export default {
       }
     }
 
+    // Mounted hooks
     onMounted(() => {
       auth.checkAuth()
       

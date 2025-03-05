@@ -33,6 +33,7 @@
 import { ref, defineProps, defineEmits } from 'vue';
 
 export default {
+    // Props and emits
     props: {
         commentId: {
             type: Number,
@@ -49,8 +50,10 @@ export default {
     },
     emits: ['reply-submitted', 'cancel-reply'],
     setup(props, { emit }) {
+        // State
         const replyText = ref('')
 
+        // Methods
         const submitReply = () => {
             if (replyText.value.trim() === '') return
             

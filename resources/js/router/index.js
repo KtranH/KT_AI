@@ -3,14 +3,19 @@ import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 
 // Components
-import Home from '../components/Home.vue'
-import Login from '../components/auth/Login.vue'
-import Register from '../components/auth/Register.vue'
-import Dashboard from '../components/Dashboard.vue'
-import VerifyEmail from '../components/auth/VerifyEmail.vue'
-import Features from '../components/Features.vue'
-import CreateImage from '../components/features/CreateImage.vue'
-import Detail from '../components/image/Detail.vue'
+// Home Pages
+import Home from '../pages/Home.vue'
+// Auth Forms
+import Login from '../components/auth/LoginForm.vue'
+import Register from '../components/auth/RegisterForm.vue'
+import VerifyEmail from '../components/auth/VerifyEmailForm.vue'
+// Dashboard Pages
+import Dashboard from '../pages/Dashboard.vue'
+// Features Pages
+import Features from '../pages/Features.vue'
+// Image Pages
+import CreateImage from '../pages/GenImage.vue'
+import Detail from '../pages/ImageDetail.vue'
 
 const routes = [
   {

@@ -114,6 +114,7 @@ export default {
   name: 'VerifyEmail',
   
   setup() {
+    //State
     const route = useRoute()
     const router = useRouter()
     const loading = ref(false)
@@ -127,10 +128,12 @@ export default {
     const verifyAttempts = ref(0)
     const lastVerifyTime = ref(0)
 
+    //Computed
     const isCodeComplete = computed(() => {
       return verificationCode.value.every(digit => digit.length === 1)
     })
 
+    //Methods
     const startResendTimer = () => {
       resendTimer.value = 60
       const timer = setInterval(() => {
@@ -208,6 +211,7 @@ export default {
       }
     }
 
+    //Mounted hooks
     onMounted(() => {
       if (!email.value) {
         router.push('/register')

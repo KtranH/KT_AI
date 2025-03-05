@@ -197,7 +197,7 @@
 
 <script>
 import { ref } from 'vue'
-import CommentReply from '@/components/layout/Reply.vue'
+import CommentReply from '@/layouts/ReplyLayout.vue'
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 

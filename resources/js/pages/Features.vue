@@ -134,6 +134,7 @@ import AOS from 'aos'
 export default {
   name: 'Features',
   setup() {
+    //State
     const router = useRouter()
     const storeFeatures = usefeaturesStore()
     const error_message = ref(false)
@@ -146,6 +147,7 @@ export default {
     const isScrolling = ref(false)
     let scrollTimeout
 
+    //Methods
     const scrollToFeature = (index) => {
       currentFeatureIndex.value = index
       const featureElement = document.querySelector(`.snap-start:nth-child(${index + 1})`)
@@ -187,10 +189,12 @@ export default {
     const encodeID = (id) => {
       return btoa(id)
     }
-    
+
+    //Mounted hook
     onMounted(() => {
       if (storeFeatures.features.length === 0) {
         storeFeatures.fetchFeatures();
+        console.log('Fetching features: already loaded')
       }
       AOS.refresh()
       if (snapContainer.value) {

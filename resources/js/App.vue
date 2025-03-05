@@ -14,8 +14,8 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import Header from './layout/Header.vue';
-import Loading from './layout/Loading.vue';
+import Header from './layouts/HeaderLayout.vue';
+import Loading from './layouts/LoadingLayout.vue';
 
 export default {
   name: 'App',
