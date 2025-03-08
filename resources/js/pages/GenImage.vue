@@ -8,8 +8,8 @@
                 <div>
                     <button @click="goBack" class="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full">Quay lại</button>
                 </div>
-                <div class="flex items-center justify-center mb-8">
-                    <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2 text-center">{{ feature.title }}</h1>
+                <div class="flex items-center justify-left mt-8 mb-8">
+                    <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2">{{ feature.title }}</h1>
                     <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
                     <img :src="icon_title" loading="lazy" class="w-12 h-12 ml-2" alt="">
                 </div>
@@ -73,6 +73,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { GuideSection, ImageParameters, PromptInput, ImageUploader } from '../components/common'
 import { usefeaturesStore } from '@/stores/features'
+import { generateRandomSeed } from '@/utils/index';
 
 export default {
     components: {
@@ -83,7 +84,7 @@ export default {
     },
     setup() {
         // State
-        const randomSeed = ref(Math.floor(Math.random() * 1000000000))
+        const randomSeed = ref(generateRandomSeed())
         const icon_title = ref("/img/ai.png")
         const featureStore = usefeaturesStore()
         const feature = computed(() => featureStore.feature)

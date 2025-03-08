@@ -25,9 +25,10 @@
           v-model="seedValue"
           @input="updateSeed"
         >
-        <button @click="generateRandomSeed" class="bg-gradient-text font-medium text-sm text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          Random
+        <button @click="RandomSeed" class="bg-gradient-text font-medium text-sm text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Tạo ngẫu nhiên
         </button>
+        <!--<Button label="Tạo ngẫu nhiên" type="button" class="w-[200px]" @click="generateRandomSeed" />-->
       </div>
     </div>
     
@@ -63,12 +64,20 @@
     >
       Tạo hình ảnh
     </button>
+    <!--<Button label="Tạo hình ảnh" class="mt-6" type="button" @click="generate" />-->
   </div>
 </template>
 
 <script>
+import { ref, watch, toRefs } from 'vue';
+import { generateRandomSeed } from '@/utils/index';
+/*import Button from './Button.vue';*/
+
 export default {
   name: 'PromptInput',
+  components: {
+    /*Button*/
+  },
   props: {
     prompt: {
       type: String,
@@ -76,7 +85,7 @@ export default {
     },
     seed: {
       type: [String, Number],
-      default: () => Math.floor(Math.random() * 1000000000)
+      default: () => generateRandomSeed()
     },
     style: {
       type: String,
@@ -96,42 +105,64 @@ export default {
       ]
     }
   },
-  data() {
+  setup(props, { emit }) {
+    // Refs for form values
+    const promptValue = ref(props.prompt);
+    const seedValue = ref(props.seed);
+    const styleValue = ref(props.style);
+    
+    // Destructure props for watching
+    const { prompt, seed, style } = toRefs(props);
+    
+    // Watch for prop changes
+    watch(prompt, (newVal) => {
+      promptValue.value = newVal;
+    });
+    
+    watch(seed, (newVal) => {
+      seedValue.value = newVal;
+    });
+    
+    watch(style, (newVal) => {
+      styleValue.value = newVal;
+    });
+    
+    // Event handlers
+    const generate = () => {
+      console.log('generate');
+      emit('generate');
+    };
+    const updatePrompt = () => {
+      emit('update:prompt', promptValue.value);
+    };
+    
+    const updateSeed = () => {
+      emit('update:seed', seedValue.value);
+    };
+    
+    const updateStyle = () => {
+      emit('update:style', styleValue.value);
+    };
+    
+    const RandomSeed = () => {
+      seedValue.value = generateRandomSeed();
+      emit('update:seed', seedValue.value);
+    };
+    
+    // Return all reactive data and methods
     return {
-      promptValue: this.prompt,
-      seedValue: this.seed,
-      styleValue: this.style
-    }
-  },
-  watch: {
-    prompt(val) {
-      this.promptValue = val
-    },
-    seed(val) {
-      this.seedValue = val
-    },
-    style(val) {
-      this.styleValue = val
-    }
-  },
-  methods: {
-    updatePrompt() {
-      this.$emit('update:prompt', this.promptValue)
-    },
-    updateSeed() {
-      this.$emit('update:seed', this.seedValue)
-    },
-    updateStyle() {
-      this.$emit('update:style', this.styleValue)
-    },
-    generateRandomSeed() {
-      this.seedValue = Math.floor(Math.random() * 1000000000)
-      this.$emit('update:seed', this.seedValue)
-    }
+      promptValue,
+      seedValue,
+      styleValue,
+      updatePrompt,
+      updateSeed,
+      updateStyle,
+      RandomSeed,
+      generate
+    };
   }
 }
 </script>
-
 <style scoped>
 .bg-gradient-text {
   background: linear-gradient(
@@ -151,4 +182,4 @@ export default {
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-</style> 
+</style>

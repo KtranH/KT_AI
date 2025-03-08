@@ -25,3 +25,19 @@ export const truncateText = (text, maxLength) => {
 };
 
 // Export thêm các hàm utility khác ở đây 
+
+export const generateRandomSeed = () => {
+    return Math.floor(Math.random() * 1000000000);
+};
+
+// Kiểm tra có phải là file ảnh không
+export const isFileImage = (file) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    return allowedTypes.includes(file.type);
+};
+
+// Kiểm tra file ảnh có dưới 2MB không
+export const sizeImageUnder2MB = (file) => {
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    return file.size <= maxSize;
+}; 

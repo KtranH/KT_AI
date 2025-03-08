@@ -4,6 +4,7 @@ import axios from 'axios'
 export const usefeaturesStore = defineStore('features', {
     state: () => ({
         features: [],
+        id_feature_current: null,
         feature: null,
         error_message: null,
     }),
@@ -39,7 +40,7 @@ export const usefeaturesStore = defineStore('features', {
             }
         },
         async fetchFeatureDetail(decodedID) {
-          if(this.feature !== null)
+          if(this.feature !== null && this.id_feature_current === decodedID)
           {
             console.log('Fetching feature detail: already loaded');
             return this.feature
@@ -57,6 +58,7 @@ export const usefeaturesStore = defineStore('features', {
               )
               if(response.data.success) {
                   this.feature = response.data.data
+                  this.id_feature_current = decodedID
               }
               else {
                   this.error_message = response.data.message
@@ -66,6 +68,6 @@ export const usefeaturesStore = defineStore('features', {
           }
         },
     },
-    persist: true
+    persist: false
 })
 

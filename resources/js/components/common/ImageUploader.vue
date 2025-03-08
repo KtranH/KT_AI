@@ -46,6 +46,7 @@
 
 <script>
 import { defineComponent, ref, watch } from 'vue';
+import { isFileImage, sizeImageUnder2MB } from '@/utils/index';
 
 export default defineComponent({
   name: 'ImageUploader',
@@ -82,14 +83,14 @@ export default defineComponent({
     };
     
     const handleFile = (file) => {
-      if (file.type.match('image.*')) {
-        if(file.size <= 2 * 1024 * 1024) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            imagePreview.value = e.target.result;
-            emit('update:image', e.target.result);
-          };
-          reader.readAsDataURL(file);
+      if (isFileImage(file)) {
+        if(sizeImageUnder2MB(file)) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.value = e.target.result;
+                emit('update:image', e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
         else {
           alert('Vui lòng chỉ tải lên hình ảnh dưới 2MB');

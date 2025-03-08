@@ -8,8 +8,11 @@ import FeatureImage from './FeatureImage.vue';
 import FeatureInfo from './FeatureInfo.vue';
 import ImageUploader from './ImageUploader.vue';
 import PromptInput from './PromptInput.vue';
+import Button from './Button.vue';
 
+// Export tất cả component để import cục bộ khi cần
 export {
+  Button,
   GuideSection,
   ImageParameters,
   ImageViewer,
@@ -22,17 +25,15 @@ export {
   PromptInput
 };
 
-// Đăng ký toàn cục các component phổ biến
+// Component được sử dụng phổ biến và cần đăng ký toàn cục
+const CORE_COMPONENTS = {
+  ImageViewer,
+  Button
+};
+
+// Đăng ký các component cần thiết toàn cục để tối ưu hiệu năng
 export const registerGlobalComponents = (app) => {
-  app.component('GuideSection', GuideSection);
-  app.component('ImageParameters', ImageParameters);
-  app.component('ImageViewer', ImageViewer);
-  app.component('PostHeader', PostHeader);
-  app.component('CommentList', CommentList);
-  app.component('FeatureCard', FeatureCard);
-  app.component('FeatureImage', FeatureImage);
-  app.component('FeatureInfo', FeatureInfo);
-  app.component('ImageUploader', ImageUploader);
-  app.component('PromptInput', PromptInput);
-  // Thêm các component khác ở đây khi cần
-}; 
+  Object.entries(CORE_COMPONENTS).forEach(([name, component]) => {
+    app.component(name, component);
+  });
+};
