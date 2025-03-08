@@ -8,6 +8,7 @@ import AOS from 'aos'
 import 'aos/dist/aos.css'
 import { createPinia } from 'pinia';
 import piniaPersist from 'pinia-plugin-persistedstate';
+import { registerGlobalComponents } from './components/common';
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -26,9 +27,13 @@ axios.interceptors.request.use(config => {
 
 // Tạo chỉ một Vue app instance duy nhất
 const app = createApp(App)
+
 // Tạo pinia 
 const pinia = createPinia()
 pinia.use(piniaPersist);
+
+// Sử dụng Pinia trước khi mount
+app.use(pinia);
 
 // Use plugins
 app.use(router)
@@ -38,6 +43,9 @@ app.use(VueFullPage, {
   css3: true,
   credits: { enabled: false }
 })
+
+// Đăng ký các component toàn cục
+registerGlobalComponents(app);
 
 // Khởi tạo AOS với cấu hình mặc định
 AOS.init({
@@ -57,5 +65,3 @@ router.afterEach(() => {
 
 // Đảm bảo app chỉ được mount một lần
 app.mount("#app")
-// Sử dụng pinia
-app.use(pinia);
