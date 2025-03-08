@@ -71,7 +71,10 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { GuideSection, ImageParameters, PromptInput, ImageUploader } from '../components/common'
+import  GuideSection  from '@/components/GenImage/GuideSection.vue'
+import  ImageParameters  from '@/components/GenImage/ImageParameters.vue'
+import  ImageUploader  from '@/components/GenImage/ImageUploader.vue'
+import  PromptInput  from '@/components/GenImage/PromptInput.vue'
 import { usefeaturesStore } from '@/stores/features'
 import { generateRandomSeed } from '@/utils/index';
 

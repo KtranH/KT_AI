@@ -30,7 +30,8 @@
 </template>
 
 <script>
-import { ref, defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits } from 'vue';
+import useReply from '@/composables/useReply';
 
 export default {
     // Props and emits
@@ -50,25 +51,8 @@ export default {
     },
     emits: ['reply-submitted', 'cancel-reply'],
     setup(props, { emit }) {
-        // State
-        const replyText = ref('')
-
-        // Methods
-        const submitReply = () => {
-            if (replyText.value.trim() === '') return
-            
-            emit('reply-submitted', {
-                commentId: props.commentId,
-                text: replyText.value
-            });
-            
-            replyText.value = ''
-        };
-
-        const cancelReply = () => {
-            replyText.value = ''
-            emit('cancel-reply')
-        };
+        // Sử dụng composable function
+        const { replyText, submitReply, cancelReply } = useReply(props, emit);
 
         return {
             replyText,

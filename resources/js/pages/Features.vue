@@ -101,7 +101,9 @@
 <script>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FeatureCard, FeatureImage, FeatureInfo } from '../components/common';
+import  FeatureCard  from '@/components/Features/FeatureCard.vue';
+import  FeatureImage  from '@/components/Features/FeatureImage.vue';
+import  FeatureInfo  from '@/components/Features/FeatureInfo.vue';
 import { usefeaturesStore } from '@/stores/features'
 
 export default {
