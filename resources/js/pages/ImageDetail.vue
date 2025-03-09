@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import ImageViewer from '@/components/ImageDetail/ImageViewer.vue'
-import CommentSection from '@/components/ImageDetail/CommentSection.vue'
+import ImageViewer from '@/components/user/ImageDetail/ImageViewer.vue'
+import CommentSection from '@/components/user/ImageDetail/CommentSection.vue'
 
 export default {
     name: 'Detail',

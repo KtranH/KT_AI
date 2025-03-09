@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios' 
+import { featuresAPI } from '../services/api';
 
 export const usefeaturesStore = defineStore('features', {
     state: () => ({
@@ -20,13 +20,7 @@ export const usefeaturesStore = defineStore('features', {
             }
             this.error_message = null;         
             try {
-              const response = await axios.get('/api/load_features', {
-                headers: {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json',
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              });
+              const response = await featuresAPI.getAll();
       
               if (response.data && response.data.success) {
                 this.features = response.data.data;
@@ -47,15 +41,8 @@ export const usefeaturesStore = defineStore('features', {
           }
           this.error_message = null;
           try {
-              const response = await axios.get(`/api/load_features/${decodedID}`,
-                  {
-                      headers: {
-                          'Accept': 'application/json',
-                          'Content-Type': 'application/json',
-                          'X-Requested-With': 'XMLHttpRequest'
-                      }
-                  }
-              )
+              const response = await featuresAPI.getById(decodedID);
+              
               if(response.data.success) {
                   this.feature = response.data.data
                   this.id_feature_current = decodedID
@@ -70,4 +57,3 @@ export const usefeaturesStore = defineStore('features', {
     },
     persist: false
 })
-

@@ -30,7 +30,7 @@ import HeaderSection from './HeaderSection.vue'
 import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'
 import CommentInput from './CommentInput.vue'
-import useComments from '@/composables/useComments'
+import useComments from '@/composables/user/useComments'
 
 export default {
     name: 'CommentSection',

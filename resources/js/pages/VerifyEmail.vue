@@ -1,41 +1,20 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-      <div>
-        <router-link to="/" class="flex justify-center">
-          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12">
-        </router-link>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Xác thực email
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Vui lòng nhập mã xác thực đã được gửi đến email {{ email }}
-        </p>
-      </div>
+      <AuthFormHeader
+        title="Xác thực email"
+        :subtitle="`Vui lòng nhập mã xác thực đã được gửi đến email ${email}`"
+      />
 
-      <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-        {{ error }}
-      </div>
-
-      <div v-if="success" class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded relative" role="alert">
-        {{ success }}
-      </div>
+      <AlertMessage :message="error" type="error" />
+      <AlertMessage :message="success" type="success" />
 
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="rounded-md shadow-sm">
-          <div class="flex justify-between gap-2">
-            <input
-              v-for="(digit, index) in 6"
-              :key="index"
-              v-model="verificationCode[index]"
-              type="text"
-              maxlength="1"
-              class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-center text-xl"
-              :ref="el => { if (el) codeInputs[index] = el }"
-              @input="handleInput($event, index)"
-              @keydown="handleKeydown($event, index)"
-            >
-          </div>
+          <VerificationCodeInput 
+            v-model="verificationCode"
+            @code-complete="handleComplete"
+          />
         </div>
 
         <div class="flex items-center justify-between">
@@ -108,10 +87,21 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { resendCode } from '@/services/codeService'
+import { resendCode } from '@/services/verificationService'
+import { useCodeVerification } from '@/composables/auth/useCodeVerification'
+import AuthFormHeader from '../components/auth/AuthFormHeader.vue'
+import AlertMessage from '../components/auth/AlertMessage.vue'
+import VerificationCodeInput from '../components/auth/VerificationCodeInput.vue'
+import axios from 'axios'
 
 export default {
   name: 'VerifyEmail',
+  
+  components: {
+    AuthFormHeader,
+    AlertMessage,
+    VerificationCodeInput
+  },
   
   setup() {
     // State
@@ -121,17 +111,17 @@ export default {
     const error = ref(null)
     const success = ref(null)
     const email = ref(route.query.email || '')
-    const verificationCode = ref(Array(6).fill(''))
-    const codeInputs = ref([])
     const resendTimer = ref(0)
     const resendCount = ref(0)
-    const verifyAttempts = ref(0)
-    const lastVerifyTime = ref(0)
-
-    // Computed
-    const isCodeComplete = computed(() => {
-      return verificationCode.value.every(digit => digit.length === 1)
-    })
+    
+    // Sử dụng composable cho việc xác thực mã
+    const {
+      verificationCode,
+      isCodeComplete,
+      checkTooManyAttempts,
+      incrementAttempts,
+      resetCode
+    } = useCodeVerification(6)
 
     // Methods
     const startResendTimer = () => {
@@ -162,10 +152,13 @@ export default {
         loading.value = false
       }
     }
+    
+    const handleComplete = (code) => {
+      // Mã hoàn thành, có thể tự động submit nếu muốn
+    }
 
     const handleSubmit = async () => {
-      const now = Date.now()
-      if (verifyAttempts.value >= 5 && now - lastVerifyTime.value < 1800000) {
+      if (checkTooManyAttempts()) {
         error.value = 'Bạn đã thử xác thực quá nhiều lần. Vui lòng thử lại sau 30 phút.'
         return
       }
@@ -187,9 +180,8 @@ export default {
         }, 2000)
       } catch (err) {
         error.value = err.response?.data?.message || 'Mã xác thực không đúng'
-        verifyAttempts.value++
-        lastVerifyTime.value = now
-        if (verifyAttempts.value >= 5) {
+        incrementAttempts()
+        if (checkTooManyAttempts()) {
           error.value = 'Bạn đã thử xác thực quá nhiều lần. Vui lòng thử lại sau 30 phút.'
         }
       } finally {
@@ -200,23 +192,22 @@ export default {
     // Lifecycle hooks
     onMounted(() => {
       if (!email.value) {
-        router.push('/register')
+        router.push('/login')
       }
-      startResendTimer()
     })
 
     return {
       email,
+      verificationCode,
       loading,
       error,
       success,
-      verificationCode,
-      codeInputs,
+      isCodeComplete,
       resendTimer,
       resendCount,
-      isCodeComplete,
       handleResendCode,
-      handleSubmit
+      handleSubmit,
+      handleComplete
     }
   }
 }

@@ -79,7 +79,7 @@
 <script>
 import { defineProps, defineEmits } from 'vue'
 import CommentReply from '@/components/ImageDetail/ReplyLayout.vue'
-import useLikes from '@/composables/useLikes'
+import useLikes from '@/composables/user/useLikes'
 
 export default {
     name: 'CommentItem',

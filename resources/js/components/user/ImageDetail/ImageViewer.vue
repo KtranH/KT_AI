@@ -11,7 +11,7 @@
 
 <script>
 import { defineProps } from 'vue'
-import useNavigation from '@/composables/useNavigation'
+import useNavigation from '@/composables/user/useNavigation'
 
 export default {
     name: 'ImageViewer',

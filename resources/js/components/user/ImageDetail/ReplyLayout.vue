@@ -58,8 +58,8 @@
 import { defineProps, defineEmits } from 'vue';
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
-import useEmoji from '@/composables/useEmoji'
-import useReply from '@/composables/useReply';
+import useEmoji from '@/composables/user/useEmoji'
+import useReply from '@/composables/user/useReply';
 
 export default {
     // Props and emits

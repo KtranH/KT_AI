@@ -1,24 +1,18 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-      <div>
-        <router-link to="/" class="flex justify-center">
-          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12">
-        </router-link>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Đăng ký tài khoản mới
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Hoặc
+      <AuthFormHeader
+        title="Đăng ký tài khoản mới"
+        subtitle="Hoặc"
+      >
+        <template #subtitle-action>
           <router-link to="/login" class="font-medium text-purple-600 hover:text-purple-500">
             đăng nhập nếu đã có tài khoản
           </router-link>
-        </p>
-      </div>
+        </template>
+      </AuthFormHeader>
 
-      <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-        {{ error }}
-      </div>
+      <AlertMessage :message="error" type="error" />
 
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="rounded-md shadow-sm -space-y-px">
@@ -74,14 +68,9 @@
           </div>
         </div>
 
-        <!-- Thêm Cloudflare Turnstile -->
+        <!-- Turnstile CAPTCHA container -->
         <div class="flex justify-center">
-          <div 
-            ref="turnstileWidget"
-            class="cf-turnstile" 
-            :data-sitekey="turnstileSiteKey"
-            data-callback="handleTurnstileCallback">
-          </div>
+          <div ref="turnstileContainer" class="cf-turnstile"></div>
         </div>
         <div v-if="turnstileError" class="text-red-500 text-sm text-center">
           {{ turnstileError }}
@@ -90,7 +79,7 @@
         <div>
           <button 
             type="submit" 
-            :disabled="loading || !form.turnstileToken"
+            :disabled="loading || !turnstileToken"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
           >
             <span class="absolute left-0 inset-y-0 flex items-center pl-3">
@@ -147,13 +136,12 @@
           </div>
 
           <div class="mt-6">
-            <a
-              href="/api/auth/google/url"
-              class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
-              Google
-            </a>
+            <SocialLoginButton 
+              provider="google" 
+              url="/api/auth/google/url"
+              icon="/img/google.png"
+              text="Google"
+            />
           </div>
         </div>
       </form>
@@ -165,9 +153,19 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import AuthFormHeader from '../components/auth/AuthFormHeader.vue'
+import AlertMessage from '../components/auth/AlertMessage.vue'
+import SocialLoginButton from '../components/auth/SocialLoginButton.vue'
+import { useTurnstile } from '@/composables/auth/useTurnstile'
 
 export default {
   name: 'Register',
+  
+  components: {
+    AuthFormHeader,
+    AlertMessage,
+    SocialLoginButton
+  },
   
   setup() {
     //State
@@ -175,47 +173,25 @@ export default {
     const loading = ref(false)
     const error = ref(null)
     const showPassword = ref(false)
-    const turnstileWidget = ref(null)
-    const turnstileError = ref(null)
-    const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
-
+    
     const form = reactive({
       name: '',
       email: '',
       password: '',
-      password_confirmation: '',
-      turnstileToken: ''
+      password_confirmation: ''
     })
 
+    // Sử dụng composable cho Turnstile
+    const turnstileContainer = ref(null)
+    const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
+    const {
+      turnstileToken,
+      turnstileError,
+      initTurnstile,
+      resetTurnstile
+    } = useTurnstile(turnstileSiteKey, turnstileContainer)
+
     //Methods
-    // Hàm xử lý callback từ Turnstile
-    window.handleTurnstileCallback = (token) => {
-      form.turnstileToken = token
-      turnstileError.value = null
-    }
-
-    const loadTurnstileScript = () => {
-      // Nếu script đã tồn tại, không cần load lại
-      if (document.querySelector('script[src*="turnstile.js"]')) {
-        return
-      }
-      
-      const script = document.createElement('script')
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-      script.async = true
-      script.defer = true
-      document.head.appendChild(script)
-      
-      script.onload = () => {
-        if (window.turnstile && turnstileWidget.value) {
-          window.turnstile.render(turnstileWidget.value, {
-            sitekey: turnstileSiteKey,
-            callback: 'handleTurnstileCallback'
-          })
-        }
-      }
-    }
-
     const togglePassword = () => {
       showPassword.value = !showPassword.value
     }
@@ -226,7 +202,7 @@ export default {
         return
       }
 
-      if (!form.turnstileToken) {
+      if (!turnstileToken.value) {
         turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
         return
       }
@@ -237,7 +213,7 @@ export default {
         
         const response = await axios.post('/api/register', {
           ...form,
-          'cf-turnstile-response': form.turnstileToken
+          'cf-turnstile-response': turnstileToken.value
         }, {
           headers: {
             'Content-Type': 'application/json',
@@ -260,9 +236,7 @@ export default {
       } catch (err) {
         error.value = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra'
         // Reset Turnstile widget nếu xác thực không thành công
-        if (window.turnstile) {
-          window.turnstile.reset()
-        }
+        resetTurnstile()
       } finally {
         loading.value = false
       }
@@ -270,7 +244,7 @@ export default {
 
     // Mounted hooks
     onMounted(() => {
-      loadTurnstileScript()
+      initTurnstile()
     })
 
     return {
@@ -280,10 +254,10 @@ export default {
       handleSubmit,
       showPassword,
       togglePassword,
-      turnstileSiteKey,
-      turnstileWidget,
+      turnstileContainer,
+      turnstileToken,
       turnstileError
     }
   }
 }
-</script> 
+</script>

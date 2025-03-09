@@ -1,26 +1,20 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-      <div>
-        <router-link to="/" class="flex justify-center">
-          <img src="/img/voice.png" alt="KT_AI Logo" class="h-12 w-12" data-aos="fade-up">
-        </router-link>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900" data-aos="fade-up" data-aos-delay="200">
-          Đăng nhập vào tài khoản
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600" data-aos="fade-up" data-aos-delay="400">
-          Hoặc
+      <AuthFormHeader
+        title="Đăng nhập vào tài khoản"
+        subtitle="Hoặc"
+      >
+        <template #subtitle-action>
           <router-link to="/register" class="font-medium text-purple-600 hover:text-purple-500">
             đăng ký tài khoản mới
           </router-link>
-        </p>
-      </div>
+        </template>
+      </AuthFormHeader>
 
-      <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-        {{ error }}
-      </div>
+      <AlertMessage :message="error" type="error" />
 
-      <div v-if="needsVerification" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded relative" role="alert">
+      <AlertMessage v-if="needsVerification" type="warning">
         <p>Tài khoản của bạn chưa được xác thực.</p>
         <div class="mt-2">
           <button 
@@ -30,7 +24,7 @@
             Xác thực ngay
           </button>
         </div>
-      </div>
+      </AlertMessage>
 
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" data-aos="zoom-in" data-aos-delay="600">
         <div class="rounded-md shadow-sm -space-y-px">
@@ -86,9 +80,7 @@
             data-callback="handleTurnstileCallback">
           </div>
         </div>
-        <div v-if="turnstileError" class="text-red-500 text-sm text-center">
-          {{ turnstileError }}
-        </div>
+        <AlertMessage :message="turnstileError" type="error" />
 
         <div>
           <button 
@@ -150,13 +142,13 @@
           </div>
 
           <div class="mt-6">
-            <button
+            <SocialLoginButton 
+              provider="Google" 
+              icon="/img/google.png"
               @click="handleLoginByGoogle"
-              class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
-              <img class="h-5 w-5 mr-2" src="/img/google.png" alt="Google logo">
               Google
-            </button>
+            </SocialLoginButton>
           </div>
         </div>
       </form>
@@ -167,10 +159,20 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore } from '../stores/auth'
+import { useTurnstile } from '@/composables/auth/useTurnstile'
+import AuthFormHeader from '../components/auth/AuthFormHeader.vue'
+import AlertMessage from '../components/auth/AlertMessage.vue'
+import SocialLoginButton from '../components/auth/SocialLoginButton.vue'
 
 export default {
   name: 'Login',
+  
+  components: {
+    AuthFormHeader,
+    AlertMessage,
+    SocialLoginButton
+  },
   
   setup() {
     // State
@@ -179,9 +181,13 @@ export default {
     const loading = ref(false)
     const error = ref(null)
     const needsVerification = ref(false)
-    const turnstileWidget = ref(null)
-    const turnstileError = ref(null)
-    const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
+    
+    // Sử dụng composable Turnstile
+    const { 
+      turnstileWidget, 
+      turnstileError, 
+      turnstileSiteKey 
+    } = useTurnstile()
 
     // Methods
     const form = reactive({
@@ -193,28 +199,6 @@ export default {
 
     window.handleTurnstileCallback = (token) => {
       form.turnstileToken = token
-      turnstileError.value = null
-    }
-
-    const loadTurnstileScript = () => {
-      if (document.querySelector('script[src*="turnstile.js"]')) {
-        return
-      }
-      
-      const script = document.createElement('script')
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-      script.async = true
-      script.defer = true
-      document.head.appendChild(script)
-      
-      script.onload = () => {
-        if (window.turnstile && turnstileWidget.value) {
-          window.turnstile.render(turnstileWidget.value, {
-            sitekey: turnstileSiteKey,
-            callback: 'handleTurnstileCallback'
-          })
-        }
-      }
     }
 
     const goToVerification = () => {
@@ -259,11 +243,6 @@ export default {
       }
     }
 
-    //Mounted hooks
-    onMounted(() => {
-      loadTurnstileScript()
-    })
-
     return {
       form,
       loading,
@@ -278,4 +257,4 @@ export default {
     }
   }
 }
-</script> 
+</script>

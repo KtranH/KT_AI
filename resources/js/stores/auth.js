@@ -1,6 +1,6 @@
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
 import router from '../router'
+import { authAPI } from '../services/api'
 
 // Reactive state
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)
@@ -55,9 +55,7 @@ export const useAuthStore = () => {
       
       if (!token.value || !user.value) return false
 
-      const response = await axios.get('/api/check', {
-        headers: { Authorization: `Bearer ${token.value}` }
-      })
+      const response = await authAPI.check()
       
       if (response.data.authenticated) {
         if (isRemembered.value) {
@@ -79,7 +77,7 @@ export const useAuthStore = () => {
 
   const login = async (credentials) => {
     try {
-      const response = await axios.post('/api/login', credentials)
+      const response = await authAPI.login(credentials)
       if (response.data.needs_verification) {
         return response.data
       }
@@ -93,9 +91,7 @@ export const useAuthStore = () => {
 
   const logout = async () => {
     try {
-      await axios.post('/api/logout', {
-        headers: { Authorization: `Bearer ${token.value}` }
-      })
+      await authAPI.logout()
       clearAuthData()
       router.push('/login')
     } catch (error) {
@@ -105,7 +101,7 @@ export const useAuthStore = () => {
 
   const handleLoginByGoogle = async () => {
     try {
-      const response = await axios.get('/auth/google/url');
+      const response = await authAPI.getGoogleAuthUrl();
       const googleAuthUrl = response.data.url;
   
       const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600');

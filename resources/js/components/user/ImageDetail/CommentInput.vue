@@ -31,8 +31,8 @@
 import { defineProps } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
-import useComments from '@/composables/useComments'
-import useEmoji from '@/composables/useEmoji'
+import useComments from '@/composables/user/useComments'
+import useEmoji from '@/composables/user/useEmoji'
 
 export default {
     name: 'CommentInput',

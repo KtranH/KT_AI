@@ -29,7 +29,7 @@
 
 <script>
 import { defineProps } from 'vue'
-import useLikes from '@/composables/useLikes'
+import useLikes from '@/composables/user/useLikes'
 
 export default {
     name: 'LikeSection',

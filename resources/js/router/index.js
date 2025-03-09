@@ -6,9 +6,9 @@ import { useAuthStore } from '../stores/auth'
 // Home Pages
 import Home from '../pages/Home.vue'
 // Auth Forms
-import Login from '../components/auth/LoginForm.vue'
-import Register from '../components/auth/RegisterForm.vue'
-import VerifyEmail from '../components/auth/VerifyEmailForm.vue'
+import Login from '../pages/Login.vue'
+import Register from '../pages/Register.vue'
+import VerifyEmail from '../pages/VerifyEmail.vue'
 // Dashboard Pages
 import Dashboard from '../pages/Dashboard.vue'
 // Features Pages
