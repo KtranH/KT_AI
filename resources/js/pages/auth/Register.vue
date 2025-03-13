@@ -137,7 +137,7 @@
 
           <div class="mt-6">
             <SocialLoginButton 
-              provider="google" 
+              provider="Google" 
               url="/api/auth/google/url"
               icon="/img/google.png"
               text="Google"

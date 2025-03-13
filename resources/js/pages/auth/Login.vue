@@ -75,9 +75,7 @@
         <div class="flex justify-center">
           <div 
             ref="turnstileWidget"
-            class="cf-turnstile" 
-            :data-sitekey="turnstileSiteKey"
-            data-callback="handleTurnstileCallback">
+            class="cf-turnstile">
           </div>
         </div>
         <AlertMessage :message="turnstileError" type="error" />
@@ -147,7 +145,6 @@
               icon="/img/google.png"
               @click="handleLoginByGoogle"
             >
-              Google
             </SocialLoginButton>
           </div>
         </div>
@@ -157,7 +154,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
@@ -186,7 +183,9 @@ export default {
     const { 
       turnstileWidget, 
       turnstileError, 
-      turnstileSiteKey 
+      turnstileSiteKey,
+      turnstileToken,
+      resetTurnstile
     } = useTurnstile()
 
     // Methods
@@ -197,9 +196,25 @@ export default {
       turnstileToken: ''
     })
 
-    window.handleTurnstileCallback = (token) => {
-      form.turnstileToken = token
-    }
+    // Watch for turnstile token changes
+    onMounted(() => {
+      // Synchronize the token with our form
+      const originalCallback = window.handleTurnstileCallback
+      window.handleTurnstileCallback = (token) => {
+        // Call original callback if exists
+        if (originalCallback) {
+          originalCallback(token)
+        }
+        
+        // Update our form
+        form.turnstileToken = token
+      }
+    })
+
+    // Clean up any modifications we made
+    onBeforeUnmount(() => {
+      resetTurnstile()
+    })
 
     const goToVerification = () => {
       router.push({

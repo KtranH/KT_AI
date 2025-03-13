@@ -4,18 +4,18 @@ import { useAuthStore } from '../stores/auth'
 
 // Components
 // Home Pages
-import Home from '../pages/Home.vue'
+import Home from '../pages/user/Home.vue'
 // Auth Forms
-import Login from '../pages/Login.vue'
-import Register from '../pages/Register.vue'
-import VerifyEmail from '../pages/VerifyEmail.vue'
+import Login from '../pages/auth/Login.vue'
+import Register from '../pages/auth/Register.vue'
+import VerifyEmail from '../pages/auth/VerifyEmail.vue'
 // Dashboard Pages
-import Dashboard from '../pages/Dashboard.vue'
+import Dashboard from '../pages/user/Dashboard.vue'
 // Features Pages
-import Features from '../pages/Features.vue'
+import Features from '../pages/user/Features.vue'
 // Image Pages
-import CreateImage from '../pages/GenImage.vue'
-import Detail from '../pages/ImageDetail.vue'
+import CreateImage from '../pages/user/GenImage.vue'
+import Detail from '../pages/user/ImageDetail.vue'
 
 const routes = [
   {
