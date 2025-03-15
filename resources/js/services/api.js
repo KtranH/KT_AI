@@ -12,6 +12,22 @@ export const verificationAPI = {
   resendCode: (email) => apiClient.post('/resend-verification', { email })
 }
 
+// Image  Information API calls
+export const imageAPI = {
+  getImagesByID: (id) => apiClient.get(`/get_images_information/${id}`)
+}
+
+// Google API calls
+export const googleAPI = {
+  getAuthUrl: () => apiClient.get('/auth/google/url'),
+  callback: (code) => apiClient.get(`/auth/google/callback?code=${code}`)
+}
+
+// Turnstile API calls
+export const turnstileAPI = {
+  getConfig: () => apiClient.get('/turnstile/config')
+}
+
 // Features API calls
 export const featuresAPI = {
   getAll: () => apiClient.get('/load_features'),

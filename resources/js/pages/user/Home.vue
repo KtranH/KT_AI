@@ -90,7 +90,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import 'aos/dist/aos.css'
 
 //Call API from store 
-import { usefeaturesStore } from '@/stores/features'
+import { usefeaturesStore } from '@/stores/user/featuresStore'
 
 export default {
   name: 'Home',

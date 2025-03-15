@@ -21,6 +21,7 @@
                 :src="image.url" 
                 class="object-cover w-full h-full cursor-pointer"
                 loading = "lazy"
+                @click="goToImageDetail(image)"
               >
             </div>
             
@@ -66,10 +67,15 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue'
-import { usefeaturesStore } from '@/stores/features'
+import { useRoute, useRouter } from 'vue-router'
+import ImageGalleryLayout from './ImageGalleryLayout.vue'
+import { imageAPI } from '@/services/api'
 
 export default {
   name: 'ImageList',
+  components: {
+    ImageGalleryLayout
+  },
   props: {
     filter: {
       type: String,
@@ -77,6 +83,8 @@ export default {
     }
   },
   setup(props) {
+    const router = useRouter()
+    const route = useRoute()
     const imageGroups = ref([
       {
         currentIndex: 0,
@@ -129,6 +137,12 @@ export default {
       }
     }
     
+    // Click to Image Detail
+    const goToImageDetail = (image) => {
+      const encodedID = btoa(image.id)
+      router.push(`/image/detail/${encodedID}`)
+    }
+
     // Example of how you would fetch images from your Laravel backend
     const fetchImages = async () => {
       try {
@@ -152,7 +166,8 @@ export default {
         navigateImages,
         previewVisible,
         previewImages,
-        previewIndex
+        previewIndex,
+        goToImageDetail
     }
   }
 }

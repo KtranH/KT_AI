@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { featuresAPI } from '../services/api';
+import { featuresAPI } from '../../services/api';
 
 export const usefeaturesStore = defineStore('features', {
     state: () => ({

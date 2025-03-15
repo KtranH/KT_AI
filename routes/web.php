@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\API\FeatureController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\TurnstileController;
+use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -27,6 +29,8 @@ Route::prefix('api')->group(function () {
     // Public API Routes
     Route::get('/load_features', [FeatureController::class, 'load_feature']);
     Route::get('/load_features/{id}', [FeatureController::class, 'get_feature']);
+    Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']); 
+    Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
 
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {

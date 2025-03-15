@@ -104,7 +104,7 @@ import { useRouter } from 'vue-router';
 import  FeatureCard  from '@/components/user/Features/FeatureCard.vue';
 import  FeatureImage  from '@/components/user/Features/FeatureImage.vue';
 import  FeatureInfo  from '@/components/user/Features/FeatureInfo.vue';
-import { usefeaturesStore } from '@/stores/features'
+import { usefeaturesStore } from '@/stores/user/featuresStore'
 
 export default {
   name: 'Features',

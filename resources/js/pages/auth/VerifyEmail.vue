@@ -89,9 +89,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { resendCode } from '@/services/verificationService'
 import { useCodeVerification } from '@/composables/auth/useCodeVerification'
-import AuthFormHeader from '../components/auth/AuthFormHeader.vue'
-import AlertMessage from '../components/auth/AlertMessage.vue'
-import VerificationCodeInput from '../components/auth/VerificationCodeInput.vue'
+import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
+import AlertMessage from '@/components/auth/AlertMessage.vue'
+import VerificationCodeInput from '@/components/auth/VerificationCodeInput.vue'
 import axios from 'axios'
 
 export default {

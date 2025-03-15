@@ -153,9 +153,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import AuthFormHeader from '../components/auth/AuthFormHeader.vue'
-import AlertMessage from '../components/auth/AlertMessage.vue'
-import SocialLoginButton from '../components/auth/SocialLoginButton.vue'
+import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
+import AlertMessage from '@/components/auth/AlertMessage.vue'
+import SocialLoginButton from '@/components/auth/SocialLoginButton.vue'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
 
 export default {
@@ -183,13 +183,12 @@ export default {
 
     // Sử dụng composable cho Turnstile
     const turnstileContainer = ref(null)
-    const turnstileSiteKey = '0x4AAAAAAAi8ATkfGjc9etVh'
     const {
       turnstileToken,
       turnstileError,
       initTurnstile,
       resetTurnstile
-    } = useTurnstile(turnstileSiteKey, turnstileContainer)
+    } = useTurnstile(null, turnstileContainer)
 
     //Methods
     const togglePassword = () => {

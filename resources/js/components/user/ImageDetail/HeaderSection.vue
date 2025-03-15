@@ -1,12 +1,11 @@
 <template>
     <div class="flex items-center p-4 border-b">
         <!-- Go back -->
-        <div class="flex items-center bg-gradient-text mr-2 rounded-xl">
+        <div class="flex items-center bg-gradient-text mr-2 rounded-full">
             <button @click="goBack" class="flex-shrink-0 px-4 py-1 text-[12px] font-medium text-white hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                Back
             </button>
         </div>
         <img src="https://imagedelivery.net/ZeGtsGSjuQe1P3UP_zk3fQ/ede24b65-497e-4940-ea90-06cc2757a200/storedata" class="w-8 h-8 rounded-full" alt="Profile" />

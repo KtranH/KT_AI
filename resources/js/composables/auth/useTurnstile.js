@@ -1,9 +1,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
+import { turnstileAPI } from '@/services/api'
 
-export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
+export function useTurnstile(siteKeyParam = null) {
   const turnstileWidget = ref(null)
   const turnstileError = ref(null)
   const turnstileToken = ref('')
+  const turnstileSiteKey = ref(siteKeyParam)
   
   // Callback function for Turnstile
   const handleTurnstileCallback = (token) => {
@@ -24,8 +27,27 @@ export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
     window.handleTurnstileError = handleTurnstileError
   }
 
+  // Fetch siteKey from the server if not provided
+  const fetchSiteKey = async () => {
+    if (turnstileSiteKey.value) return
+    
+    try {
+      const response = await turnstileAPI.getConfig()
+      turnstileSiteKey.value = response.data.siteKey
+    } catch (error) {
+      console.error('Failed to fetch Turnstile siteKey:', error)
+      turnstileError.value = 'Không thể lấy cấu hình bảo mật. Vui lòng làm mới trang.'
+    }
+  }
+
   // Load Turnstile script
-  const loadTurnstileScript = () => {
+  const loadTurnstileScript = async () => {
+    // First ensure we have the siteKey
+    await fetchSiteKey()
+    if (!turnstileSiteKey.value) {
+      return // Cannot load without siteKey
+    }
+    
     // If script is already loaded, render the widget directly
     if (window.turnstile) {
       renderTurnstileWidget()
@@ -65,7 +87,7 @@ export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
   // Render the Turnstile widget
   const renderTurnstileWidget = () => {
     // Make sure the DOM element and turnstile object are available
-    if (!turnstileWidget.value || !window.turnstile) return
+    if (!turnstileWidget.value || !window.turnstile || !turnstileSiteKey.value) return
     
     try {
       // Clear any existing widget first
@@ -75,7 +97,7 @@ export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
       
       // Render new widget
       window.turnstile.render(turnstileWidget.value, {
-        sitekey: siteKey,
+        sitekey: turnstileSiteKey.value,
         callback: function(token) {
           if (window.handleTurnstileCallback) {
             window.handleTurnstileCallback(token)
@@ -110,9 +132,9 @@ export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
   }
 
   // Initialize Turnstile
-  const initTurnstile = () => {
+  const initTurnstile = async () => {
     setupGlobalCallback()
-    loadTurnstileScript()
+    await loadTurnstileScript()
   }
 
   // Clean up on component unmount
@@ -126,15 +148,15 @@ export function useTurnstile(siteKey = '0x4AAAAAAAi8ATkfGjc9etVh') {
     }
   })
 
-  onMounted(() => {
-    initTurnstile()
+  onMounted(async () => {
+    await initTurnstile()
   })
 
   return {
     turnstileWidget,
     turnstileError,
     turnstileToken,
-    turnstileSiteKey: siteKey,
+    turnstileSiteKey,
     resetTurnstile,
     loadTurnstileScript,
     initTurnstile

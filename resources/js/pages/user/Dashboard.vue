@@ -134,7 +134,7 @@
 <script>
 import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth/authStore'
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import AOS from 'aos'
 

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import axios from 'axios'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth/authStore'
 
 // Components
 // Home Pages
@@ -60,7 +60,7 @@ const routes = [
     meta: { requiresAuth: true, title: 'KT_AI - Tạo ảnh' }
   },
   {
-    path: '/image/detail',
+    path: '/image/detail/:encodedID',
     name: 'detail',
     component: Detail,
     meta: { requiresAuth: true, title: 'KT_AI - Chi tiết ảnh' }

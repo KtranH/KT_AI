@@ -1,6 +1,6 @@
 import { ref, computed, onMounted } from 'vue'
-import router from '../router'
-import { authAPI } from '../services/api'
+import router from '../../router'
+import { authAPI } from '../../services/api'
 
 // Reactive state
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)

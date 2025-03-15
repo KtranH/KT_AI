@@ -75,7 +75,7 @@ import  GuideSection  from '@/components/user/GenImage/GuideSection.vue'
 import  ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
 import  ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
 import  PromptInput  from '@/components/user/GenImage/PromptInput.vue'
-import { usefeaturesStore } from '@/stores/features'
+import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index';
 
 export default {
