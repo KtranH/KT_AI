@@ -1,10 +1,10 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useImageStore } from '@/stores/user/imagesStore'
 
 export default function useLikes() {
     const isLiked = ref(false)
-    const totalLikes = ref(5532)
-    const postDate = ref('12 THÁNG 5, 2023')
-
+    const totalLikes = computed(() => useImageStore().data.sum_like)
+   
     const likePost = () => {
         if (isLiked.value) {
             totalLikes.value--
@@ -35,7 +35,6 @@ export default function useLikes() {
     return {
         isLiked,
         totalLikes,
-        postDate,
         likePost,
         likeComment,
         likeReply

@@ -8,7 +8,7 @@
                 </svg>
             </button>
         </div>
-        <img :src="userImage.avatar ? userImage.avatar : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
+        <img :src="userImage.avatar_url ? userImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
                 <span class="font-semibold">{{ userImage.name ? userImage.name : nameUser }}</span>
@@ -35,10 +35,8 @@
 
 <script>
 import { computed } from 'vue'
-import { onMounted } from 'vue'
 import useNavigation from '@/composables/user/useNavigation'
 import { useImageStore } from '@/stores/user/imagesStore'
-import { useRoute } from 'vue-router'
 
 export default {
     name: 'HeaderSection',
@@ -63,27 +61,7 @@ export default {
         const { goBack } = useNavigation()
         const dataImage = computed(() => useImageStore().data)
         const userImage = computed(() => useImageStore().user)
-        const route = useRoute()
-        const decodeID = (encodedID) => {
-            return atob(encodedID)
-        }
 
-        const fetchDataImage = async (id) => {
-            try
-            {
-                await useImageStore().fetchImages(id)
-            }
-            catch (error)
-            {
-                console.error('Error fetching image:', error)
-            }
-        }
-        
-        onMounted(() => {
-            if(dataImage.value === null || userImage.value === null) {
-                fetchDataImage(decodeID(route.params.encodedID))
-            }
-        })
         return {
             goBack,
             dataImage,

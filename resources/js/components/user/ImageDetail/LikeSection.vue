@@ -23,23 +23,20 @@
             </button>-->
         </div>
         <div class="font-semibold mb-1">{{ totalLikes }} lượt thích</div>
-        <div class="text-xs text-gray-500">{{ postDate }}</div>
     </div>
 </template>
 
 <script>
-import { defineProps } from 'vue'
 import useLikes from '@/composables/user/useLikes'
 
 export default {
     name: 'LikeSection',
     setup() {
-        const { isLiked, totalLikes, postDate, likePost } = useLikes()
+        const { isLiked, totalLikes, likePost } = useLikes()
 
         return {
             isLiked,
             totalLikes,
-            postDate,
             likePost
         }
     }
