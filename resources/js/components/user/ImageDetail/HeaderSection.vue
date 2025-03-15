@@ -8,10 +8,10 @@
                 </svg>
             </button>
         </div>
-        <img src="https://imagedelivery.net/ZeGtsGSjuQe1P3UP_zk3fQ/ede24b65-497e-4940-ea90-06cc2757a200/storedata" class="w-8 h-8 rounded-full" alt="Profile" />
+        <img :src="userImage.avatar ? userImage.avatar : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
-                <span class="font-semibold">Test thử</span>
+                <span class="font-semibold">{{ userImage.name ? userImage.name : nameUser }}</span>
                 <div class="flex items-center ml-1">
                     <span class="text-purple-400 mr-1">🔮</span>
                     <span class="text-pink-500">👡</span>
@@ -28,22 +28,66 @@
     <!-- Post Title -->
     <div class="px-4 py-2 border-b">
         <div class="flex items-center">
-            <h1 class="text-base font-bold">Beach girl</h1>
+            <h1 class="text-base font-bold">{{ dataImage.prompt ? dataImage.prompt : title }}</h1>
         </div>
     </div>
 </template>
 
 <script>
-import { defineProps } from 'vue'
+import { computed } from 'vue'
+import { onMounted } from 'vue'
 import useNavigation from '@/composables/user/useNavigation'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { useRoute } from 'vue-router'
 
 export default {
     name: 'HeaderSection',
+    props:
+    {
+        avataUser:
+        {
+            type: String,
+            default: 'https://imagedelivery.net/ZeGtsGSjuQe1P3UP_zk3fQ/ede24b65-497e-4940-ea90-06cc2757a200/storedata'
+        },
+        nameUser:
+        {
+            type: String,
+            default: 'Lỗi 404'
+        },
+        title: {
+            type: String,
+            default: 'Lỗi 404'
+        }
+    },
     setup() {
         const { goBack } = useNavigation()
+        const dataImage = computed(() => useImageStore().data)
+        const userImage = computed(() => useImageStore().user)
+        const route = useRoute()
+        const decodeID = (encodedID) => {
+            return atob(encodedID)
+        }
 
+        const fetchDataImage = async (id) => {
+            try
+            {
+                await useImageStore().fetchImages(id)
+            }
+            catch (error)
+            {
+                console.error('Error fetching image:', error)
+            }
+        }
+        
+        onMounted(() => {
+            if(dataImage.value === null || userImage.value === null) {
+                fetchDataImage(decodeID(route.params.encodedID))
+            }
+        })
         return {
-            goBack
+            goBack,
+            dataImage,
+            userImage
         }
     }
 }

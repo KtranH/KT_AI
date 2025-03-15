@@ -12,11 +12,13 @@ class ImageController extends Controller
     public function getImages($id)
     {
         try {
-            $information = Image::where('id', $id)->select('image_url')->first();
+            $information = Image::where('id', $id)->first();
             $imageUrls = $information ? json_decode($information->image_url, true) : [];
             return response()->json([
                 'success' => true,
-                'data' => $imageUrls
+                'images' => $imageUrls,
+                'data' => $information,
+                'user' => $information->user
             ], 200, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
             return response()->json([
