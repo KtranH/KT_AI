@@ -31,6 +31,7 @@ Route::prefix('api')->group(function () {
     Route::get('/load_features/{id}', [FeatureController::class, 'get_feature']);
     Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']); 
     Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
+    Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
 
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {

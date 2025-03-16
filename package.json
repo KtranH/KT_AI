@@ -17,6 +17,7 @@
     "dependencies": {
         "@vitejs/plugin-vue": "^5.2.1",
         "aos": "^2.3.4",
+        "dayjs": "^1.11.13",
         "emoji-picker-element": "^1.26.1",
         "fullpage.js": "^4.0.33",
         "pinia": "^3.0.1",

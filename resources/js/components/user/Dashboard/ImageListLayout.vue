@@ -7,58 +7,72 @@
         <div 
           v-for="(imageGroup, index) in imageGroups" 
           :key="index" 
-          class="relative aspect-square border border-gray-200 rounded-lg overflow-hidden group"
+          class="relative aspect-square border border-gray-200 rounded-lg overflow-hidden"
         >
-          <!-- Image carousel - Fixed with absolute positioning for all images -->
-          <div class="h-full relative">
-            <div 
-              v-for="(image, imgIndex) in imageGroup.images" 
-              :key="imgIndex"
-              class="absolute inset-0 w-full h-full transition-opacity duration-300 ease-in-out"
-              :class="imgIndex === imageGroup.currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'"
+          <!-- Image display -->
+          <div class="h-full w-full">
+            <img 
+              :src="imageGroup.images[imageGroup.currentIndex].url" 
+              class="object-cover w-full h-full cursor-pointer"
+              loading="lazy"
+              @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)"
             >
-              <img 
-                :src="image.url" 
-                class="object-cover w-full h-full cursor-pointer"
-                loading = "lazy"
-                @click="goToImageDetail(image)"
-              >
-            </div>
-            
-            <!-- Navigation arrows (only shown if multiple images) -->
-            <template v-if="imageGroup.images.length > 1">
-              <button 
-                class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImages(index, 'prev')"
-                v-show="imageGroup.currentIndex > 0"
-              >
+          </div>
+          <!-- Navigation controls -->
+          <div class="absolute inset-0 flex items-center justify-between">
+            <!-- Previous button -->
+            <button
+              v-if="imageGroup.images.length > 1 && imageGroup.currentIndex > 0"
+              @click.stop="prevImage(index)"
+              class="h-full flex items-center px-1 z-30"
+            >
+              <div class="bg-white/70 rounded-full p-2 shadow hover:bg-white/90 transition cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-              </button>
-              <button 
-                class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImages(index, 'next')"
-                v-show="imageGroup.currentIndex < imageGroup.images.length - 1"
-              >
+              </div>
+            </button>
+            
+            <!-- Empty middle space to allow image clicking -->
+            <div class="flex-grow h-full"></div>
+            
+            <!-- Next button -->
+            <button
+              v-if="imageGroup.images.length > 1 && imageGroup.currentIndex < imageGroup.images.length - 1"
+              @click.stop="nextImage(index)"
+              class="h-full flex items-center px-1 z-30"
+            >
+              <div class="bg-white/70 rounded-full p-2 shadow hover:bg-white/90 transition cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
-              </button>
-            </template>
-            
-            <!-- Indicator dots -->
+              </div>
+            </button>
+          </div>
+          
+          <!-- Indicator dots -->
+          <div 
+            v-if="imageGroup.images.length > 1" 
+            class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2 z-20"
+          >
+            <button
+              v-for="(_, dotIndex) in imageGroup.images" 
+              :key="dotIndex" 
+              class="w-2 h-2 rounded-full transition-colors duration-200 hover:scale-125"
+              :class="dotIndex === imageGroup.currentIndex ? 'bg-white' : 'bg-white/50'"
+              @click.stop="setCurrentIndex(index, dotIndex)"
+            ></button>
+          </div>
+          
+          <!-- Image count badge -->
+          <div class="flex items-center justify-between">
             <div 
               v-if="imageGroup.images.length > 1" 
-              class="absolute bottom-1 left-0 right-0 flex justify-center space-x-1 z-20"
+              class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20"
             >
-              <div 
-                v-for="(_, dotIndex) in imageGroup.images" 
-                :key="dotIndex" 
-                class="w-1.5 h-1.5 rounded-full transition-colors duration-200"
-                :class="dotIndex === imageGroup.currentIndex ? 'bg-white' : 'bg-white/50'"
-              ></div>
+              {{ imageGroup.currentIndex + 1 }}/{{ imageGroup.images.length }}
             </div>
+            <button class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer" @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)">Xem chi tiết</button>
           </div>
         </div>
       </div>
@@ -66,10 +80,10 @@
 </template>
 
 <script>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ImageGalleryLayout from './ImageGalleryLayout.vue'
-import { imageAPI } from '@/services/api'
+import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
   name: 'ImageList',
@@ -85,91 +99,110 @@ export default {
   setup(props) {
     const router = useRouter()
     const route = useRoute()
-    const imageGroups = ref([
-      {
-        currentIndex: 0,
-        type: 'created',
-        images: [
-          { url: "https://picsum.photos/id/237/400/400", id: 1 },
-          { url: "https://picsum.photos/id/238/400/400", id: 2 },
-          { url: "https://picsum.photos/id/239/400/400", id: 3 }
-        ]
-      },
-      {
-        currentIndex: 0,
-        type: 'uploaded',
-        images: [
-          { url: "https://picsum.photos/id/240/400/400", id: 4 },
-        ]
-      },
-      {
-        currentIndex: 0,
-        type: 'liked',
-        images: [
-          { url: "https://picsum.photos/id/242/400/400", id: 5 },
-          { url: "https://picsum.photos/id/243/400/400", id: 6 }
-        ]
-      }
-    ])
-
-    // Computed property for filtered images
-    const filteredImageGroups = computed(() => {
-      return imageGroups.value.filter(group => group.type === props.filter)
-    })
-
-    const fileInput = ref(null)
-    const previewVisible = ref(false)
-    const previewImages = ref([])
-    const previewIndex = ref(0)
-
-    // Open file selector
-    const openFileSelector = () => {
-      fileInput.value.click()
-    }
-
-    // Navigate between images in a group
-    const navigateImages = (groupIndex, direction) => {
-      const group = filteredImageGroups.value[groupIndex]
-      if (direction === 'next' && group.currentIndex < group.images.length - 1) {
-        group.currentIndex++
-      } else if (direction === 'prev' && group.currentIndex > 0) {
-        group.currentIndex--
+    const imageStore = useImageStore()
+    const imageGroups = ref([])
+    
+    // Thay đổi currentIndex cho một nhóm hình ảnh
+    const setCurrentIndex = (groupIndex, newIndex) => {
+      if (imageGroups.value[groupIndex]) {
+        imageGroups.value[groupIndex].currentIndex = newIndex
       }
     }
     
-    // Click to Image Detail
-    const goToImageDetail = (image) => {
-      const encodedID = btoa(image.id)
-      router.push(`/image/detail/${encodedID}`)
-    }
-
-    // Example of how you would fetch images from your Laravel backend
-    const fetchImages = async () => {
-      try {
-        const response = await fetch('/api/images')
-        const data = await response.json()
-        
-        // Transform the data to match our component structure
-        imageGroups.value = data.map(group => ({
-          currentIndex: 0,
-          type: group.type,
-          images: group.images
-        }))
-      } catch (error) {
-        console.error('Error fetching images:', error)
+    const nextImage = (groupIndex) => {
+      if (imageGroups.value[groupIndex]) {
+        const group = imageGroups.value[groupIndex]
+        if (group.currentIndex < group.images.length - 1) {
+          group.currentIndex++
+        }
       }
     }
-    return{
-        imageGroups: filteredImageGroups,
-        fileInput,
-        openFileSelector,
-        navigateImages,
-        previewVisible,
-        previewImages,
-        previewIndex,
-        goToImageDetail
+    
+    const prevImage = (groupIndex) => {
+      if (imageGroups.value[groupIndex]) {
+        const group = imageGroups.value[groupIndex]
+        if (group.currentIndex > 0) {
+          group.currentIndex--
+        }
+      }
+    }
+    
+    // Điều hướng đến trang chi tiết hình ảnh
+    const goToImageDetail = (id) => {
+      console.log('Going to image detail:', id)
+      const encodedID = btoa(id)
+      router.push(`/image/detail/${encodedID}`)
+    }
+    
+    // Lấy và nhóm hình ảnh theo bộ lọc và ID
+    const fetchAndGroupImages = () => {
+      let allImages = []
+      
+      if (props.filter === 'created') {
+        // Lấy từ store hoặc sử dụng dữ liệu mẫu
+        if (imageStore.imagesCreatedByUser && imageStore.imagesCreatedByUser.length > 0) {
+          allImages = imageStore.imagesCreatedByUser.flatMap(item => 
+            item.url.map(url => ({ url, id: item.id }))
+          )
+        } else {
+          // Dữ liệu mẫu
+          allImages = [
+            { url: "https://picsum.photos/id/237/400/400", id: 1 },
+            { url: "https://picsum.photos/id/238/400/400", id: 1 },
+            { url: "https://picsum.photos/id/239/400/400", id: 1 },
+            { url: "https://picsum.photos/id/240/400/400", id: 2 }
+          ]
+        }
+      } else if (props.filter === 'uploaded') {
+        allImages = [
+          { url: "https://picsum.photos/id/241/400/400", id: 1 }
+        ]
+      } else if (props.filter === 'liked') {
+        allImages = [
+          { url: "https://picsum.photos/id/242/400/400", id: 1 },
+          { url: "https://picsum.photos/id/243/400/400", id: 1 },
+          { url: "https://picsum.photos/id/244/400/400", id: 2 }
+        ]
+      }
+      
+      // Nhóm hình ảnh theo ID
+      const groupedImages = {}
+      allImages.forEach(image => {
+        if (!groupedImages[image.id]) {
+          groupedImages[image.id] = {
+            id: image.id,
+            currentIndex: 0,
+            images: []
+          }
+        }
+        groupedImages[image.id].images.push(image)
+      })
+      
+      // Chuyển đổi thành mảng
+      imageGroups.value = Object.values(groupedImages)
+    }
+    
+    watch(() => props.filter, () => {
+      fetchAndGroupImages()
+    }, { immediate: true })
+    
+    onMounted(() => {
+      if (props.filter === 'created' && imageStore.imagesCreatedByUser.length === 0) {
+        imageStore.fetchImagesCreatedByUser().then(() => {
+          fetchAndGroupImages()
+        })
+      } else {
+        fetchAndGroupImages()
+      }
+    })
+    
+    return {
+      imageGroups,
+      setCurrentIndex,
+      nextImage,
+      prevImage,
+      goToImageDetail
     }
   }
 }
-
 </script>

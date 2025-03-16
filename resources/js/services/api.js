@@ -17,6 +17,11 @@ export const imageAPI = {
   getImagesByID: (id) => apiClient.get(`/get_images_information/${id}`)
 }
 
+// Image Created By User API calls
+export const imageCreatedByUserAPI = {
+  getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user')
+}
+
 // Google API calls
 export const googleAPI = {
   getAuthUrl: () => apiClient.get('/auth/google/url'),

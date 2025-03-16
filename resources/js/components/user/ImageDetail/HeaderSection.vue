@@ -17,6 +17,7 @@
                     <span class="text-pink-500">👡</span>
                 </div>
             </div>
+            <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ formatTime(dataImage.created_at) }}</span>
         </div>
         <button class="ml-auto">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -34,9 +35,12 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+
 import useNavigation from '@/composables/user/useNavigation'
-import { useImageStore } from '@/stores/user/imagesStore'
+import useImage from '@/composables/user/useImage'
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
 
 export default {
     name: 'HeaderSection',
@@ -58,14 +62,20 @@ export default {
         }
     },
     setup() {
-        const { goBack } = useNavigation()
-        const dataImage = computed(() => useImageStore().data)
-        const userImage = computed(() => useImageStore().user)
+        dayjs.extend(relativeTime);
+        dayjs.locale('vi');
 
+        const { goBack } = useNavigation()
+        const { dataImage, userImage } = useImage()
+        
+        const formatTime = (time) => {
+            return dayjs(time).fromNow()
+        }
         return {
             goBack,
             dataImage,
-            userImage
+            userImage,
+            formatTime
         }
     }
 }

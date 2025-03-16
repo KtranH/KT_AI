@@ -52,6 +52,7 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue'
+import useImage from '@/composables/user/useImage'
 import useNavigation from '@/composables/user/useNavigation'
 import { useRoute } from 'vue-router'
 import { useImageStore } from '@/stores/user/imagesStore'
@@ -71,7 +72,7 @@ export default {
     setup(props) {
         const { previewImage } = useNavigation()
         const route = useRoute()
-        const imageUrls = computed(() => useImageStore().images)
+        const { imageUrls } = useImage()
         const isLoading = ref(true)
         const hasError = ref(false)
         const currentIndex = ref(0)
@@ -126,9 +127,7 @@ export default {
         }
 
         onMounted(() => {
-            if(imageUrls.value.length === 0) {
-                fetchImages(decodeID(route.params.encodedID))
-            }
+            fetchImages(decodeID(route.params.encodedID))
         })
         
         return {
