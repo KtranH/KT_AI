@@ -52,6 +52,7 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import useImage from '@/composables/user/useImage'
 import useNavigation from '@/composables/user/useNavigation'
 import { useRoute } from 'vue-router'
@@ -72,10 +73,12 @@ export default {
     setup(props) {
         const { previewImage } = useNavigation()
         const route = useRoute()
+        const router = useRouter()
         const { imageUrls } = useImage()
         const isLoading = ref(true)
         const hasError = ref(false)
         const currentIndex = ref(0)
+        const error = computed(() => useImageStore().error_message)
         
         const displayImages = computed(() => {
             if (imageUrls.value.length > 0) {
@@ -95,6 +98,9 @@ export default {
             
             try {
                 await useImageStore().fetchImages(id)
+                if (error.value) {
+                    router.push('/error/404')
+                }
             } catch (error) {
                 hasError.value = true
                 console.error('API Error:', error)

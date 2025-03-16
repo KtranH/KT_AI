@@ -16,6 +16,8 @@ import Features from '../pages/user/Features.vue'
 // Image Pages
 import CreateImage from '../pages/user/GenImage.vue'
 import Detail from '../pages/user/ImageDetail.vue'
+// Error Pages
+import Error404 from '../pages/errors/error404.vue'
 
 const routes = [
   {
@@ -65,6 +67,12 @@ const routes = [
     component: Detail,
     meta: { requiresAuth: true, title: 'KT_AI - Chi tiết ảnh' }
   },
+  {
+    path: '/error/404',
+    name: 'error-404',
+    component: Error404,
+    meta: { title: 'KT_AI - Lỗi 404' }
+  }
 ]
 
 const router = createRouter({

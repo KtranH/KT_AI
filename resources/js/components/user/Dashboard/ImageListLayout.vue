@@ -72,7 +72,7 @@
             >
               {{ imageGroup.currentIndex + 1 }}/{{ imageGroup.images.length }}
             </div>
-            <button class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer" @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)">Xem chi tiết</button>
+            <button class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer hover:bg-black/30 transition" @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)">Xem chi tiết</button>
           </div>
         </div>
       </div>
