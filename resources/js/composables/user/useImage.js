@@ -8,6 +8,6 @@ export default function useImage() {
     return {
         imageUrls,
         dataImage,
-        userImage
+        userImage,
     }
 }

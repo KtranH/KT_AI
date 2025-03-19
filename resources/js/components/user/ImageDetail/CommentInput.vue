@@ -7,31 +7,43 @@
         </button>
         <input
             type="text"
-            v-model="newComment"
+            v-model="commentText"
             placeholder="Thêm nhận xét..."
             class="flex-1 p-2 focus:outline-none"
-            @keyup.enter="addComment"
+            @keyup.enter="submitComment"
         />
         <button
-            @click="addComment"
+            @click="submitComment"
             class="text-blue-500 font-semibold px-2"
-            :class="{'opacity-50 cursor-default': !newComment.trim(), 'hover:text-blue-600': newComment.trim()}"
-            :disabled="!newComment.trim()"
+            :class="{'opacity-50 cursor-default': !canSubmit, 'hover:text-blue-600': canSubmit}"
+            :disabled="!canSubmit"
         >
             Đăng
         </button>
+
         <!-- Emoji Picker -->
-        <div v-if="showEmojiPicker" class="absolute bottom-14 left-0 z-50">
-            <EmojiPicker @select="addEmoji" :style="{ height: '400px', width: '300px' }" />
+        <Teleport to="body">
+            <div v-if="showEmojiPicker" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[9999]">
+                <div class="bg-white p-4 rounded-lg shadow-lg relative" style="width: 320px;">
+                    <button @click="showEmojiPicker = false" class="absolute top-0 right-2 text-gray-600 font-bold text-lg hover:text-gray-800">
+                    ✕
+                    </button>
+                    <EmojiPicker @select="addEmoji" :style="{ height: '400px', width: '300px' }" />
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Toast thông báo -->
+        <div v-if="showToast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300" :class="{'opacity-100': showToast, 'opacity-0': !showToast}">
+            Bình luận đã được thêm thành công!
         </div>
     </div>
 </template>
 
 <script>
-import { defineProps } from 'vue'
+import { defineProps, ref, computed, watch } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
-import useComments from '@/composables/user/useComments'
 import useEmoji from '@/composables/user/useEmoji'
 
 export default {
@@ -39,16 +51,61 @@ export default {
     components: {
         EmojiPicker
     },
-    setup() {
-        const { newComment, addComment } = useComments()
-        const { showEmojiPicker, toggleEmojiPicker, addEmoji } = useEmoji(newComment)
+    props: {
+        newComment: {
+            type: String,
+            required: true
+        }
+    },
+    emits: ['update:newComment', 'add-comment'],
+    setup(props, { emit }) {
+        const commentText = ref('')
+        const showToast = ref(false)
+        
+        // Theo dõi thay đổi từ prop và cập nhật commentText
+        watch(() => props.newComment, (newVal) => {
+            commentText.value = newVal
+        }, { immediate: true })
+        
+        // Cập nhật giá trị newComment khi commentText thay đổi
+        watch(() => commentText.value, (newVal) => {
+            emit('update:newComment', newVal)
+        })
+        
+        const { showEmojiPicker, toggleEmojiPicker, addEmoji: addEmojiToText } = useEmoji(commentText)
+        
+        const addEmoji = (emoji) => {
+            addEmojiToText(emoji)
+            // Đảm bảo sự thay đổi được truyền lên component cha
+            emit('update:newComment', commentText.value)
+        }
+        
+        const canSubmit = computed(() => {
+            return commentText.value && commentText.value.trim() !== ''
+        })
+        
+        const submitComment = () => {
+            if (!canSubmit.value) return
+            
+            console.log('Đang thêm bình luận:', commentText.value)
+            emit('add-comment')
+            emit('update:newComment', '')
+            
+            // Hiển thị toast
+            showToast.value = true
+            setTimeout(() => {
+                showToast.value = false
+            }, 3000)
+        }
 
         return {
-            newComment,
-            addComment,
+            commentText,
+            canSubmit,
+            submitComment,
             showEmojiPicker,
             toggleEmojiPicker,
-            addEmoji
+            addEmoji,
+            showToast
         }
     }
 }
@@ -60,4 +117,4 @@ emoji-picker {
   max-height: 400px;
   overflow-y: auto;
 }
-</style> 
+</style>

@@ -82,7 +82,7 @@
 <script>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ImageGalleryLayout from './ImageGalleryLayout.vue'
+import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
 import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
@@ -134,54 +134,55 @@ export default {
       router.push(`/image/detail/${encodedID}`)
     }
     
+
     // Lấy và nhóm hình ảnh theo bộ lọc và ID
     const fetchAndGroupImages = () => {
-      let allImages = []
-      
-      if (props.filter === 'created') {
-        // Lấy từ store hoặc sử dụng dữ liệu mẫu
-        if (imageStore.imagesCreatedByUser && imageStore.imagesCreatedByUser.length > 0) {
-          allImages = imageStore.imagesCreatedByUser.flatMap(item => 
-            item.url.map(url => ({ url, id: item.id }))
-          )
-        } else {
-          // Dữ liệu mẫu
-          allImages = [
-            { url: "https://picsum.photos/id/237/400/400", id: 1 },
-            { url: "https://picsum.photos/id/238/400/400", id: 1 },
-            { url: "https://picsum.photos/id/239/400/400", id: 1 },
-            { url: "https://picsum.photos/id/240/400/400", id: 2 }
-          ]
+        let allImages = []        
+        if (props.filter === 'created') {
+            // Lấy từ store hoặc sử dụng dữ liệu mẫu
+            if (imageStore.imagesCreatedByUser && imageStore.imagesCreatedByUser.length > 0) {
+                allImages = imageStore.imagesCreatedByUser.flatMap(item =>
+                    item.url.map(url => ({ url, id: item.id }))
+                )
+            } else {
+                // Dữ liệu mẫu
+                allImages = [
+                    { url: "https://picsum.photos/id/237/400/400", id: 1 },
+                    { url: "https://picsum.photos/id/238/400/400", id: 1 },
+                    { url: "https://picsum.photos/id/239/400/400", id: 1 },
+                    { url: "https://picsum.photos/id/240/400/400", id: 2 }
+                ]
+            }
+        } else if (props.filter === 'uploaded') {
+            allImages = [
+                { url: "https://picsum.photos/id/241/400/400", id: 1 }
+            ]
+        } else if (props.filter === 'liked') {
+            allImages = [
+                { url: "https://picsum.photos/id/242/400/400", id: 1 },
+                { url: "https://picsum.photos/id/243/400/400", id: 1 },
+                { url: "https://picsum.photos/id/244/400/400", id: 2 }
+            ]
         }
-      } else if (props.filter === 'uploaded') {
-        allImages = [
-          { url: "https://picsum.photos/id/241/400/400", id: 1 }
-        ]
-      } else if (props.filter === 'liked') {
-        allImages = [
-          { url: "https://picsum.photos/id/242/400/400", id: 1 },
-          { url: "https://picsum.photos/id/243/400/400", id: 1 },
-          { url: "https://picsum.photos/id/244/400/400", id: 2 }
-        ]
-      }
-      
-      // Nhóm hình ảnh theo ID
-      const groupedImages = {}
-      allImages.forEach(image => {
-        if (!groupedImages[image.id]) {
-          groupedImages[image.id] = {
-            id: image.id,
-            currentIndex: 0,
-            images: []
-          }
-        }
-        groupedImages[image.id].images.push(image)
-      })
-      
-      // Chuyển đổi thành mảng
-      imageGroups.value = Object.values(groupedImages)
+
+        // Nhóm hình ảnh theo ID
+        const groupedImages = {}
+        allImages.forEach(image => {
+            if (!groupedImages[image.id]) {
+                groupedImages[image.id] = {
+                    id: image.id,
+                    currentIndex: 0,
+                    images: []
+                }
+            }
+            groupedImages[image.id].images.push(image)
+        })
+
+        // Chuyển đổi thành mảng
+        imageGroups.value = Object.values(groupedImages)
     }
-    
+
+
     watch(() => props.filter, () => {
       fetchAndGroupImages()
     }, { immediate: true })

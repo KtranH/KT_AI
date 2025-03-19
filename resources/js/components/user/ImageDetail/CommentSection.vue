@@ -20,12 +20,16 @@
         <LikeSection />
 
         <!-- New comment input -->
-        <CommentInput />
+        <CommentInput 
+            :newComment="newComment"
+            @update:newComment="newComment = $event"
+            @add-comment="handleAddComment"
+        />
     </div>
 </template>
 
 <script>
-import { defineProps } from 'vue'
+import { defineProps, nextTick } from 'vue'
 import HeaderSection from './HeaderSection.vue'
 import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'
@@ -43,6 +47,8 @@ export default {
     setup() {
         const { 
             comments, 
+            newComment,
+            addComment,
             replyingToIndex, 
             replyingToNested, 
             replyToNestedUsername, 
@@ -64,9 +70,17 @@ export default {
         const handleCancelReply = () => {
             cancelReply()
         }
+        
+        const handleAddComment = () => {
+            addComment()
+            nextTick(() => {
+                newComment.value = ''
+            })
+        }
 
         return {
             comments,
+            newComment,
             replyingToIndex,
             replyingToNested,
             replyToNestedUsername,
@@ -74,7 +88,8 @@ export default {
             handleStartNestedReply,
             handleCancelReply,
             handleReplySubmit,
-            handleNestedReplySubmit
+            handleNestedReplySubmit,
+            handleAddComment
         }
     }
 }

@@ -17,7 +17,7 @@
                 v-model="replyText" 
                 class="flex-1 bg-transparent text-sm focus:outline-none ml-2"
                 :placeholder="`Trả lời cho ${replyToUsername}...`"
-                @keyup.enter="submitReply"
+                @keyup.enter="handleSubmitReply"
             />
 
             <!-- Emoji Picker -->
@@ -34,10 +34,10 @@
             
             <!-- Nút Đăng -->
             <button 
-                @click="submitReply" 
+                @click="handleSubmitReply" 
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500 font-semibold text-sm"
-                :class="{'opacity-50 cursor-default': !replyText.trim(), 'hover:text-blue-600': replyText.trim()}"
-                :disabled="!replyText.trim()"
+                :class="{'opacity-50 cursor-default': !canSubmit, 'hover:text-blue-600': canSubmit}"
+                :disabled="!canSubmit"
             >
                 Đăng
             </button>
@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import useEmoji from '@/composables/user/useEmoji'
@@ -85,6 +85,17 @@ export default {
         // Sử dụng composable function
         const { replyText, submitReply, cancelReply } = useReply(props, emit);
         const { showEmojiPicker, toggleEmojiPicker, addEmoji } = useEmoji(replyText)
+        
+        const canSubmit = computed(() => {
+            return replyText.value && replyText.value.trim() !== ''
+        })
+        
+        const handleSubmitReply = () => {
+            if (!canSubmit.value) return
+            
+            console.log(`Đang gửi phản hồi cho ${props.replyToUsername}:`, replyText.value)
+            submitReply()
+        }
 
         return {
             replyText,
@@ -92,7 +103,9 @@ export default {
             cancelReply,
             showEmojiPicker,
             toggleEmojiPicker,
-            addEmoji
+            addEmoji,
+            canSubmit,
+            handleSubmitReply
         }
     }
 }

@@ -80,13 +80,18 @@ export default function useComments() {
         }
     ])
 
+    // Avatar mặc định cho người dùng
+    const userAvatar = 'https://images2.thanhnien.vn/528068263637045248/2024/1/25/e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912.jpg'
+
     // Phương thức quản lý bình luận
     const addComment = () => {
         if (newComment.value.trim() === '') return
         
+        console.log("Thêm bình luận mới:", newComment.value)
+        
         comments.value.unshift({
             username: 'you',
-            avatar: 'https://images2.thanhnien.vn/528068263637045248/2024/1/25/e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912.jpg',
+            avatar: userAvatar,
             text: newComment.value,
             time: 'Vừa xong',
             likes: 0,
@@ -95,6 +100,7 @@ export default function useComments() {
             replies: []
         })
         newComment.value = ''
+        console.log("Danh sách bình luận sau khi thêm:", comments.value);
     }
 
     const toggleReplies = (comment) => {
@@ -102,17 +108,20 @@ export default function useComments() {
     }
 
     const startReply = (index, username) => {
+        console.log(`Bắt đầu trả lời bình luận của ${username} ở vị trí ${index}`)
         replyingToIndex.value = index
         replyingToNested.value = false
     }
 
     const startNestedReply = (index, username) => {
+        console.log(`Bắt đầu trả lời phản hồi của ${username} ở vị trí ${index}`)
         replyingToIndex.value = index
         replyingToNested.value = true
         replyToNestedUsername.value = username
     }
 
     const cancelReply = () => {
+        console.log("Hủy trả lời")
         replyingToIndex.value = -1
         replyingToNested.value = false
         replyToNestedUsername.value = ''
@@ -120,9 +129,17 @@ export default function useComments() {
 
     const handleReplySubmit = (data) => {
         const { commentId, text } = data
+        console.log(`Đang thêm phản hồi cho bình luận ${commentId}: ${text}`)
+        
+        // Kiểm tra xem commentId có tồn tại và có hợp lệ không
+        if (commentId < 0 || commentId >= comments.value.length) {
+            console.error(`ID bình luận không hợp lệ: ${commentId}`)
+            return
+        }
+        
         comments.value[commentId].replies.push({
             username: 'you',
-            avatar: 'https://via.placeholder.com/32',
+            avatar: userAvatar,
             text: text,
             time: 'Vừa xong',
             likes: 0,
@@ -136,11 +153,19 @@ export default function useComments() {
 
     const handleNestedReplySubmit = (data) => {
         const { commentId, text } = data
+        console.log(`Đang thêm phản hồi lồng cho bình luận ${commentId}: ${text}`)
+        
+        // Kiểm tra xem commentId có tồn tại và có hợp lệ không
+        if (commentId < 0 || commentId >= comments.value.length) {
+            console.error(`ID bình luận không hợp lệ: ${commentId}`)
+            return
+        }
+        
         const mentionText = `<span class="font-medium text-blue-500">@${replyToNestedUsername.value}</span> ${text}`
         
         comments.value[commentId].replies.push({
             username: 'you',
-            avatar: 'https://via.placeholder.com/32',
+            avatar: userAvatar,
             text: mentionText,
             time: 'Vừa xong',
             likes: 0,
@@ -165,4 +190,4 @@ export default function useComments() {
         handleReplySubmit,
         handleNestedReplySubmit
     }
-} 
+}

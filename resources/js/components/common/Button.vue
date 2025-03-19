@@ -20,7 +20,7 @@ export default {
         {
             type: String,
             default: 'button'
-        }
+        },
     },
     setup() {
         return {};

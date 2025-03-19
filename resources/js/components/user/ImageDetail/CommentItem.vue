@@ -87,26 +87,11 @@ export default {
         CommentReply
     },
     props: {
-        comment: {
-            type: Object,
-            required: true
-        },
-        index: {
-            type: Number,
-            required: true
-        },
-        replyingToIndex: {
-            type: Number,
-            required: true
-        },
-        replyingToNested: {
-            type: Boolean,
-            required: true
-        },
-        replyToNestedUsername: {
-            type: String,
-            required: true
-        }
+        comment: Object,
+        index: Number,
+        replyingToIndex: Number,
+        replyingToNested: Boolean,
+        replyToNestedUsername: String
     },
     emits: ['reply', 'nested-reply', 'cancel-reply', 'reply-submit', 'nested-reply-submit'],
     setup(props, { emit }) {

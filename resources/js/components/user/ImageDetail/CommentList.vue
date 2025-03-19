@@ -3,7 +3,7 @@
         <div class="space-y-4 p-4">
             <CommentItem
                 v-for="(comment, index) in comments"
-                :key="index"
+                :key="comment.username + '_' + index"
                 :comment="comment"
                 :index="index"
                 :replyingToIndex="replyingToIndex"
