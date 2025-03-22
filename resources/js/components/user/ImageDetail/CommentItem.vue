@@ -10,6 +10,8 @@
                 <span>{{ comment.time }}</span>
                 <span class="mx-1">•</span>
                 <button class="font-medium hover:underline" @click="onReply(index, comment.username)">Trả lời</button>
+                <button class="font-medium ml-2 hover:underline">Xóa</button>
+                <button class="font-medium ml-2 hover:underline">Sửa</button>
                 <div class="flex items-center ml-2">
                     <button @click="onLikeComment(comment)" class="flex items-center focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'text-red-500 fill-current': comment.isLiked}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -22,10 +24,10 @@
 
             <!-- Reply form -->
             <CommentReply
-                v-if="replyingToIndex === index"
+                v-if="replyingToIndex === index && !replyingToNested"
                 :commentId="index"
                 :replyToUsername="comment.username"
-                :isReplying="replyingToIndex === index"
+                :isReplying="replyingToIndex === index && !replyingToNested"
                 @reply-submitted="onReplySubmit"
                 @cancel-reply="onCancelReply"
             />
@@ -49,6 +51,8 @@
                                 <span>{{ reply.time }}</span>
                                 <span class="mx-1">•</span>
                                 <button class="font-medium hover:underline" @click="onNestedReply(index, reply.username)">Trả lời</button>
+                                <button class="font-medium ml-2 hover:underline">Xóa</button>
+                                <button class="font-medium ml-2 hover:underline">Sửa</button>
                                 <div class="flex items-center ml-2">
                                     <button @click="onLikeReply(comment, reply)" class="flex items-center focus:outline-none">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'text-red-500 fill-current': reply.isLiked}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

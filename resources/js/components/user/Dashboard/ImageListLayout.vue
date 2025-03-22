@@ -83,7 +83,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
-import { useImageStore } from '@/stores/user/imagesStore'
+import useImage from '@/composables/user/useImage'
 
 export default {
   name: 'ImageList',
@@ -99,8 +99,15 @@ export default {
   setup(props) {
     const router = useRouter()
     const route = useRoute()
-    const imageStore = useImageStore()
     const imageGroups = ref([])
+
+    // Sử dụng composable cải tiến
+    const { 
+      imagesCreatedByUser, 
+      isLoading,
+      hasError,
+      fetchImagesCreatedByUser 
+    } = useImage()
     
     // Thay đổi currentIndex cho một nhóm hình ảnh
     const setCurrentIndex = (groupIndex, newIndex) => {
@@ -139,9 +146,9 @@ export default {
     const fetchAndGroupImages = () => {
         let allImages = []        
         if (props.filter === 'created') {
-            // Lấy từ store hoặc sử dụng dữ liệu mẫu
-            if (imageStore.imagesCreatedByUser && imageStore.imagesCreatedByUser.length > 0) {
-                allImages = imageStore.imagesCreatedByUser.flatMap(item =>
+            // Lấy từ store thông qua composable
+            if (imagesCreatedByUser.value && imagesCreatedByUser.value.length > 0) {
+                allImages = imagesCreatedByUser.value.flatMap(item =>
                     item.url.map(url => ({ url, id: item.id }))
                 )
             } else {
@@ -188,8 +195,8 @@ export default {
     }, { immediate: true })
     
     onMounted(() => {
-      if (props.filter === 'created' && imageStore.imagesCreatedByUser.length === 0) {
-        imageStore.fetchImagesCreatedByUser().then(() => {
+      if (props.filter === 'created' && imagesCreatedByUser.value.length === 0) {
+        fetchImagesCreatedByUser().then(() => {
           fetchAndGroupImages()
         })
       } else {

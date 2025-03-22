@@ -52,11 +52,9 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import useImage from '@/composables/user/useImage'
 import useNavigation from '@/composables/user/useNavigation'
 import { useRoute } from 'vue-router'
-import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
     name: 'ImageViewer',
@@ -73,12 +71,17 @@ export default {
     setup(props) {
         const { previewImage } = useNavigation()
         const route = useRoute()
-        const router = useRouter()
-        const { imageUrls } = useImage()
-        const isLoading = ref(true)
-        const hasError = ref(false)
         const currentIndex = ref(0)
-        const error = computed(() => useImageStore().error_message)
+        
+        // Sử dụng composable cải tiến
+        const { 
+            imageUrls, 
+            isLoading, 
+            hasError, 
+            errorMessage,
+            fetchImages, 
+            decodeID 
+        } = useImage()
         
         const displayImages = computed(() => {
             if (imageUrls.value.length > 0) {
@@ -87,27 +90,6 @@ export default {
                 return [props.imageUrl]
             }
         })
-        
-        const decodeID = (encodedID) => {
-            return atob(encodedID)
-        }
-        
-        const fetchImages = async (id) => {
-            isLoading.value = true
-            hasError.value = false
-            
-            try {
-                await useImageStore().fetchImages(id)
-                if (error.value) {
-                    router.push('/error/404')
-                }
-            } catch (error) {
-                hasError.value = true
-                console.error('API Error:', error)
-            } finally {
-                isLoading.value = false
-            }
-        }
         
         // Navigation functions
         const nextImage = () => {
