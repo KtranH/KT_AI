@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>KT_AI - Sáng tạo ảnh với AI</title>
         <link rel="icon" href="{{ asset('img/voice.png') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
         <script src="https://cdn.tailwindcss.com"></script>
         <!-- Cloudflare Turnstile connections -->
         <link rel="preconnect" href="https://challenges.cloudflare.com">

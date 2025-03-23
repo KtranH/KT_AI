@@ -63,6 +63,15 @@
                         </div>
                     </div>
                 </div>
+                <ImageGalleryLayout
+                    :images="images"
+                    :previewImages="previewImages"
+                    :previewIndex="previewIndex"
+                    :previewVisible="previewVisible"
+                    @navigateImages="navigateImages"
+                    @openPreview="openPreview"
+                    @navigatePreview="navigatePreview"
+                />
             </div>
         </div>
     </div>
@@ -75,6 +84,7 @@ import  GuideSection  from '@/components/user/GenImage/GuideSection.vue'
 import  ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
 import  ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
 import  PromptInput  from '@/components/user/GenImage/PromptInput.vue'
+import  ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index';
 import { decodedID } from '@/utils'
@@ -83,6 +93,7 @@ export default {
     components: {
         GuideSection,
         ImageParameters,
+        ImageGalleryLayout,
         PromptInput,
         ImageUploader
     },

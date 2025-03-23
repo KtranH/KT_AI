@@ -1,6 +1,6 @@
 <template>
-    <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh</h2>
+    <div class="bg-white rounded-xl shadow-lg p-6 mt-8 container mx-auto">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh người dùng tải lên</h2>
       
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         <!-- Add image button cell -->

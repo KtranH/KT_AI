@@ -9,6 +9,8 @@ import 'aos/dist/aos.css'
 import { createPinia } from 'pinia';
 import piniaPersist from 'pinia-plugin-persistedstate';
 import { registerGlobalComponents } from './components/common';
+import VueSweetalert2 from 'vue-sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -28,9 +30,10 @@ axios.interceptors.request.use(config => {
 // Tạo chỉ một Vue app instance duy nhất
 const app = createApp(App)
 
-// Tạo pinia 
+// Use pinia
 const pinia = createPinia()
 pinia.use(piniaPersist);
+app.use(pinia)
 
 // Use plugins
 app.use(router)
@@ -40,7 +43,7 @@ app.use(VueFullPage, {
   css3: true,
   credits: { enabled: false }
 })
-app.use(pinia)
+app.use(VueSweetalert2)
 
 // Đăng ký các component toàn cục
 registerGlobalComponents(app);

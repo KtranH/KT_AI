@@ -31,8 +31,10 @@ export default function useLikes() {
             
             if (currentLikeStatus) {
                 totalLikes.value--
+                useImageStore().data.sum_like--
             } else {
                 totalLikes.value++
+                useImageStore().data.sum_like++
             }
             
             // Call API

@@ -19,11 +19,33 @@
             </div>
             <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ formatTime(dataImage.created_at) }}</span>
         </div>
-        <button class="ml-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-            </svg>
-        </button>
+         <!-- Setting post button with dropdown -->
+        <div class="ml-auto relative">
+            <button @click="toggleDropdown" class="focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+            </button>
+            <!-- Dropdown menu -->
+            <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10">
+                <div class="py-1" v-if="user.id === userImage.id">
+                    <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <i class="fa-solid fa-pen-to-square"></i> Sửa bài viết
+                    </button>
+                    <ConfirmUpdate ref="updateRef" />
+                    <button @click="handleDelete" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <i class="fa-solid fa-trash"></i> Xóa bài viết
+                    </button>
+                    <ConfirmDelete ref="deleteRef" />
+                </div>
+                <div class="py-1" v-else>
+                    <button @click="handleReport" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <i class="fa-solid fa-bell"></i> Báo cáo bài viết
+                    </button>
+                    <ConfirmReport ref="reportRef" />
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Post Title -->
@@ -38,12 +60,23 @@
 
 import useNavigation from '@/composables/user/useNavigation'
 import useImage from '@/composables/user/useImage'
+import { useAuthStore } from '@/stores/auth/authStore'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
+import { ref } from 'vue'
+import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
+import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
+import ConfirmReport from '@/components/common/ConfirmReport.vue'
 
 export default {
     name: 'HeaderSection',
+    components:
+    {
+        ConfirmUpdate,
+        ConfirmDelete,
+        ConfirmReport
+    },
     props:
     {
         avataUser:
@@ -64,18 +97,61 @@ export default {
     setup() {
         dayjs.extend(relativeTime);
         dayjs.locale('vi');
-
+        
+        const isDropdownOpen = ref(false)
         const { goBack } = useNavigation()
         const { dataImage, userImage } = useImage()
+        const auth = useAuthStore()
+        const user = auth.user.value
+        const updateRef = ref(null)
+        const deleteRef = ref(null)
+        const reportRef = ref(null)
         
         const formatTime = (time) => {
+            console.log(user)
             return dayjs(time).fromNow()
+        }
+
+        const toggleSetting = () => {
+            isOpen.value = !isOpen.value
+        }
+
+        const toggleDropdown = () => {
+            isDropdownOpen.value = !isDropdownOpen.value
+        }
+
+        const handleEdit = () => {
+            isDropdownOpen.value = false
+            updateRef.value.showAlert()
+            console.log('Edit post clicked')
+        }
+
+        const handleReport = () => {
+            isDropdownOpen.value = false
+            reportRef.value.showAlert()
+            console.log('Report post clicked')
+        }
+
+        const handleDelete = () => {
+            isDropdownOpen.value = false
+            deleteRef.value.showAlert()
+            console.log('Delete post clicked')
         }
         return {
             goBack,
             dataImage,
             userImage,
-            formatTime
+            formatTime,
+            toggleSetting,
+            isDropdownOpen,
+            toggleDropdown,
+            handleEdit,
+            handleDelete,
+            handleReport,
+            user,
+            updateRef,
+            deleteRef,
+            reportRef
         }
     }
 }
