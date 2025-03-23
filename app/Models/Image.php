@@ -15,7 +15,8 @@ class Image extends Model
         'sum_comment',
         'privacy_status',
         'metadata',
-        'status_image'
+        'status_image',
+        'list_like'
     ];
 
     protected $casts = [

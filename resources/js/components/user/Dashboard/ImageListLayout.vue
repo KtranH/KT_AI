@@ -84,6 +84,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
 import useImage from '@/composables/user/useImage'
+import { encodedID } from '@/utils'
 
 export default {
   name: 'ImageList',
@@ -137,11 +138,9 @@ export default {
     // Điều hướng đến trang chi tiết hình ảnh
     const goToImageDetail = (id) => {
       console.log('Going to image detail:', id)
-      const encodedID = btoa(id)
-      router.push(`/image/detail/${encodedID}`)
+      router.push(`/image/detail/${encodedID(id)}`)
     }
     
-
     // Lấy và nhóm hình ảnh theo bộ lọc và ID
     const fetchAndGroupImages = () => {
         let allImages = []        

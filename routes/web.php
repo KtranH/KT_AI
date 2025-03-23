@@ -32,13 +32,17 @@ Route::prefix('api')->group(function () {
     Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']); 
     Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
     Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
-
+    Route::get('/get_likes_information/{id}', [ImageController::class, 'getLikes']);
+    
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/check_liked/{id}', [ImageController::class, 'checkLiked']);
+        Route::post('/like_post/{id}', [ImageController::class, 'likePost']);
+        Route::post('/unlike_post/{id}', [ImageController::class, 'unlikePost']);
     });
     // Tránh trùng lặp route logout
     // Route::post('/logout', [AuthController::class, 'logout']);

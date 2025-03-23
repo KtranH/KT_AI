@@ -39,6 +39,32 @@ export const featuresAPI = {
   getById: (id) => apiClient.get(`/load_features/${id}`)
 }
 
+// Like API calls
+export const likeAPI = {
+  getLikesByID: (id) => apiClient.get(`/get_likes_information/${id}`),
+  checkLiked: (id) => apiClient.get(`/check_liked/${id}`),
+  likePost: async (id) => {
+    try {
+      const response = await apiClient.post(`/like_post/${id}`)
+      return response
+    } catch (error) {
+      console.error('Lỗi khi thực hiện like post:', error)
+      // Ném lỗi để xử lý ở composable
+      throw error
+    }
+  },
+  unlikePost: async (id) => {
+    try {
+      const response = await apiClient.post(`/unlike_post/${id}`)
+      return response
+    } catch (error) {
+      console.error('Lỗi khi thực hiện unlike post:', error)
+      // Ném lỗi để xử lý ở composable
+      throw error
+    }
+  }
+}
+
 // Generic API - for any other endpoints
 export const genericAPI = {
   get: (endpoint, config) => apiClient.get(endpoint, config),

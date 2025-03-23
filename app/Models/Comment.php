@@ -10,7 +10,9 @@ class Comment extends Model
         'user_id',
         'image_id',
         'parent_id',
-        'content'
+        'content',
+        'sum_like',
+        'list_like'
     ];
 
     // Relationship với User (nhiều-1)

@@ -32,8 +32,8 @@ export const generateRandomSeed = () => {
 
 // Kiểm tra có phải là file ảnh không
 export const isFileImage = (file) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    return allowedTypes.includes(file.type);
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  return allowedTypes.includes(file.type);
 };
 
 // Kiểm tra file ảnh có dưới 2MB không
@@ -41,3 +41,24 @@ export const sizeImageUnder2MB = (file) => {
     const maxSize = 2 * 1024 * 1024; // 2MB
     return file.size <= maxSize;
 }; 
+
+// Kiểm tra độ dài văn bản dưới 256 kí tự
+export const textLengthUnder256 = (text) => {
+  return text.length <= 256;
+};
+
+// Giải mã ID
+export const decodedID = (encodedID) => {
+  return atob(encodedID)
+}
+
+// Mã hóa ID
+export const encodedID = (id) => {
+  return btoa(id)
+}
+
+// Kiểm tra xem thao tác có quá nhanh không
+export const isActionTooFast = (lastActionTime, threshold = 1000) => {
+  const now = Date.now()
+  return now - lastActionTime < threshold
+}

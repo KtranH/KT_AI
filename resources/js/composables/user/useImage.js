@@ -47,11 +47,6 @@ export default function useImage() {
         }
     }
     
-    // Helpers
-    const decodeID = (encodedID) => {
-        return atob(encodedID)
-    }
-    
     return {
         // States
         isLoading,
@@ -67,6 +62,5 @@ export default function useImage() {
         // Methods
         fetchImages,
         fetchImagesCreatedByUser,
-        decodeID
     }
 }

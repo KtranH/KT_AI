@@ -1,11 +1,22 @@
 <template>
     <div class="border-t border-b p-4">
         <div class="flex items-center mb-2">
-            <button class="mr-4 focus:outline-none" @click="likePost">
+            <button class="mr-4 focus:outline-none" @click="userLikePost">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" :class="{'text-red-500 fill-current': isLiked}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
             </button>
+            <!-- List User name Liked -->
+            <div class="flex items-center">
+                <div v-if="listLikes.length > 0" class="flex items-center">
+                    <div v-for="(like, index) in listLikes" :key="index" class="flex items-center">    
+                        <span class="ml-2 text-gray-500 text-sm font-medium">{{ like.user_name }}</span>
+                        <span v-if="index < listLikes.length - 1">,</span>
+                    </div>
+                    <span v-if="listLikes.length < totalLikes" class="text-gray-500 text-sm font-medium ml-2"> và {{ totalLikes - listLikes.length }} người khác</span>
+                </div>
+                <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
+            </div>
             <!--<button class="mr-4 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -23,21 +34,53 @@
             </button>-->
         </div>
         <div class="font-semibold mb-1">{{ totalLikes }} lượt thích</div>
+        <VueSonner />
     </div>
 </template>
 
 <script>
 import useLikes from '@/composables/user/useLikes'
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { decodedID } from '@/utils'
+import { isActionTooFast } from '@/utils'
+import { ref } from 'vue'
+import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export default {
     name: 'LikeSection',
+    components: {
+        VueSonner
+    },
     setup() {
-        const { isLiked, totalLikes, likePost } = useLikes()
+        const isFast = ref(false)
+        const lastLikeTime = ref(0)
+        const { isLiked, totalLikes, likePost, listLikes, fetchLikes } = useLikes()
+        const route = useRoute()
+
+        const userLikePost = async () => {
+            if (isActionTooFast(lastLikeTime.value)) {
+                toast.error('Vui lòng đợi 1 giây trước khi thực hiện thao tác khác', {
+                    duration: 3000,            
+                    position: 'bottom-right'
+                })
+                isFast.value = true
+            }
+            lastLikeTime.value = Date.now()
+            await likePost()
+            isFast.value = false
+        }
+        onMounted(async () => {
+            await fetchLikes(decodedID(route.params.encodedID))
+        })
 
         return {
             isLiked,
             totalLikes,
-            likePost
+            likePost,
+            listLikes,
+            userLikePost,
+            isFast
         }
     }
 }

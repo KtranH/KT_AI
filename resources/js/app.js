@@ -32,9 +32,6 @@ const app = createApp(App)
 const pinia = createPinia()
 pinia.use(piniaPersist);
 
-// Sử dụng Pinia trước khi mount
-app.use(pinia);
-
 // Use plugins
 app.use(router)
 app.use(VueFullPage, {
@@ -43,6 +40,7 @@ app.use(VueFullPage, {
   css3: true,
   credits: { enabled: false }
 })
+app.use(pinia)
 
 // Đăng ký các component toàn cục
 registerGlobalComponents(app);
@@ -62,6 +60,7 @@ router.afterEach(() => {
         AOS.refresh()
     }, 100)
 })
+
 
 // Đảm bảo app chỉ được mount một lần
 app.mount("#app")

@@ -31,7 +31,7 @@
                 >
                   <template #cta>
                     <router-link
-                      :to="{ name: 'createimage', params: { encodedID: encodeID(feature.id) }}"
+                      :to="{ name: 'createimage', params: { encodedID: encodedID(feature.id) }}"
                       class="inline-block mt-8 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl transform transition-all duration-500 hover:scale-105 hover:shadow-lg"
                     >
                       Xem chi tiết
@@ -105,6 +105,7 @@ import  FeatureCard  from '@/components/user/Features/FeatureCard.vue';
 import  FeatureImage  from '@/components/user/Features/FeatureImage.vue';
 import  FeatureInfo  from '@/components/user/Features/FeatureInfo.vue';
 import { usefeaturesStore } from '@/stores/user/featuresStore'
+import { encodedID } from '@/utils'
 
 export default {
   name: 'Features',
@@ -121,10 +122,8 @@ export default {
     const isScrolling = ref(false)
     const error_message = ref(null)
     const icon_title = ref('/img/ai.png')
-    const encodeID = (id) => {
-      return btoa(id)
-    }
     const storeFeatures = usefeaturesStore()
+
     // Dữ liệu tính năng (nên được lấy từ API)
     const features = computed(() => storeFeatures.features) 
     
@@ -213,7 +212,7 @@ export default {
       goToFeature,
       nextFeature,
       prevFeature,
-      encodeID,
+      encodedID,
     }
   }
 }

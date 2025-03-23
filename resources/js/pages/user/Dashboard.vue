@@ -136,6 +136,8 @@ import { onMounted, ref, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
+import { formatDate } from '@/utils/index'
+
 import AOS from 'aos'
 
 export default {
@@ -157,7 +159,7 @@ export default {
     const currentPreviewImage = ref("");
     const previewType = ref("");
     const activeTab = ref('created'); // Default active tab
-
+    
     // Fetch data
     const tabs = [
       { id: 'created', name: 'Ảnh đã tạo' },
@@ -166,11 +168,6 @@ export default {
     ];
 
     // Methods
-    const formatDate = (date) => {
-      if (!date) return 'N/A'
-      return new Date(date).toLocaleDateString('vi-VN')
-    }
-
     const logout = async () => {
       try {
         const response = await auth.logout()
@@ -191,6 +188,7 @@ export default {
 
     // Mounted hook
     onMounted(() => {
+      console.log(user.sum_like)
       auth.checkAuth()
       setTimeout(() => {
         AOS.refresh()

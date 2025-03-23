@@ -55,6 +55,7 @@ import { onMounted, ref, computed } from 'vue'
 import useImage from '@/composables/user/useImage'
 import useNavigation from '@/composables/user/useNavigation'
 import { useRoute } from 'vue-router'
+import { decodedID } from '@/utils'
 
 export default {
     name: 'ImageViewer',
@@ -115,7 +116,7 @@ export default {
         }
 
         onMounted(() => {
-            fetchImages(decodeID(route.params.encodedID))
+            fetchImages(decodedID(route.params.encodedID))
         })
         
         return {

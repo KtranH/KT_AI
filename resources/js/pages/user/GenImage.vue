@@ -77,6 +77,7 @@ import  ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
 import  PromptInput  from '@/components/user/GenImage/PromptInput.vue'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index';
+import { decodedID } from '@/utils'
 
 export default {
     components: {
@@ -111,7 +112,7 @@ export default {
         const secondaryImage = ref(null)
         const route = useRoute()
         const router = useRouter()
-        const decodedID = ref(null)
+        const decoded_value = ref(null)
         const error_message = ref(null)
         
         // Items cho hướng dẫn
@@ -123,11 +124,6 @@ export default {
             "❌ Vui lòng không bỏ trống ô thông tin đầu vào cũng như tải ảnh đầy đủ vào các ô tải ảnh lên.",
             "🚻 Không được nhập các từ ngữ nhạy cảm để tạo ảnh."
         ])
-
-        // Decode ID
-        const decodeID = (encodedID) => {
-            return atob(encodedID);
-        };
 
         // Xử lý nút quay lại
         const goBack = () => {
@@ -166,7 +162,7 @@ export default {
         // Gọi API lấy thông tin
         const get_feature = async () => {
             try {
-                featureStore.fetchFeatureDetail(decodedID.value)
+                featureStore.fetchFeatureDetail(decoded_value.value)
             } catch (error) {
                 error_message.value = 'Không thể kết nối đến máy chủ'
             }
@@ -175,7 +171,7 @@ export default {
         // Mounted Hook
         onMounted(() => {
             const encodedID = route.params.encodedID;
-            decodedID.value = decodeID(encodedID);
+            decoded_value.value = decodedID(encodedID);
             get_feature();
         });
         
@@ -190,7 +186,7 @@ export default {
             mainImage,
             secondaryImage,
             error_message,
-            decodedID,
+            decoded_value,
             icon_title,
             guideItems,
             goBack,
