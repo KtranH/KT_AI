@@ -11,6 +11,7 @@ import piniaPersist from 'pinia-plugin-persistedstate';
 import { registerGlobalComponents } from './components/common';
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
+import { clickOutside } from './directives/clickOutside';
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -47,6 +48,9 @@ app.use(VueSweetalert2)
 
 // Đăng ký các component toàn cục
 registerGlobalComponents(app);
+
+// Đăng ký các directives toàn cục
+app.directive('click-outside', clickOutside);
 
 // Khởi tạo AOS với cấu hình mặc định
 AOS.init({

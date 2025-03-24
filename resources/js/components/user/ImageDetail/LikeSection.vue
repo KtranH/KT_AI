@@ -13,7 +13,7 @@
                         <span class="ml-2 text-gray-500 text-sm font-medium">{{ like.user_name }}</span>
                         <span v-if="index < listLikes.length - 1">,</span>
                     </div>
-                    <span v-if="listLikes.length < totalLikes" class="text-gray-500 text-sm font-medium ml-2"> và {{ totalLikes - listLikes.length }} người khác</span>
+                    <span v-if="listLikes.length < currentImageLikes" class="text-gray-500 text-sm font-medium ml-2"> và {{ currentImageLikes - listLikes.length }} người khác</span>
                 </div>
                 <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
             </div>
@@ -33,19 +33,19 @@
                 </svg>
             </button>-->
         </div>
-        <div class="font-semibold mb-1">{{ totalLikes }} lượt thích</div>
+        <div class="font-semibold mb-1">{{ currentImageLikes }} lượt thích</div>
         <VueSonner />
     </div>
 </template>
 
 <script>
 import useLikes from '@/composables/user/useLikes'
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount, watch, computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { decodedID } from '@/utils'
 import { isActionTooFast } from '@/utils'
-import { ref } from 'vue'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
     name: 'LikeSection',
@@ -55,8 +55,16 @@ export default {
     setup() {
         const isFast = ref(false)
         const lastLikeTime = ref(0)
-        const { isLiked, totalLikes, likePost, listLikes, fetchLikes } = useLikes()
         const route = useRoute()
+        const imageStore = useImageStore()
+        
+        // Lấy dữ liệu từ composable useLikes
+        const { isLiked, totalLikes, likePost, listLikes, fetchLikes } = useLikes()
+        
+        // Tạo một computed để luôn lấy giá trị mới nhất từ imageStore
+        const currentImageLikes = computed(() => {
+            return imageStore.data?.sum_like || 0
+        })
 
         const userLikePost = async () => {
             if (isActionTooFast(lastLikeTime.value)) {
@@ -65,18 +73,28 @@ export default {
                     position: 'bottom-right'
                 })
                 isFast.value = true
+                return
             }
             lastLikeTime.value = Date.now()
             await likePost()
             isFast.value = false
         }
+        
+        // Theo dõi sự thay đổi của route.params.encodedID để cập nhật dữ liệu khi chuyển bài viết
+        watch(() => route.params.encodedID, async (newId, oldId) => {
+            if (newId && newId !== oldId) {
+                await fetchLikes(decodedID(newId))
+            }
+        })
+
         onMounted(async () => {
+            // Lấy thông tin like khi component được mount
             await fetchLikes(decodedID(route.params.encodedID))
         })
 
         return {
             isLiked,
-            totalLikes,
+            currentImageLikes,
             likePost,
             listLikes,
             userLikePost,

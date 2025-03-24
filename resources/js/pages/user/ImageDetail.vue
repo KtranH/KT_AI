@@ -9,7 +9,7 @@
                 <ImageViewer />
                 
                 <!-- Right column: Post header, comments, interactions -->
-                <CommentSection />
+                <CommentSection :imageId="imageId" />
             </div>
         </div>
     </div>
@@ -19,12 +19,22 @@
 <script>
 import ImageViewer from '@/components/user/ImageDetail/ImageViewer.vue'
 import CommentSection from '@/components/user/ImageDetail/CommentSection.vue'
+import { useRoute } from 'vue-router'
+import { decodedID } from '@/utils'
 
 export default {
     name: 'Detail',
     components: {
         ImageViewer,
         CommentSection
+    },
+    setup() {
+        const route = useRoute()
+        const imageId = decodedID(route.params.encodedID)
+        
+        return {
+            imageId
+        }
     }
 }
 </script>

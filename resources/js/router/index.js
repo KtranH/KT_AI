@@ -18,6 +18,8 @@ import CreateImage from '../pages/user/GenImage.vue'
 import Detail from '../pages/user/ImageDetail.vue'
 // Error Pages
 import Error404 from '../pages/errors/error404.vue'
+// Settings Pages
+import Settings from '../pages/user/Settings.vue'
 
 const routes = [
   {
@@ -66,6 +68,12 @@ const routes = [
     name: 'detail',
     component: Detail,
     meta: { requiresAuth: true, title: 'KT_AI - Chi tiết ảnh' }
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: Settings,
+    meta: { requiresAuth: true, title: 'KT_AI - Cài đặt' }
   },
   {
     path: '/error/404',

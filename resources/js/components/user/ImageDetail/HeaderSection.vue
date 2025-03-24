@@ -1,23 +1,17 @@
 <template>
     <div class="flex items-center p-4 border-b">
         <!-- Go back -->
-        <div class="flex items-center bg-gradient-text mr-2 rounded-full">
-            <button @click="goBack" class="flex-shrink-0 px-4 py-1 text-[12px] font-medium text-white hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-        </div>
-        <img :src="userImage.avatar_url ? userImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
+        <ButtonBackVue customClass="flex items-center bg-gradient-text mr-2 rounded-full hover: text-white font-bold py-2 px-4 rounded-full"/>
+        <img :src="currentUserImage && currentUserImage.avatar_url ? currentUserImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
-                <span class="font-semibold">{{ userImage.name ? userImage.name : nameUser }}</span>
+                <span class="font-semibold">{{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}</span>
                 <div class="flex items-center ml-1">
                     <span class="text-purple-400 mr-1">🔮</span>
                     <span class="text-pink-500">👡</span>
                 </div>
             </div>
-            <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ formatTime(dataImage.created_at) }}</span>
+            <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ dataImage && dataImage.created_at ? formatTime(dataImage.created_at) : 'vừa xong' }}</span>
         </div>
          <!-- Setting post button with dropdown -->
         <div class="ml-auto relative">
@@ -28,7 +22,7 @@
             </button>
             <!-- Dropdown menu -->
             <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10">
-                <div class="py-1" v-if="user.id === userImage.id">
+                <div class="py-1" v-if="user && currentUserImage && user.id === currentUserImage.id">
                     <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <i class="fa-solid fa-pen-to-square"></i> Sửa bài viết
                     </button>
@@ -51,23 +45,24 @@
     <!-- Post Title -->
     <div class="px-4 py-2 border-b">
         <div class="flex items-center">
-            <h1 class="text-base font-bold">{{ dataImage.prompt ? dataImage.prompt : title }}</h1>
+            <h1 class="text-base font-bold">{{ dataImage && dataImage.prompt ? dataImage.prompt : title }}</h1>
         </div>
     </div>
 </template>
 
 <script>
 
-import useNavigation from '@/composables/user/useNavigation'
 import useImage from '@/composables/user/useImage'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
-import { ref } from 'vue'
 import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
 import ConfirmReport from '@/components/common/ConfirmReport.vue'
+import ButtonBackVue from '../../common/ButtonBack.vue'
 
 export default {
     name: 'HeaderSection',
@@ -75,7 +70,8 @@ export default {
     {
         ConfirmUpdate,
         ConfirmDelete,
-        ConfirmReport
+        ConfirmReport,
+        ButtonBackVue
     },
     props:
     {
@@ -99,16 +95,18 @@ export default {
         dayjs.locale('vi');
         
         const isDropdownOpen = ref(false)
-        const { goBack } = useNavigation()
-        const { dataImage, userImage } = useImage()
+        const { dataImage } = useImage()
+        const imageStore = useImageStore()
         const auth = useAuthStore()
-        const user = auth.user.value
+        const user = computed(() => auth.user)
         const updateRef = ref(null)
         const deleteRef = ref(null)
         const reportRef = ref(null)
         
+        const currentUserImage = computed(() => imageStore.currentUser)
+        
         const formatTime = (time) => {
-            console.log(user)
+            if (!time) return 'vừa xong';
             return dayjs(time).fromNow()
         }
 
@@ -137,10 +135,25 @@ export default {
             deleteRef.value.showAlert()
             console.log('Delete post clicked')
         }
+        
+        // Xử lý đóng dropdown khi click bên ngoài
+        const handleClickOutside = (event) => {
+            if (isDropdownOpen.value && !event.target.closest('.ml-auto')) {
+                isDropdownOpen.value = false
+            }
+        }
+        
+        onMounted(() => {
+            document.addEventListener('click', handleClickOutside)
+        })
+        
+        onUnmounted(() => {
+            document.removeEventListener('click', handleClickOutside)
+        })
+        
         return {
-            goBack,
             dataImage,
-            userImage,
+            currentUserImage,
             formatTime,
             toggleSetting,
             isDropdownOpen,

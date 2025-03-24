@@ -65,6 +65,15 @@ export const likeAPI = {
   }
 }
 
+// Comment API calls
+export const commentAPI = {
+  getComments: (imageId) => apiClient.get(`/images/${imageId}/comments`),
+  createComment: (commentData) => apiClient.post('/comments', commentData),
+  updateComment: (commentId, content) => apiClient.put(`/comments/${commentId}`, { content }),
+  deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),
+  toggleLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)
+}
+
 // Generic API - for any other endpoints
 export const genericAPI = {
   get: (endpoint, config) => apiClient.get(endpoint, config),

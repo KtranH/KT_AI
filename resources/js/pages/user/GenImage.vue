@@ -5,9 +5,7 @@
         <div class="min-h-screen bg-gray-50">
             <div class="container mx-auto p-6">
                 <!-- Nút quay lại -->
-                <div>
-                    <button @click="goBack" class="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full">Quay lại</button>
-                </div>
+                <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full"/>
                 <div class="flex items-center justify-left mt-8 mb-8">
                     <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2">{{ feature.title }}</h1>
                     <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
@@ -64,13 +62,7 @@
                     </div>
                 </div>
                 <ImageGalleryLayout
-                    :images="images"
-                    :previewImages="previewImages"
-                    :previewIndex="previewIndex"
-                    :previewVisible="previewVisible"
-                    @navigateImages="navigateImages"
-                    @openPreview="openPreview"
-                    @navigatePreview="navigatePreview"
+                    
                 />
             </div>
         </div>
@@ -78,7 +70,7 @@
 </div>
 </template>
 <script>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import  GuideSection  from '@/components/user/GenImage/GuideSection.vue'
 import  ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
@@ -88,6 +80,7 @@ import  ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.
 import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index';
 import { decodedID } from '@/utils'
+import ButtonBackVue from '../../components/common/ButtonBack.vue'
 
 export default {
     components: {
@@ -95,7 +88,8 @@ export default {
         ImageParameters,
         ImageGalleryLayout,
         PromptInput,
-        ImageUploader
+        ImageUploader,
+        ButtonBackVue
     },
     setup() {
         // State
@@ -135,11 +129,6 @@ export default {
             "❌ Vui lòng không bỏ trống ô thông tin đầu vào cũng như tải ảnh đầy đủ vào các ô tải ảnh lên.",
             "🚻 Không được nhập các từ ngữ nhạy cảm để tạo ảnh."
         ])
-
-        // Xử lý nút quay lại
-        const goBack = () => {
-            router.go(-1)
-        }
 
         // Tạo ảnh (giả lập)
         const generateImage = () => {
@@ -200,7 +189,6 @@ export default {
             decoded_value,
             icon_title,
             guideItems,
-            goBack,
             generateImage
         }
     }

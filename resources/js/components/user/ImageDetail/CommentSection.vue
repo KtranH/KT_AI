@@ -3,8 +3,20 @@
         <!-- Header with profile info -->
         <HeaderSection />
 
+        <!-- Loading indicator -->
+        <div v-if="loading" class="flex justify-center items-center py-6">
+            <span class="animate-pulse text-gray-500">Đang tải bình luận...</span>
+        </div>
+
+        <!-- Error message -->
+        <div v-else-if="error" class="p-4 text-center text-red-500">
+            {{ error }}
+            <button @click="fetchComments" class="ml-2 text-blue-500 hover:underline">Thử lại</button>
+        </div>
+
         <!-- Comments scrollable section -->
         <CommentList 
+            v-else
             :comments="comments"
             :replyingToIndex="replyingToIndex"
             :replyingToNested="replyingToNested"
@@ -14,6 +26,8 @@
             @cancel-reply="handleCancelReply"
             @reply-submit="handleReplySubmit"
             @nested-reply-submit="handleNestedReplySubmit"
+            @delete="handleDeleteComment"
+            @update="handleUpdateComment"
         />
 
         <!-- Post actions (like, comment, share) -->
@@ -44,7 +58,13 @@ export default {
         LikeSection,
         CommentInput
     },
-    setup() {
+    props: {
+        imageId: {
+            type: [Number, String],
+            required: true
+        }
+    },
+    setup(props) {
         const { 
             comments, 
             newComment,
@@ -56,8 +76,14 @@ export default {
             startNestedReply, 
             cancelReply, 
             handleReplySubmit, 
-            handleNestedReplySubmit 
-        } = useComments()
+            handleNestedReplySubmit,
+            deleteComment,
+            updateComment,
+            toggleLikeComment,
+            loading,
+            error,
+            fetchComments
+        } = useComments(props.imageId)
 
         const handleStartReply = (index, username) => {
             startReply(index, username)
@@ -78,18 +104,31 @@ export default {
             })
         }
 
+        const handleDeleteComment = (data) => {
+            deleteComment(data.commentId, data.isReply, data.parentIndex)
+        }
+
+        const handleUpdateComment = (data) => {
+            updateComment(data.commentId, data.content, data.isReply, data.parentIndex)
+        }
+
         return {
             comments,
             newComment,
             replyingToIndex,
             replyingToNested,
             replyToNestedUsername,
+            loading,
+            error,
+            fetchComments,
             handleStartReply,
             handleStartNestedReply,
             handleCancelReply,
             handleReplySubmit,
             handleNestedReplySubmit,
-            handleAddComment
+            handleAddComment,
+            handleDeleteComment,
+            handleUpdateComment
         }
     }
 }

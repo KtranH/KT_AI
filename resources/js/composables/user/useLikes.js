@@ -5,78 +5,107 @@ import { likeAPI } from '@/services/api'
 import { decodedID } from '@/utils'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 export default function useLikes() {
     const likeStore = useLikeStore()
+    const imageStore = useImageStore()
     const isLiked = computed(() => likeStore.isLiked)
-    const totalLikes = ref(useImageStore().data.sum_like)
+    const totalLikes = ref(imageStore.data?.sum_like || 0)
     const listLikes = computed(() => likeStore.likes)
     const route = useRoute()
 
     const fetchLikes = async (id) => {
         await likeStore.checkLiked(id)
         await likeStore.fetchLikes(id)
+        totalLikes.value = imageStore.data?.sum_like || 0
     }
 
     const likePost = async () => {
         try {
             const id = decodedID(route.params.encodedID)
             const currentLikeStatus = isLiked.value
+            const previousLikeCount = totalLikes.value
             
-            // Cập nhật UI trước (optimistic update)
-            // Không thay đổi isLiked trực tiếp mà thay đổi giá trị trong store
             likeStore.$patch({
                 isLiked: !currentLikeStatus
             })
             
             if (currentLikeStatus) {
                 totalLikes.value--
-                useImageStore().data.sum_like--
+                imageStore.updateLikeCount(false)
             } else {
                 totalLikes.value++
-                useImageStore().data.sum_like++
+                imageStore.updateLikeCount(true)
             }
             
-            // Call API
+            let response;
             if (currentLikeStatus) {
-                await likeAPI.unlikePost(id)
+                response = await likeAPI.unlikePost(id)
             } else {
-                await likeAPI.likePost(id)
+                response = await likeAPI.likePost(id)
             }
             
-            // Refresh data from server
-            await fetchLikes(id)
+            if (response?.data?.success) {
+                await fetchLikes(id)
+            } else {
+                likeStore.$patch({
+                    isLiked: currentLikeStatus
+                })
+                totalLikes.value = previousLikeCount
+                if (imageStore.data) {
+                    imageStore.data.sum_like = previousLikeCount
+                }
+            }
         } catch (error) {
             console.error('Lỗi khi thực hiện like/unlike:', error)
-            // Rollback UI nếu API thất bại
             likeStore.$patch({
                 isLiked: !likeStore.isLiked
             })
+            totalLikes.value = imageStore.data?.sum_like || 0
+        }
+    }
+
+    const likeComment = async (comment) => {
+        try {
+            const originalLiked = comment.isLiked
+            const originalLikes = comment.likes
             
-            if (likeStore.isLiked) {
-                totalLikes.value++
-            } else {
-                totalLikes.value--
-            }
+            comment.isLiked = !comment.isLiked
+            comment.likes = comment.isLiked ? comment.likes + 1 : Math.max(0, comment.likes - 1)
+            
+            const response = await likeAPI.toggleCommentLike(comment.id)
+            
+            comment.likes = response.data.likes
+            comment.isLiked = response.data.isLiked
+        } catch (err) {
+            console.error("Lỗi khi thích/bỏ thích bình luận:", err)
+            comment.isLiked = originalLiked
+            comment.likes = originalLikes
+            
+            toast.error('Không thể thích/bỏ thích bình luận')
         }
     }
 
-    const likeComment = (comment) => {
-        if (comment.isLiked) {
-            comment.likes--
-        } else {
-            comment.likes++
+    const likeReply = async (comment, reply) => {
+        try {
+            const originalLiked = reply.isLiked
+            const originalLikes = reply.likes
+            
+            reply.isLiked = !reply.isLiked
+            reply.likes = reply.isLiked ? reply.likes + 1 : Math.max(0, reply.likes - 1)
+            
+            const response = await likeAPI.toggleCommentLike(reply.id)
+            
+            reply.likes = response.data.likes
+            reply.isLiked = response.data.isLiked
+        } catch (err) {
+            console.error("Lỗi khi thích/bỏ thích phản hồi:", err)
+            reply.isLiked = originalLiked 
+            reply.likes = originalLikes
+            
+            toast.error('Không thể thích/bỏ thích phản hồi')
         }
-        comment.isLiked = !comment.isLiked
-    }
-
-    const likeReply = (comment, reply) => {
-        if (reply.isLiked) {
-            reply.likes--
-        } else {
-            reply.likes++
-        }
-        reply.isLiked = !reply.isLiked
     }
 
     return {

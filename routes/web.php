@@ -6,6 +6,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\TurnstileController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\API\CommentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -40,12 +41,17 @@ Route::prefix('api')->group(function () {
             return $request->user();
         });
         Route::post('/logout', [AuthController::class, 'logout']);
+        // Like Routes
         Route::get('/check_liked/{id}', [ImageController::class, 'checkLiked']);
         Route::post('/like_post/{id}', [ImageController::class, 'likePost']);
         Route::post('/unlike_post/{id}', [ImageController::class, 'unlikePost']);
+        // Comment Routes
+        Route::get('/images/{imageId}/comments', [CommentController::class, 'getComments']);
+        Route::post('/comments', [CommentController::class, 'store']);
+        Route::put('/comments/{comment}', [CommentController::class, 'update']); 
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+        Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
     });
-    // Tránh trùng lặp route logout
-    // Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 // Google OAuth Routes

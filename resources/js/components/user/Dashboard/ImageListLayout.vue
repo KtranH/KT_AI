@@ -2,7 +2,19 @@
     <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
       <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh</h2>
       
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"> 
+      <div v-if="isLoading" class="text-center py-8">
+        <p>Đang tải dữ liệu...</p>
+      </div>
+      
+      <div v-else-if="hasError" class="text-center py-8">
+        <p class="text-red-500">Đã xảy ra lỗi khi tải dữ liệu</p>
+      </div>
+      
+      <div v-else-if="imageGroups.length === 0" class="text-center py-8">
+        <p>Không có ảnh nào</p>
+      </div>
+      
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"> 
         <!-- Image cells -->
         <div 
           v-for="(imageGroup, index) in imageGroups" 
@@ -12,17 +24,22 @@
           <!-- Image display -->
           <div class="h-full w-full">
             <img 
+              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 0 && imageGroup.images[imageGroup.currentIndex]"
               :src="imageGroup.images[imageGroup.currentIndex].url" 
               class="object-cover w-full h-full cursor-pointer"
               loading="lazy"
               @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)"
+              alt="Image"
             >
+            <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span class="text-gray-500">Hình ảnh không khả dụng</span>
+            </div>
           </div>
           <!-- Navigation controls -->
           <div class="absolute inset-0 flex items-center justify-between">
             <!-- Previous button -->
             <button
-              v-if="imageGroup.images.length > 1 && imageGroup.currentIndex > 0"
+              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1 && imageGroup.currentIndex > 0"
               @click.stop="prevImage(index)"
               class="h-full flex items-center px-1 z-30"
             >
@@ -38,7 +55,7 @@
             
             <!-- Next button -->
             <button
-              v-if="imageGroup.images.length > 1 && imageGroup.currentIndex < imageGroup.images.length - 1"
+              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1 && imageGroup.currentIndex < imageGroup.images.length - 1"
               @click.stop="nextImage(index)"
               class="h-full flex items-center px-1 z-30"
             >
@@ -52,7 +69,7 @@
           
           <!-- Indicator dots -->
           <div 
-            v-if="imageGroup.images.length > 1" 
+            v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1" 
             class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2 z-20"
           >
             <button
@@ -67,12 +84,18 @@
           <!-- Image count badge -->
           <div class="flex items-center justify-between">
             <div 
-              v-if="imageGroup.images.length > 1" 
+              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1" 
               class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20"
             >
               {{ imageGroup.currentIndex + 1 }}/{{ imageGroup.images.length }}
             </div>
-            <button class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer hover:bg-black/30 transition" @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)">Xem chi tiết</button>
+            <button 
+              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 0 && imageGroup.images[imageGroup.currentIndex]"
+              class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer hover:bg-black/30 transition" 
+              @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)"
+            >
+              Xem chi tiết
+            </button>
           </div>
         </div>
       </div>
@@ -118,25 +141,33 @@ export default {
     }
     
     const nextImage = (groupIndex) => {
-      if (imageGroups.value[groupIndex]) {
-        const group = imageGroups.value[groupIndex]
-        if (group.currentIndex < group.images.length - 1) {
-          group.currentIndex++
-        }
+      if (!imageGroups.value[groupIndex]) return
+      
+      const group = imageGroups.value[groupIndex]
+      if (!group.images) return
+      
+      if (group.currentIndex < group.images.length - 1) {
+        group.currentIndex++
       }
     }
     
     const prevImage = (groupIndex) => {
-      if (imageGroups.value[groupIndex]) {
-        const group = imageGroups.value[groupIndex]
-        if (group.currentIndex > 0) {
-          group.currentIndex--
-        }
+      if (!imageGroups.value[groupIndex]) return
+      
+      const group = imageGroups.value[groupIndex]
+      if (!group.images) return
+      
+      if (group.currentIndex > 0) {
+        group.currentIndex--
       }
     }
     
     // Điều hướng đến trang chi tiết hình ảnh
     const goToImageDetail = (id) => {
+      if (!id) {
+        console.error('Không tìm thấy ID hình ảnh')
+        return
+      }
       console.log('Going to image detail:', id)
       router.push(`/image/detail/${encodedID(id)}`)
     }
@@ -147,9 +178,12 @@ export default {
         if (props.filter === 'created') {
             // Lấy từ store thông qua composable
             if (imagesCreatedByUser.value && imagesCreatedByUser.value.length > 0) {
-                allImages = imagesCreatedByUser.value.flatMap(item =>
-                    item.url.map(url => ({ url, id: item.id }))
-                )
+                allImages = imagesCreatedByUser.value.flatMap(item => {
+                    if (!item || !item.url) return []
+                    return Array.isArray(item.url) 
+                        ? item.url.map(url => ({ url, id: item.id }))
+                        : [{ url: item.url, id: item.id }]
+                }).filter(item => item && item.url && item.id)
             } else {
                 // Dữ liệu mẫu
                 allImages = [
@@ -174,6 +208,8 @@ export default {
         // Nhóm hình ảnh theo ID
         const groupedImages = {}
         allImages.forEach(image => {
+            if (!image || !image.id || !image.url) return
+            
             if (!groupedImages[image.id]) {
                 groupedImages[image.id] = {
                     id: image.id,
@@ -194,9 +230,11 @@ export default {
     }, { immediate: true })
     
     onMounted(() => {
-      if (props.filter === 'created' && imagesCreatedByUser.value.length === 0) {
+      if (props.filter === 'created' && (!imagesCreatedByUser.value || imagesCreatedByUser.value.length === 0)) {
         fetchImagesCreatedByUser().then(() => {
           fetchAndGroupImages()
+        }).catch(error => {
+          console.error('Lỗi khi tải hình ảnh:', error)
         })
       } else {
         fetchAndGroupImages()
@@ -208,7 +246,9 @@ export default {
       setCurrentIndex,
       nextImage,
       prevImage,
-      goToImageDetail
+      goToImageDetail,
+      isLoading,
+      hasError
     }
   }
 }

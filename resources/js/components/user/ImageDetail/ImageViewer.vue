@@ -79,9 +79,7 @@ export default {
             imageUrls, 
             isLoading, 
             hasError, 
-            errorMessage,
             fetchImages, 
-            decodeID 
         } = useImage()
         
         const displayImages = computed(() => {
@@ -115,8 +113,8 @@ export default {
             currentIndex.value = index
         }
 
-        onMounted(() => {
-            fetchImages(decodedID(route.params.encodedID))
+        onMounted(async () => {
+            await fetchImages(decodedID(route.params.encodedID))
         })
         
         return {

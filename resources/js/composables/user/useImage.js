@@ -11,9 +11,10 @@ export default function useImage() {
     // Computed properties
     const imageUrls = computed(() => store.images)
     const dataImage = computed(() => store.data)
-    const userImage = computed(() => store.user)
+    const userImage = computed(() => store.currentUser)
     const imagesCreatedByUser = computed(() => store.imagesCreatedByUser)
     const errorMessage = computed(() => store.error_message)
+    const isLoadingStore = computed(() => store.isLoading)
     
     // Phương thức fetch dữ liệu
     const fetchImages = async (id) => {
@@ -51,6 +52,7 @@ export default function useImage() {
         // States
         isLoading,
         hasError,
+        isLoadingStore,
         
         // Computed properties
         imageUrls,

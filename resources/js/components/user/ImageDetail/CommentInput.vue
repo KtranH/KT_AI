@@ -32,16 +32,11 @@
                 </div>
             </div>
         </Teleport>
-
-        <!-- Toast thông báo -->
-        <div v-if="showToast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300" :class="{'opacity-100': showToast, 'opacity-0': !showToast}">
-            Bình luận đã được thêm thành công!
-        </div>
     </div>
 </template>
 
 <script>
-import { defineProps, ref, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import useEmoji from '@/composables/user/useEmoji'
@@ -60,7 +55,6 @@ export default {
     emits: ['update:newComment', 'add-comment'],
     setup(props, { emit }) {
         const commentText = ref('')
-        const showToast = ref(false)
         
         // Theo dõi thay đổi từ prop và cập nhật commentText
         watch(() => props.newComment, (newVal) => {
@@ -90,12 +84,6 @@ export default {
             console.log('Đang thêm bình luận:', commentText.value)
             emit('add-comment')
             emit('update:newComment', '')
-            
-            // Hiển thị toast
-            showToast.value = true
-            setTimeout(() => {
-                showToast.value = false
-            }, 3000)
         }
 
         return {
@@ -105,7 +93,6 @@ export default {
             showEmojiPicker,
             toggleEmojiPicker,
             addEmoji,
-            showToast
         }
     }
 }
