@@ -40,6 +40,17 @@ export const useAuthStore = () => {
     localStorage.removeItem('remember')
     sessionStorage.removeItem('user')
     sessionStorage.removeItem('token')
+    sessionStorage.removeItem('remember')
+    
+    // Xóa dữ liệu trong các store khác nếu cần
+    if (window.$pinia) {
+      const stores = window.$pinia._s
+      Object.keys(stores).forEach(key => {
+        if (key !== 'auth') {
+          stores[key].$reset()
+        }
+      })
+    }
   }
 
   const checkAuth = async () => {

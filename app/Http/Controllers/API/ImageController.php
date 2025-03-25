@@ -44,18 +44,73 @@ class ImageController extends Controller
                 'error' => $e->getMessage()
             ], 500, ['Content-Type' => 'application/json']);
         }
-    }
-    
-    public function getImagesCreatedByUser()
+    } 
+    public function getImagesByFeature($id)
     {
         try {
-            $images = Image::where('user_id', Auth::user()->id)->get();
+            $perPage = 5; // Số ảnh mỗi trang
+            $images = Image::where('features_id', $id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
             return response()->json([
                 'success' => true,
                 'data' => $images->map(function ($image) {
+                    $imageUrls = is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url;
+                        if (!is_array($imageUrls)) {
+                        $imageUrls = [$imageUrls];
+                    }
                     return [
                         'id' => $image->id,
-                        'image_url' => json_decode($image->image_url, true),
+                        'image_url' => $imageUrls,
+                        'prompt' => $image->prompt,
+                        'sum_like' => $image->sum_like,
+                        'sum_comment' => $image->sum_comment,
+                        'created_at' => $image->created_at,
+                        'updated_at' => $image->updated_at,
+                        'user' => $image->user
+                    ];
+                }),
+                'pagination' => [
+                    'current_page' => $images->currentPage(),
+                    'last_page' => $images->lastPage(),
+                    'per_page' => $images->perPage(),
+                    'total' => $images->total()
+                ]
+            ], 200, ['Content-Type' => 'application/json']);
+        } catch (\Exception $e) {
+            Log::error('Get Images By Feature Error: ' . $e->getMessage(), [
+                'feature_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể tải dữ liệu ảnh',
+                'error' => $e->getMessage()
+            ], 500, ['Content-Type' => 'application/json']);
+        }
+    }
+    public function getImagesCreatedByUser()
+    {
+        try {
+            $images = Image::where('user_id', Auth::user()->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            return response()->json([
+                'success' => true,
+                'data' => $images->map(function ($image) {
+                    // Đảm bảo image_url được parse từ JSON thành mảng
+                    $imageUrls = is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url;
+                    
+                    // Nếu không phải mảng, chuyển về mảng
+                    if (!is_array($imageUrls)) {
+                        $imageUrls = [$imageUrls];
+                    }
+                    
+                    return [
+                        'id' => $image->id,
+                        'image_url' => $imageUrls,
                         'prompt' => $image->prompt,
                         'sum_like' => $image->sum_like,
                         'sum_comment' => $image->sum_comment,

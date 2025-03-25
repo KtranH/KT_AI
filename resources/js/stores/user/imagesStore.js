@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { imageAPI } from '../../services/api'
-import { imageCreatedByUserAPI } from '../../services/api'
+import { imageAPI } from '@/services/api'
 import { toRaw } from 'vue'
 
 export const useImageStore = defineStore('image',
@@ -12,8 +11,12 @@ export const useImageStore = defineStore('image',
             lastUser: null,
             error_message: null,
             imagesCreatedByUser: [],
+            imagesByFeature: [],
             lastFetchedId: null,
             isLoading: false,
+            currentPage: 1,
+            lastPage: 1,
+            totalImages: 0
         }),
         getters: {
             currentUser: (state) => state.user || state.lastUser || null
@@ -35,7 +38,7 @@ export const useImageStore = defineStore('image',
                     this.images = [];
                     this.data = null;
                     
-                    const response = await imageAPI.getImagesByID(id)
+                    const response = await imageAPI.getImages(id)
                     if (response.data && response.data.success) {
                         this.images = response.data.images
                         this.data = response.data.data
@@ -63,7 +66,7 @@ export const useImageStore = defineStore('image',
                 if (this.user) {
                     this.lastUser = { ...toRaw(this.user) };
                 }
-                
+
                 this.images = [];
                 this.data = null;
                 this.user = null;
@@ -71,13 +74,23 @@ export const useImageStore = defineStore('image',
             },
             async fetchImagesCreatedByUser() {
                 this.error_message = null
+                this.isLoading = true
                 try {
-                    const response = await imageCreatedByUserAPI.getImagesCreatedByUser()
+                    const response = await imageAPI.getImagesCreatedByUser()
                     if (response.data && response.data.success) {
-                        this.imagesCreatedByUser = response.data.data.map(item => ({
-                            id: item.id,
-                            url: item.image_url
-                        }));
+                        this.imagesCreatedByUser = response.data.data.map(item => {
+                            const imageUrls = item.image_url || [];
+                            return {
+                                id: item.id,
+                                prompt: item.prompt,
+                                sum_like: item.sum_like,
+                                sum_comment: item.sum_comment,
+                                created_at: item.created_at,
+                                updated_at: item.updated_at,
+                                url: imageUrls,
+                                image_url: imageUrls
+                            };
+                        });
                     } else {
                         console.error('Error:', response.statusText)
                         this.error_message = response.data.message
@@ -85,6 +98,47 @@ export const useImageStore = defineStore('image',
                 } catch (error) {
                     console.error('Error fetching images:', error)
                     this.error_message = 'An error occurred'
+                } finally {
+                    this.isLoading = false
+                }
+            },
+            async fetchImagesByFeature(id, page = 1) {
+                this.error_message = null
+                this.isLoading = true
+                
+                try {
+                    const response = await imageAPI.getImagesByFeature(id, page)
+                    
+                    if (response.data && response.data.success) {
+                        const processedData = response.data.data.map(image => {
+                            return {
+                                ...image,
+                                currentSlideIndex: 0
+                            };
+                        });
+                        
+                        if (page === 1) {
+                            this.imagesByFeature = processedData;
+                            this.images = processedData;
+                        } else {
+                            this.imagesByFeature = [...this.imagesByFeature, ...processedData];
+                            this.images = [...this.images, ...processedData];
+                        }
+                        
+                        if (response.data.pagination) {
+                            this.currentPage = response.data.pagination.current_page;
+                            this.lastPage = response.data.pagination.last_page;
+                            this.totalImages = response.data.pagination.total;
+                        }
+                    } else {
+                        console.error('Error:', response.statusText)
+                        this.error_message = response.data.message
+                    }
+                } catch (error) {
+                    console.error('Error fetching images:', error)
+                    this.error_message = 'An error occurred'
+                } finally {
+                    this.isLoading = false
                 }
             },
             clearImagesCreatedByUser() {

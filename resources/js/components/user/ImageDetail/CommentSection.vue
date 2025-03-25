@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { defineProps, nextTick } from 'vue'
+import { nextTick } from 'vue'
 import HeaderSection from './HeaderSection.vue'
 import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'

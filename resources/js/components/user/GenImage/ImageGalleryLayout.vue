@@ -28,32 +28,41 @@
         
         <!-- Image cells -->
         <div 
-          v-for="(imageGroup, index) in imageGroups" 
+          v-for="(image, index) in images" 
           :key="index" 
           class="relative aspect-square border border-gray-200 rounded-lg overflow-hidden group"
         >
-          <!-- Image carousel - Fixed with absolute positioning for all images -->
+          <!-- Image carousel - Hiển thị slide ảnh cho mỗi image -->
           <div class="h-full relative">
             <div 
-              v-for="(image, imgIndex) in imageGroup.images" 
+              v-for="(imageUrl, imgIndex) in image.image_url" 
               :key="imgIndex"
               class="absolute inset-0 w-full h-full transition-opacity duration-300 ease-in-out"
-              :class="imgIndex === imageGroup.currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'"
+              :class="imgIndex === (image.currentSlideIndex || 0) ? 'opacity-100 z-10' : 'opacity-0 z-0'"
             >
+              <!-- Thêm sự kiện nhấp vào ảnh -->
               <img 
-                :src="image.url" 
-                class="object-cover w-full h-full cursor-pointer"
-                @click="openPreview(imageGroup.images, imgIndex)"
-                loading = "lazy"
+                :src="imageUrl" 
+                class="object-cover w-full h-[80%] cursor-pointer"
+                loading="lazy"
               >
+              <!-- Phần hiển thị chủ bài viết -->
+              <div class="p-2 flex items-center justify-between">
+                <img :src="image.user.avatar_url" class="w-8 h-8 rounded-full" alt="User Avatar">
+                <p class="text-sm font-medium text-gray-900">{{ image.user.name }}</p>
+                <div class="ml-2 flex gap-2">
+                  <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-heart text-red-500"></i> {{ image.sum_like }}</p>
+                  <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-comment text-gray-500"></i> {{ image.sum_comment }}</p>
+                </div>
+              </div>
             </div>
             
-            <!-- Navigation arrows (only shown if multiple images) -->
-            <template v-if="imageGroup.images.length > 1">
+            <!-- Navigation arrows (chỉ hiển thị khi có nhiều ảnh) -->
+            <template v-if="image.image_url && image.image_url.length > 1">
               <button 
                 class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImages(index, 'prev')"
-                v-show="imageGroup.currentIndex > 0"
+                @click.stop="navigateImageSlide(index, 'prev')"
+                v-show="(image.currentSlideIndex || 0) > 0"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -61,8 +70,8 @@
               </button>
               <button 
                 class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImages(index, 'next')"
-                v-show="imageGroup.currentIndex < imageGroup.images.length - 1"
+                @click.stop="navigateImageSlide(index, 'next')"
+                v-show="(image.currentSlideIndex || 0) < image.image_url.length - 1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -70,20 +79,31 @@
               </button>
             </template>
             
-            <!-- Indicator dots -->
+            <!-- Indicator dots nếu có nhiều ảnh -->
             <div 
-              v-if="imageGroup.images.length > 1" 
+              v-if="image.image_url && image.image_url.length > 1" 
               class="absolute bottom-1 left-0 right-0 flex justify-center space-x-1 z-20"
             >
               <div 
-                v-for="(_, dotIndex) in imageGroup.images" 
+                v-for="(_, dotIndex) in image.image_url" 
                 :key="dotIndex" 
                 class="w-1.5 h-1.5 rounded-full transition-colors duration-200"
-                :class="dotIndex === imageGroup.currentIndex ? 'bg-white' : 'bg-white/50'"
+                :class="dotIndex === (image.currentSlideIndex || 0) ? 'bg-white' : 'bg-white/50'"
               ></div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div v-if="currentPage < lastPage" class="text-center mt-8">
+        <button 
+          @click="loadMore" 
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          :disabled="isLoading"
+        >
+          {{ isLoading ? 'Đang tải...' : 'Xem thêm' }}
+        </button>
       </div>
     </div>
     
@@ -105,7 +125,8 @@
         
         <div class="relative">
           <img 
-            :src="previewImages[previewIndex]?.url" 
+            :src="previewImages[previewIndex]" 
+            loading="lazy"
             class="max-h-screen max-w-full object-contain"
           >
           
@@ -130,45 +151,106 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
+
+          <!-- Thông tin ảnh -->
+          <div v-if="currentPreviewImage" class="absolute bottom-0 left-0 right-0 p-4 bg-black/50 text-white">
+            <div class="flex justify-between items-center">
+              <div>
+                <p v-if="currentPreviewImage.prompt" class="text-sm font-medium mb-1">{{ currentPreviewImage.prompt }}</p>
+                <p class="text-xs opacity-80">{{ formatDate(currentPreviewImage.created_at) }}</p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  {{ currentPreviewImage.sum_like || 0 }}
+                </span>
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  {{ currentPreviewImage.sum_comment || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'
+import { ref, computed, watch } from 'vue'
+import useImage from '@/composables/user/useImage'
 
 export default {
   name: 'ImageGallery',
-  setup() {
-    const imageGroups = ref([
-      {
-        currentIndex: 0,
-        images: [
-          { url: "https://picsum.photos/id/237/400/400", id: 1 },
-          { url: "https://picsum.photos/id/238/400/400", id: 2 },
-          { url: "https://picsum.photos/id/239/400/400", id: 3 }
-        ]
-      },
-      {
-        currentIndex: 0,
-        images: [
-          { url: "https://picsum.photos/id/240/400/400", id: 4 },
-          { url: "https://picsum.photos/id/241/400/400", id: 5 }
-        ]
-      },
-      {
-        currentIndex: 0,
-        images: [
-          { url: "https://picsum.photos/id/242/400/400", id: 6 }
-        ]
+  props: {
+    featureId: {
+      type: [Number, String, null],
+      required: false,
+      default: null,
+      validator(value) {
+        return value === null || value === undefined || !isNaN(Number(value));
       }
-    ])
+    }
+  },
+  setup(props) {
+    const { 
+      fetchImagesByFeature, 
+      loadMoreImages, 
+      imageUrls, 
+      isLoading, 
+      currentPage, 
+      lastPage ,
+      user
+    } = useImage()
+
+    const featureId = computed(() => {
+      if (props.featureId) {
+        return Number(props.featureId);
+      }
+      return null;
+    });
 
     const fileInput = ref(null)
     const previewVisible = ref(false)
     const previewImages = ref([])
     const previewIndex = ref(0)
+    const currentPreviewImage = ref(null)
+    
+    // Hàm định dạng ngày tháng
+    const formatDate = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    // Theo dõi imageUrls để cập nhật slide cho mỗi ảnh
+    watch(imageUrls, (newImages) => {
+      if (newImages && newImages.length) {
+        newImages.forEach(image => {
+          if (!image.hasOwnProperty('currentSlideIndex')) {
+            image.currentSlideIndex = 0;
+          }
+        });
+      }
+    }, { immediate: true });
+
+    // Theo dõi featureId để tải lại dữ liệu khi thay đổi
+    watch(featureId, async (newId, oldId) => {
+      console.log(`featureId thay đổi từ ${oldId} thành ${newId}`);
+      if (newId && newId !== oldId) {
+        await fetchImagesByFeature(newId);
+      }
+    }, { immediate: true });
 
     // Open file selector
     const openFileSelector = () => {
@@ -180,38 +262,35 @@ export default {
       const files = event.target.files
       if (!files.length) return
       
-      // In a real application, you would upload these to your Laravel backend
-      // For this demo, we'll create URLs for the selected files
-      const newImages = Array.from(files).map(file => ({
-        url: URL.createObjectURL(file),
-        id: Math.random().toString(36).substring(2, 11)
-      }))
+      // Xử lý upload ảnh đến API (sẽ implement sau)
+      console.log('Tải ảnh lên:', files);
       
-      // Add as a new image group
-      imageGroups.value.push({
-        currentIndex: 0,
-        images: newImages
-      });
-      
-      // Reset file input to allow selecting the same files again
+      // Reset file input để cho phép chọn lại các file tương tự
       event.target.value = ''
-    };
+    }
 
-    // Navigate between images in a group
-    const navigateImages = (groupIndex, direction) => {
-      const group = imageGroups.value[groupIndex]
-      if (direction === 'next' && group.currentIndex < group.images.length - 1) {
-        group.currentIndex++
-      } else if (direction === 'prev' && group.currentIndex > 0) {
-        group.currentIndex--
+    // Điều hướng giữa các slide của một ảnh
+    const navigateImageSlide = (imageIndex, direction) => {
+      const image = imageUrls.value[imageIndex];
+      if (!image || !image.image_url || !image.image_url.length) return;
+      
+      if (!image.currentSlideIndex) {
+        image.currentSlideIndex = 0;
+      }
+      
+      if (direction === 'next' && image.currentSlideIndex < image.image_url.length - 1) {
+        image.currentSlideIndex++;
+      } else if (direction === 'prev' && image.currentSlideIndex > 0) {
+        image.currentSlideIndex--;
       }
     }
 
     // Open preview mode
-    const openPreview = (images, startIndex) => {
-      previewImages.value = images
-      previewIndex.value = startIndex
-      previewVisible.value = true
+    const openPreview = (images, startIndex, imageData) => {
+      previewImages.value = images;
+      previewIndex.value = startIndex || 0;
+      previewVisible.value = true;
+      currentPreviewImage.value = imageData;
     }
 
     // Navigate in preview mode
@@ -223,33 +302,30 @@ export default {
       }
     }
 
-    // Example of how you would fetch images from your Laravel backend
-    const fetchImages = async () => {
-      try {
-        const response = await fetch('/api/images')
-        const data = await response.json()
-        
-        // Transform the data to match our component structure
-        imageGroups.value = data.map(group => ({
-          currentIndex: 0,
-          images: group.images
-        }))
-      } catch (error) {
-        console.error('Error fetching images:', error)
+    // Load more images
+    const loadMore = async () => {
+      if (featureId.value) {
+        await loadMoreImages(featureId.value);
       }
     }
-    return{
-        imageGroups,
-        openFileSelector,
-        handleFileUpload,
-        navigateImages,
-        openPreview,
-        navigatePreview,
-        previewVisible,
-        previewImages,
-        previewIndex
+    return {
+      images: imageUrls,
+      isLoading,
+      currentPage,
+      lastPage,
+      user,
+      openFileSelector,
+      handleFileUpload,
+      openPreview,
+      navigatePreview,
+      navigateImageSlide,
+      previewVisible,
+      previewImages,
+      previewIndex,
+      currentPreviewImage,
+      loadMore,
+      formatDate
     }
   }
 }
-
 </script>

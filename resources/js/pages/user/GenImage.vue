@@ -61,8 +61,8 @@
                         </div>
                     </div>
                 </div>
-                <ImageGalleryLayout
-                    
+                <ImageGalleryLayout 
+                    :featureId="featureId"
                 />
             </div>
         </div>
@@ -111,7 +111,8 @@ export default {
             { value: 'digital-art', label: 'Nghệ thuật số' },
             { value: 'abstract', label: 'Trừu tượng' }
         ])
-        
+        const featureId = ref(null)
+
         // Các state cho phần ảnh
         const mainImage = ref(null)
         const secondaryImage = ref(null)
@@ -162,16 +163,34 @@ export default {
         // Gọi API lấy thông tin
         const get_feature = async () => {
             try {
-                featureStore.fetchFeatureDetail(decoded_value.value)
+                if (decoded_value.value) {
+                    await featureStore.fetchFeatureDetail(decoded_value.value);
+                    featureId.value = Number(decoded_value.value);
+                } else {
+                    if (lastId) {
+                        featureId.value = Number(lastId);
+                        await featureStore.fetchFeatureDetail(lastId);
+                    } else {
+                        error_message.value = 'Không tìm thấy thông tin feature';
+                    }
+                }
             } catch (error) {
-                error_message.value = 'Không thể kết nối đến máy chủ'
+                error_message.value = 'Không thể kết nối đến máy chủ';
+                console.error('Error fetching feature:', error);
             }
         }
 
         // Mounted Hook
         onMounted(() => {
-            const encodedID = route.params.encodedID;
-            decoded_value.value = decodedID(encodedID);
+            try {
+                const encodedID = route.params.encodedID;
+                if (encodedID) {
+                    decoded_value.value = Number(decodedID(encodedID));
+                }
+            } catch (error) {
+                console.error('Error decoding ID:', error);
+            }
+            
             get_feature();
         });
         
@@ -189,7 +208,8 @@ export default {
             decoded_value,
             icon_title,
             guideItems,
-            generateImage
+            generateImage,
+            featureId,
         }
     }
 }

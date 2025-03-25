@@ -14,12 +14,12 @@ export const verificationAPI = {
 
 // Image  Information API calls
 export const imageAPI = {
-  getImagesByID: (id) => apiClient.get(`/get_images_information/${id}`)
-}
-
-// Image Created By User API calls
-export const imageCreatedByUserAPI = {
-  getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user')
+  getImages: (id) => apiClient.get(`/get_images_information/${id}`),
+  getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user'),
+  getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
+  getLikes: (id) => apiClient.get(`/get_likes_information/${id}`),
+  likePost: (id) => apiClient.post(`/like_post/${id}`),
+  unlikePost: (id) => apiClient.post(`/unlike_post/${id}`)
 }
 
 // Google API calls
@@ -36,7 +36,7 @@ export const turnstileAPI = {
 // Features API calls
 export const featuresAPI = {
   getAll: () => apiClient.get('/load_features'),
-  getById: (id) => apiClient.get(`/load_features/${id}`)
+  getById: (id) => apiClient.get(`/load_features/${id}`),
 }
 
 // Like API calls

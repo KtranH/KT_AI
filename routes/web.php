@@ -33,6 +33,7 @@ Route::prefix('api')->group(function () {
     Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']); 
     Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
     Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
+    Route::get('/get_images_by_feature/{id}', [ImageController::class, 'getImagesByFeature']);
     Route::get('/get_likes_information/{id}', [ImageController::class, 'getLikes']);
     
     // Protected API Routes

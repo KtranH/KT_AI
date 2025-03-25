@@ -40,7 +40,6 @@
 </template>
 
 <script>
-import { defineProps } from 'vue'
 import CommentItem from './CommentItem.vue'
 
 export default {

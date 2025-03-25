@@ -62,3 +62,5 @@ export const isActionTooFast = (lastActionTime, threshold = 1000) => {
   const now = Date.now()
   return now - lastActionTime < threshold
 }
+
+

@@ -29,7 +29,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:30'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'cf-turnstile-response' => ['required', 'string'],
@@ -191,7 +191,8 @@ class AuthController extends Controller
             ]);
         }
 
-        $user = User::find(Auth::user()->id);
+        // Lấy user mới nhất từ database
+        $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find(Auth::user()->id);
         
         if (!$user->is_verified) {
             Auth::logout();
@@ -236,6 +237,9 @@ class AuthController extends Controller
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Xóa dữ liệu user trong session
+        $request->session()->forget('user');
 
         return response()->json(['message' => 'Đã đăng xuất thành công']);
     }
