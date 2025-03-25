@@ -62,6 +62,16 @@ export const likeAPI = {
       // Ném lỗi để xử lý ở composable
       throw error
     }
+  },
+  toggleCommentLike: async (id) => {
+    try {
+      const response = await apiClient.post(`/comments/${id}/toggle-like`)
+      return response
+    } catch (error) {
+      console.error('Lỗi khi thực hiện toggle like comment:', error)
+      // Ném lỗi để xử lý ở composable
+      throw error
+    }
   }
 }
 

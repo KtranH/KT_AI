@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { nextTick } from 'vue'
+import { nextTick, onMounted } from 'vue'
 import HeaderSection from './HeaderSection.vue'
 import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'
@@ -61,10 +61,13 @@ export default {
     props: {
         imageId: {
             type: [Number, String],
-            required: true
+            required: true,
+            validator: function(value) {
+                return value !== null && value !== undefined && value !== '';
+            }
         }
     },
-    setup(props) {
+    setup(props) {        
         const { 
             comments, 
             newComment,
@@ -84,6 +87,12 @@ export default {
             error,
             fetchComments
         } = useComments(props.imageId)
+        
+        onMounted(() => {
+            if (props.imageId) {
+                fetchComments();
+            }
+        });
 
         const handleStartReply = (index, username) => {
             startReply(index, username)

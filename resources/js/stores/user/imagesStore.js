@@ -23,7 +23,16 @@ export const useImageStore = defineStore('image',
         },
         actions: {
             async fetchImages(id) {
-                if (this.lastFetchedId === id && this.data !== null) {
+
+                if (!id) {
+                    this.error_message = "ID không hợp lệ hoặc trống";
+                    return;
+                }
+                
+                // Đảm bảo ID được xử lý đúng cách
+                const processedId = String(id).trim();
+                
+                if (this.lastFetchedId === processedId && this.data !== null && this.images.length > 0) {
                     return;
                 }
                 
@@ -37,25 +46,24 @@ export const useImageStore = defineStore('image',
                     
                     this.images = [];
                     this.data = null;
-                    
-                    const response = await imageAPI.getImages(id)
+
+                    const response = await imageAPI.getImages(processedId)
                     if (response.data && response.data.success) {
                         this.images = response.data.images
                         this.data = response.data.data
-                        
                         if (response.data.user) {
                             this.user = toRaw(response.data.user)
                             this.lastUser = { ...toRaw(response.data.user) }
                         }
                         
-                        this.lastFetchedId = id;
+                        this.lastFetchedId = processedId;
                     } else {
-                        console.error('Error:', response.statusText)
-                        this.error_message = response.data.message
+                        console.error('Error:', response.data?.message || response.statusText)
+                        this.error_message = response.data?.message || 'Không thể tải dữ liệu'
                     }
                 } catch (error) {
                     console.error('Error fetching images:', error)
-                    this.error_message = 'An error occurred'
+                    this.error_message = error.message || 'Đã xảy ra lỗi khi tải dữ liệu'
                     this.images = [];
                     this.data = null;
                 } finally {
@@ -68,6 +76,7 @@ export const useImageStore = defineStore('image',
                 }
 
                 this.images = [];
+                this.imageUrls = [];
                 this.data = null;
                 this.user = null;
                 this.error_message = null;
@@ -107,8 +116,7 @@ export const useImageStore = defineStore('image',
                 this.isLoading = true
                 
                 try {
-                    const response = await imageAPI.getImagesByFeature(id, page)
-                    
+                    const response = await imageAPI.getImagesByFeature(id, page)             
                     if (response.data && response.data.success) {
                         const processedData = response.data.data.map(image => {
                             return {
@@ -119,10 +127,8 @@ export const useImageStore = defineStore('image',
                         
                         if (page === 1) {
                             this.imagesByFeature = processedData;
-                            this.images = processedData;
                         } else {
                             this.imagesByFeature = [...this.imagesByFeature, ...processedData];
-                            this.images = [...this.images, ...processedData];
                         }
                         
                         if (response.data.pagination) {

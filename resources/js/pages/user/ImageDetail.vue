@@ -6,7 +6,7 @@
             <!-- Instagram-like layout: post image on left, details on right -->
             <div class="flex flex-col md:flex-row">
                 <!-- Left column: Image -->
-                <ImageViewer />
+                <ImageViewer :imageID="imageId" />
                 
                 <!-- Right column: Post header, comments, interactions -->
                 <CommentSection :imageId="imageId" />
@@ -21,6 +21,7 @@ import ImageViewer from '@/components/user/ImageDetail/ImageViewer.vue'
 import CommentSection from '@/components/user/ImageDetail/CommentSection.vue'
 import { useRoute } from 'vue-router'
 import { decodedID } from '@/utils'
+import { onMounted } from 'vue'
 
 export default {
     name: 'Detail',
@@ -30,7 +31,14 @@ export default {
     },
     setup() {
         const route = useRoute()
-        const imageId = decodedID(route.params.encodedID)
+        let imageId = null
+        
+        try {
+            // Thêm xử lý lỗi khi decode ID
+            imageId = decodedID(route.params.encodedID)
+        } catch (error) {
+            imageId = route.params.encodedID // Sử dụng ID gốc nếu không thể giải mã
+        }
         
         return {
             imageId

@@ -130,7 +130,8 @@ export default {
       imagesCreatedByUser, 
       isLoading,
       hasError,
-      fetchImagesCreatedByUser 
+      fetchImagesCreatedByUser,
+      goToImageDetail
     } = useImage()
     
     // Thay đổi currentIndex cho một nhóm hình ảnh
@@ -160,16 +161,6 @@ export default {
       if (group.currentIndex > 0) {
         group.currentIndex--
       }
-    }
-    
-    // Điều hướng đến trang chi tiết hình ảnh
-    const goToImageDetail = (id) => {
-      if (!id) {
-        console.error('Không tìm thấy ID hình ảnh')
-        return
-      }
-      console.log('Going to image detail:', id)
-      router.push(`/image/detail/${encodedID(id)}`)
     }
     
     // Lấy và nhóm hình ảnh theo bộ lọc và ID
@@ -248,7 +239,7 @@ export default {
       prevImage,
       goToImageDetail,
       isLoading,
-      hasError
+      hasError,
     }
   }
 }

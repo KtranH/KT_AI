@@ -49,12 +49,31 @@ export const textLengthUnder256 = (text) => {
 
 // Giải mã ID
 export const decodedID = (encodedID) => {
-  return atob(encodedID)
+  try {
+    if (!encodedID) return null;
+    // Đảm bảo chuỗi hợp lệ trước khi decode
+    const base64Regex = /^[A-Za-z0-9+/=]+$/;
+    if (!base64Regex.test(encodedID)) {
+      console.warn('encodedID không phải là chuỗi base64 hợp lệ:', encodedID);
+      return encodedID; // Trả về ID gốc nếu không phải base64
+    }
+    
+    return atob(encodedID);
+  } catch (error) {
+    console.error('Lỗi khi giải mã ID:', error);
+    return encodedID; // Trả về ID gốc nếu có lỗi
+  }
 }
 
 // Mã hóa ID
 export const encodedID = (id) => {
-  return btoa(id)
+  try {
+    if (!id) return '';
+    return btoa(String(id));
+  } catch (error) {
+    console.error('Lỗi khi mã hóa ID:', error);
+    return String(id); // Trả về ID gốc nếu có lỗi
+  }
 }
 
 // Kiểm tra xem thao tác có quá nhanh không

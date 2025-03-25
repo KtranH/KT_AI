@@ -51,11 +51,9 @@
 </template>
 
 <script>
-import { onMounted, ref, computed } from 'vue'
+import { watch, ref, computed, onMounted } from 'vue'
 import useImage from '@/composables/user/useImage'
 import useNavigation from '@/composables/user/useNavigation'
-import { useRoute } from 'vue-router'
-import { decodedID } from '@/utils'
 
 export default {
     name: 'ImageViewer',
@@ -67,24 +65,42 @@ export default {
         altText: {
             type: String,
             default: 'Fashion outfit'
+        },
+        imageID: {
+            type: [Number, String],
+            required: true
         }
     },
     setup(props) {
         const { previewImage } = useNavigation()
-        const route = useRoute()
         const currentIndex = ref(0)
         
         // Sử dụng composable cải tiến
         const { 
-            imageUrls, 
+            imageDetail,
             isLoading, 
             hasError, 
             fetchImages, 
+            
         } = useImage()
         
-        const displayImages = computed(() => {
-            if (imageUrls.value.length > 0) {
-                return imageUrls.value
+        // Tải dữ liệu khi component được khởi tạo
+        onMounted(async () => {
+            if (props.imageID) {
+                await fetchImages(props.imageID)
+            }
+        })
+        
+        // Theo dõi sự thay đổi của imageID và tải lại dữ liệu
+        watch(() => props.imageID, async (newId, oldId) => {
+            if (newId && newId !== oldId) {
+                await fetchImages(newId)
+            }
+        }, { immediate: true })
+
+        const displayImages = computed(() => {       
+            if (imageDetail.value && imageDetail.value.length > 0) {
+                return imageDetail.value
             } else {
                 return [props.imageUrl]
             }
@@ -113,13 +129,9 @@ export default {
             currentIndex.value = index
         }
 
-        onMounted(async () => {
-            await fetchImages(decodedID(route.params.encodedID))
-        })
-        
         return {
             previewImage,
-            imageUrls,
+            imageDetail,
             isLoading,
             hasError,
             currentIndex,

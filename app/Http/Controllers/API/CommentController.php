@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Comment;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\Image;
 
 class CommentController extends Controller
 {
@@ -77,6 +77,12 @@ class CommentController extends Controller
             'list_like' => json_encode([])
         ]);
 
+        $image = Image::find($request->image_id);
+        if ($image) {
+            $image->sum_comment += 1;
+            $image->save();
+        }
+
         $comment->load(['user', 'replies.user']);
 
         return response()->json($this->formatComment($comment), 201);
@@ -94,6 +100,12 @@ class CommentController extends Controller
         // Xóa cả replies nếu là comment cha
         if ($comment->parent_id === null) {
             $comment->replies()->delete();
+        }
+
+        $image = Image::find($comment->image_id);
+        if ($image) {
+            $image->sum_comment -= 1;
+            $image->save();
         }
         
         $comment->delete();

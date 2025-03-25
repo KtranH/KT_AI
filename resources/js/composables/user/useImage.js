@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { useImageStore } from '@/stores/user/imagesStore'
 import { useRouter } from 'vue-router'
+import { encodedID } from '@/utils'
 
 export default function useImage() {
     const store = useImageStore()
@@ -9,14 +10,12 @@ export default function useImage() {
     const hasError = ref(false)
     
     // Computed properties từ store
+    const imageDetail = computed(() => store.images)
     const imageUrls = computed(() => {
-        // Xử lý trả về dữ liệu từ store.images hoặc store.imagesByFeature
         const images = store.imagesByFeature && store.imagesByFeature.length > 0 
             ? store.imagesByFeature 
-            : store.images;
-        
-        // Đảm bảo format đúng để hiển thị slide ảnh
-        return images;
+            : null;
+         return images;
     })
     
     const dataImage = computed(() => store.data)
@@ -32,12 +31,21 @@ export default function useImage() {
     
     // Phương thức fetch dữ liệu
     const fetchImages = async (id) => {
+        if (!id) {
+            console.error('ID không hợp lệ:', id)
+            hasError.value = true
+            return
+        }
+
         isLoading.value = true
         hasError.value = false
+        console.log('Đang tải dữ liệu cho ID:', id)
         
         try {
             await store.fetchImages(id)
             if (store.error_message) {
+                console.error('Lỗi từ API:', store.error_message)
+                hasError.value = true
                 router.push('/error/404')
             }
         } catch (error) {
@@ -46,6 +54,17 @@ export default function useImage() {
         } finally {
             isLoading.value = false
         }
+    }
+
+    // Điều hướng đến trang chi tiết hình ảnh
+    const goToImageDetail = (id) => {
+        if (!id) {
+          router.push('/error/404')
+          console.error('Không tìm thấy ID hình ảnh')
+          return
+        }
+        console.log('Going to image detail:', id)
+        router.push(`/image/detail/${encodedID(id)}`)
     }
     
     const fetchImagesCreatedByUser = async () => {
@@ -103,11 +122,13 @@ export default function useImage() {
         userImage,
         imagesCreatedByUser,
         errorMessage,
+        imageDetail,
         
         // Methods
         fetchImages,
         fetchImagesCreatedByUser,
         fetchImagesByFeature,
-        loadMoreImages
+        loadMoreImages,
+        goToImageDetail
     }
 }

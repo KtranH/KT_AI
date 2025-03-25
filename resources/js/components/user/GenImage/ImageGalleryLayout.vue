@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white rounded-xl shadow-lg p-6 mt-8 container mx-auto">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh người dùng tải lên</h2>
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Danh sách ảnh người dùng tải lên</h2>
       
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         <!-- Add image button cell -->
@@ -44,6 +44,7 @@
               <img 
                 :src="imageUrl" 
                 class="object-cover w-full h-[80%] cursor-pointer"
+                @click="goToImageDetail(image.id)"
                 loading="lazy"
               >
               <!-- Phần hiển thị chủ bài viết -->
@@ -204,7 +205,8 @@ export default {
       isLoading, 
       currentPage, 
       lastPage ,
-      user
+      user,
+      goToImageDetail
     } = useImage()
 
     const featureId = computed(() => {
@@ -324,7 +326,8 @@ export default {
       previewIndex,
       currentPreviewImage,
       loadMore,
-      formatDate
+      formatDate,
+      goToImageDetail
     }
   }
 }
