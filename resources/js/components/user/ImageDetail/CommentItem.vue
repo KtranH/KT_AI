@@ -176,7 +176,7 @@
 </template>
 
 <script>
-import { defineProps, ref, computed } from 'vue'
+import { ref } from 'vue'
 import CommentReply from '@/components/user/ImageDetail/ReplyLayout.vue'
 import useLikes from '@/composables/user/useLikes'
 

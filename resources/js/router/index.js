@@ -20,6 +20,8 @@ import Detail from '../pages/user/ImageDetail.vue'
 import Error404 from '../pages/errors/error404.vue'
 // Settings Pages
 import Settings from '../pages/user/Settings.vue'
+// Upload Pages
+import Upload from '../pages/user/Upload.vue'
 
 const routes = [
   {
@@ -80,6 +82,12 @@ const routes = [
     name: 'error-404',
     component: Error404,
     meta: { title: 'KT_AI - Lỗi 404' }
+  },
+  {
+    path: '/upload',
+    name: 'upload',
+    component: Upload,
+    meta: { requiresAuth: true, title: 'KT_AI - Tải lên' }
   }
 ]
 
