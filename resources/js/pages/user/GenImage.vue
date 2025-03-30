@@ -63,6 +63,7 @@
                 </div>
                 <ImageGalleryLayout 
                     :featureId="featureId"
+                    :featureName="featureName"
                 />
             </div>
         </div>
@@ -112,7 +113,7 @@ export default {
             { value: 'abstract', label: 'Trừu tượng' }
         ])
         const featureId = ref(null)
-
+        const featureName = ref(null)
         // Các state cho phần ảnh
         const mainImage = ref(null)
         const secondaryImage = ref(null)
@@ -174,6 +175,7 @@ export default {
                         error_message.value = 'Không tìm thấy thông tin feature';
                     }
                 }
+                featureName.value = feature.value.title;
             } catch (error) {
                 error_message.value = 'Không thể kết nối đến máy chủ';
                 console.error('Error fetching feature:', error);
@@ -210,6 +212,7 @@ export default {
             guideItems,
             generateImage,
             featureId,
+            featureName
         }
     }
 }

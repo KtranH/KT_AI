@@ -183,6 +183,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import useImage from '@/composables/user/useImage'
 
 export default {
@@ -195,6 +196,11 @@ export default {
       validator(value) {
         return value === null || value === undefined || !isNaN(Number(value));
       }
+    },
+    featureName: {
+      type: [String, null],
+      required: false,
+      default: null
     }
   },
   setup(props) {
@@ -216,7 +222,14 @@ export default {
       return null;
     });
 
-    const fileInput = ref(null)
+    const featureName = computed(() => {
+      if (props.featureName) {
+        return props.featureName;
+      }
+      return null;
+    });
+
+    const router = useRouter()
     const previewVisible = ref(false)
     const previewImages = ref([])
     const previewIndex = ref(0)
@@ -256,7 +269,7 @@ export default {
 
     // Open file selector
     const openFileSelector = () => {
-      fileInput.value.click()
+      router.push({ name: 'upload', query: { featureId: featureId.value, featureName: featureName.value } })
     }
 
     // Handle file upload

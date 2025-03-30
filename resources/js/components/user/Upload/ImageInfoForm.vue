@@ -1,6 +1,11 @@
 <template>
   <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-    <h2 class="text-xl font-bold bg-gradient-text-v2 mb-6 pb-3 border-b border-gray-100">Thông tin hình ảnh cho chức năng ... </h2>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold bg-gradient-text-v2 pb-3 border-b border-gray-100">
+        Tải ảnh cho chức năng: {{ featureName }}
+      </h2>
+      <img :src="sticker" alt="Sticker" class="w-12 h-12 rounded-full ml-4" />
+    </div>
     
     <form @submit.prevent="submitForm" class="space-y-6">
       <div>
@@ -78,17 +83,30 @@
 import { ref, inject } from 'vue';
 
 export default {
-  setup() {
+  props: {
+    featureId: {
+      type: [Number, String, null],
+      required: false,
+      default: null
+    },
+    featureName: {
+      type: [String, null],
+      required: false,
+      default: null
+    }
+  },
+  setup(props) {
     // Lấy instance từ component cha
     const imageUploadInstance = inject('imageUploadInstance');
     const { files, clearAllFiles } = imageUploadInstance;
-    
+    const sticker = ref("/img/upload.png")
     const title = ref('');
     const description = ref('');
     const isSubmitting = ref(false);
     const successMessage = ref('');
     const errorMessage = ref('');
-    
+    const { featureId, featureName } = props;
+
     const calculateTotalSize = () => {
       const totalBytes = files.value.reduce((total, fileObj) => total + fileObj.file.size, 0);
       
@@ -151,7 +169,10 @@ export default {
       successMessage,
       errorMessage,
       calculateTotalSize,
-      submitForm
+      submitForm,
+      featureId,
+      featureName,
+      sticker
     };
   }
 }

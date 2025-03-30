@@ -1,9 +1,9 @@
 <!-- src/pages/UploadPage.vue -->
 <template>
   <div
-    class="upload-page container mx-auto p-6 md:p-6 bg-gray-50 min-h-screen pt-20 md:pt-24" data-aos="fade-up"
+    class="upload-page container mx-auto p-6 md:p-6 bg-gray-50 min-h-screen pt-20 md:pt-24"
   >
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center mb-8">
         <div class="flex items-center">
           <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full" />
@@ -45,7 +45,7 @@
         </div>
 
         <div class="w-full lg:w-1/2">
-          <ImageInfoForm />
+          <ImageInfoForm :featureId="featureId" :featureName="featureName"/>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ import ImageUploader from "@/components/user/Upload/ImageUploader.vue";
 import ImageInfoForm from "@/components/user/Upload/ImageInfoForm.vue";
 import { useImageUpload } from "@/composables/user/useImageUpload";
 import ButtonBackVue from "@/components/common/ButtonBack.vue";
-
+import { useRoute, useRouter } from "vue-router";
 export default {
   components: {
     ImageUploader,
@@ -76,7 +76,10 @@ export default {
   setup() {
     // Tạo một instance duy nhất của useImageUpload
     const imageUploadInstance = useImageUpload();
-    const { files, uploadErrors, totalFiles, remainingSlots } = imageUploadInstance;
+    const route = useRoute();
+    const featureId = computed(() => route.query.featureId);
+    const featureName = computed(() => route.query.featureName);
+    const { files, uploadErrors, totalFiles, remainingSlots} = imageUploadInstance;
 
     // Cung cấp instance này cho các component con
     provide('imageUploadInstance', imageUploadInstance);
@@ -89,7 +92,9 @@ export default {
     return {
       files,
       uploadErrors,
-      uploadStatus
+      uploadStatus,
+      featureId,
+      featureName
     };
   }
 }
