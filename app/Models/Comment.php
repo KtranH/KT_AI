@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'image_id',
@@ -15,14 +20,19 @@ class Comment extends Model
         'list_like'
     ];
 
+    protected $casts = [
+        'list_like' => 'array',
+        'sum_like' => 'integer'
+    ];
+
     // Relationship với User (nhiều-1)
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Relationship với Image (nhiều-1)
-    public function image()
+    public function image(): BelongsTo
     {
         return $this->belongsTo(Image::class);
     }
@@ -34,7 +44,7 @@ class Comment extends Model
     }
 
     // Self relationship cho child comments
-    public function replies()
+    public function replies(): HasMany
     {
         return $this->hasMany(Comment::class, 'parent_id');
     }

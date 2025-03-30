@@ -8,26 +8,26 @@ export function useTurnstile(siteKeyParam = null) {
   const turnstileToken = ref('')
   const turnstileSiteKey = ref(siteKeyParam)
   
-  // Callback function for Turnstile
+  // Hàm callback cho Turnstile
   const handleTurnstileCallback = (token) => {
     turnstileToken.value = token
     turnstileError.value = null
   }
 
-  // Error callback function for Turnstile
+  // Hàm callback xử lý lỗi cho Turnstile
   const handleTurnstileError = (error) => {
     console.error('Turnstile error:', error)
     turnstileError.value = 'Đã xảy ra lỗi khi xác thực. Vui lòng thử lại.'
     resetTurnstile()
   }
 
-  // Expose the callback globally
+  // Đưa callback ra toàn cục
   const setupGlobalCallback = () => {
     window.handleTurnstileCallback = handleTurnstileCallback
     window.handleTurnstileError = handleTurnstileError
   }
 
-  // Fetch siteKey from the server if not provided
+  // Lấy siteKey từ server nếu không được cung cấp
   const fetchSiteKey = async () => {
     if (turnstileSiteKey.value) return
     
@@ -40,23 +40,23 @@ export function useTurnstile(siteKeyParam = null) {
     }
   }
 
-  // Load Turnstile script
+  // Tải script Turnstile
   const loadTurnstileScript = async () => {
-    // First ensure we have the siteKey
+    // Đảm bảo có siteKey trước
     await fetchSiteKey()
     if (!turnstileSiteKey.value) {
-      return // Cannot load without siteKey
+      return // Không thể tải nếu không có siteKey
     }
     
-    // If script is already loaded, render the widget directly
+    // Nếu script đã được tải, hiển thị widget trực tiếp
     if (window.turnstile) {
       renderTurnstileWidget()
       return
     }
     
-    // If script tag exists but widget not rendered yet
+    // Nếu thẻ script tồn tại nhưng widget chưa được hiển thị
     if (document.querySelector('script[src*="turnstile.js"]')) {
-      // Wait for script to load
+      // Đợi script tải xong
       const checkTurnstile = setInterval(() => {
         if (window.turnstile) {
           clearInterval(checkTurnstile)
@@ -66,7 +66,7 @@ export function useTurnstile(siteKeyParam = null) {
       return
     }
     
-    // Create and load script
+    // Tạo và tải script
     const script = document.createElement('script')
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
     script.async = true
@@ -84,18 +84,18 @@ export function useTurnstile(siteKeyParam = null) {
     document.head.appendChild(script)
   }
   
-  // Render the Turnstile widget
+  // Hiển thị widget Turnstile
   const renderTurnstileWidget = () => {
-    // Make sure the DOM element and turnstile object are available
+    // Đảm bảo phần tử DOM và đối tượng turnstile có sẵn
     if (!turnstileWidget.value || !window.turnstile || !turnstileSiteKey.value) return
     
     try {
-      // Clear any existing widget first
+      // Xóa widget hiện có trước
       while (turnstileWidget.value.firstChild) {
         turnstileWidget.value.removeChild(turnstileWidget.value.firstChild)
       }
       
-      // Render new widget
+      // Hiển thị widget mới
       window.turnstile.render(turnstileWidget.value, {
         sitekey: turnstileSiteKey.value,
         callback: function(token) {
@@ -115,7 +115,7 @@ export function useTurnstile(siteKeyParam = null) {
     }
   }
 
-  // Reset Turnstile widget
+  // Đặt lại widget Turnstile
   const resetTurnstile = () => {
     if (!window.turnstile || !turnstileWidget.value) return
     
@@ -124,22 +124,22 @@ export function useTurnstile(siteKeyParam = null) {
     } catch (err) {
       console.error('Error resetting Turnstile:', err)
       
-      // Try re-rendering as fallback
+      // Thử hiển thị lại như một giải pháp dự phòng
       renderTurnstileWidget()
     }
     
     turnstileToken.value = ''
   }
 
-  // Initialize Turnstile
+  // Khởi tạo Turnstile
   const initTurnstile = async () => {
     setupGlobalCallback()
     await loadTurnstileScript()
   }
 
-  // Clean up on component unmount
+  // Dọn dẹp khi component bị hủy
   onUnmounted(() => {
-    // Remove global references to prevent memory leaks
+    // Xóa tham chiếu toàn cục để tránh rò rỉ bộ nhớ
     if (window.handleTurnstileCallback) {
       window.handleTurnstileCallback = undefined
     }

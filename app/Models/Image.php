@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Image extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'features_id',
@@ -20,13 +25,16 @@ class Image extends Model
     ];
 
     protected $casts = [
+        'image_url' => 'array',
+        'sum_like' => 'integer',
+        'sum_comment' => 'integer',
         'metadata' => 'json',
         'privacy_status' => 'string',
         'status_image' => 'string'
     ];
 
     // Relationship với User (nhiều-1)
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -38,7 +46,7 @@ class Image extends Model
     }
 
     // Relationship với Comment (1-nhiều)
-    public function comments()
+    public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }

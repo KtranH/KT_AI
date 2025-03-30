@@ -51,7 +51,7 @@
 
 <script>
 import { ref, inject } from 'vue';
-import { isFileImage, sizeImageUnder2MB } from '@/utils';
+import { isFileImage, isImageSizeValid } from '@/utils';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export default {
@@ -97,7 +97,7 @@ export default {
         }
         
         // Kiểm tra kích thước (2MB = 2 * 1024 * 1024 bytes)
-        if (!sizeImageUnder2MB(file)) {
+        if (!isImageSizeValid(file)) {
           uploadError.value = 'Mỗi ảnh không được vượt quá 2MB.';
           toastError(uploadError.value);
           return false;

@@ -70,4 +70,7 @@ router.afterEach(() => {
 
 
 // Đảm bảo app chỉ được mount một lần
-app.mount("#app")
+if (!document.getElementById('app')._vue_app_) {
+  app.mount('#app')
+  document.getElementById('app')._vue_app_ = true
+}

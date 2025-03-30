@@ -31,55 +31,52 @@ export const generateRandomSeed = () => {
 };
 
 // Kiểm tra có phải là file ảnh không
-export const isFileImage = (file) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-  return allowedTypes.includes(file.type);
-};
+export function isFileImage(file) {
+  return file && file.type && file.type.startsWith('image/')
+}
 
 // Kiểm tra file ảnh có dưới 2MB không
-export const sizeImageUnder2MB = (file) => {
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    return file.size <= maxSize;
-}; 
+export function isImageSizeValid(file) {
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  return file && file.size <= maxSize
+}
 
 // Kiểm tra độ dài văn bản dưới 256 kí tự
-export const textLengthUnder256 = (text) => {
-  return text.length <= 256;
-};
+export function isTextLengthValid(text, maxLength = 256) {
+  return text && text.length <= maxLength
+}
 
 // Giải mã ID
-export const decodedID = (encodedID) => {
+export function decodedID(encodedID) {
   try {
-    if (!encodedID) return null;
     // Đảm bảo chuỗi hợp lệ trước khi decode
-    const base64Regex = /^[A-Za-z0-9+/=]+$/;
-    if (!base64Regex.test(encodedID)) {
-      console.warn('encodedID không phải là chuỗi base64 hợp lệ:', encodedID);
+    if (!encodedID || typeof encodedID !== 'string' || !encodedID.trim()) {
       return encodedID; // Trả về ID gốc nếu không phải base64
     }
     
-    return atob(encodedID);
+    const decodedID = atob(encodedID)
+    return decodedID
   } catch (error) {
-    console.error('Lỗi khi giải mã ID:', error);
+    console.error('Error decoding ID:', error)
     return encodedID; // Trả về ID gốc nếu có lỗi
   }
 }
 
 // Mã hóa ID
-export const encodedID = (id) => {
+export function encodedID(id) {
   try {
-    if (!id) return '';
-    return btoa(String(id));
+    const encodedID = btoa(String(id))
+    return encodedID
   } catch (error) {
-    console.error('Lỗi khi mã hóa ID:', error);
+    console.error('Error encoding ID:', error)
     return String(id); // Trả về ID gốc nếu có lỗi
   }
 }
 
 // Kiểm tra xem thao tác có quá nhanh không
-export const isActionTooFast = (lastActionTime, threshold = 1000) => {
+export function isActionTooQuick(lastActionTime, minInterval = 500) {
   const now = Date.now()
-  return now - lastActionTime < threshold
+  return lastActionTime && (now - lastActionTime < minInterval)
 }
 
 

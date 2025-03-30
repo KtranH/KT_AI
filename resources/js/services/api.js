@@ -1,18 +1,18 @@
 import apiClient from '../config/apiConfig'
 
-// Auth API calls
+// Các gọi API xác thực
 export const authAPI = {
   login: (credentials) => apiClient.post('/login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
 }
 
-// User verification API calls
+// Các gọi API xác minh người dùng
 export const verificationAPI = {
   resendCode: (email) => apiClient.post('/resend-verification', { email })
 }
 
-// Image  Information API calls
+// Các gọi API thông tin hình ảnh
 export const imageAPI = {
   getImages: (id) => apiClient.get(`/get_images_information/${id}`),
   getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user'),
@@ -22,24 +22,24 @@ export const imageAPI = {
   unlikePost: (id) => apiClient.post(`/unlike_post/${id}`)
 }
 
-// Google API calls
+// Các gọi API Google
 export const googleAPI = {
   getAuthUrl: () => apiClient.get('/auth/google/url'),
   callback: (code) => apiClient.get(`/auth/google/callback?code=${code}`)
 }
 
-// Turnstile API calls
+// Các gọi API Turnstile
 export const turnstileAPI = {
   getConfig: () => apiClient.get('/turnstile/config')
 }
 
-// Features API calls
+// Các gọi API tính năng
 export const featuresAPI = {
   getAll: () => apiClient.get('/load_features'),
   getById: (id) => apiClient.get(`/load_features/${id}`),
 }
 
-// Like API calls
+// Các gọi API thích
 export const likeAPI = {
   getLikesByID: (id) => apiClient.get(`/get_likes_information/${id}`),
   checkLiked: (id) => apiClient.get(`/check_liked/${id}`),
@@ -75,7 +75,7 @@ export const likeAPI = {
   }
 }
 
-// Comment API calls
+// Các gọi API bình luận
 export const commentAPI = {
   getComments: (imageId) => apiClient.get(`/images/${imageId}/comments`),
   createComment: (commentData) => apiClient.post('/comments', commentData),
@@ -84,7 +84,7 @@ export const commentAPI = {
   toggleLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)
 }
 
-// Generic API - for any other endpoints
+// API tổng quát - cho các endpoint khác
 export const genericAPI = {
   get: (endpoint, config) => apiClient.get(endpoint, config),
   post: (endpoint, data, config) => apiClient.post(endpoint, data, config),
