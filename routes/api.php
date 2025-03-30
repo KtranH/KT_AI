@@ -31,7 +31,7 @@ Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']);
 // Routes cho bình luận
 Route::middleware('auth:sanctum')->group(function () {
     // Lấy bình luận cho một hình ảnh
-    Route::get('/images/{imageId}/comments', [CommentController::class, 'getComments']);
+    Route::get('/images/{imageId}/comments', [App\Http\Controllers\API\CommentController::class, 'getComments']);
     
     // Tạo bình luận mới
     Route::post('/comments', [CommentController::class, 'store']);

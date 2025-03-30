@@ -8,10 +8,6 @@ const token = ref(localStorage.getItem('token') || null)
 const isRemembered = ref(localStorage.getItem('remember') === 'true')
 const isAuthenticated = computed(() => !!user.value)
 
-// Hàm khởi tạo để thay thế onMounted
-const initializeAuth = () => {
-  checkAuth()
-}
 
 export const useAuthStore = () => {
   
@@ -89,6 +85,11 @@ export const useAuthStore = () => {
       console.error('Error checking auth:', error)
       return false
     }
+  }
+
+  // Hàm khởi tạo để thay thế onMounted
+  const initializeAuth = () => {
+    checkAuth()
   }
 
   const login = async (credentials) => {

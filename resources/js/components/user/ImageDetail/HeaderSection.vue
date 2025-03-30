@@ -22,7 +22,7 @@
             </button>
             <!-- Dropdown menu -->
             <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10">
-                <div class="py-1" v-if="user && currentUserImage && user.id === currentUserImage.id">
+                <div class="py-1" v-if="user.value.id === currentUserImage.id">
                     <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <i class="fa-solid fa-pen-to-square"></i> Sửa bài viết
                     </button>
@@ -34,7 +34,7 @@
                 </div>
                 <div class="py-1" v-else>
                     <button @click="handleReport" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fa-solid fa-bell"></i> Báo cáo bài viết
+                        <i class="fa-solid fa-bell"></i> Báo cáo
                     </button>
                     <ConfirmReport ref="reportRef" />
                 </div>
@@ -55,7 +55,7 @@
 import useImage from '@/composables/user/useImage'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
@@ -98,12 +98,36 @@ export default {
         const { dataImage } = useImage()
         const imageStore = useImageStore()
         const auth = useAuthStore()
+        
+        // Đảm bảo trạng thái đăng nhập được khởi tạo
+        onMounted(async () => {
+            try {
+                // Kiểm tra xác thực
+                await auth.checkAuth()
+                // In ra console để debug
+                console.log('Thông tin người dùng sau khi kiểm tra xác thực:', auth.user)
+                console.log('Thông tin chủ bài viết:', imageStore.currentUser)
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra xác thực:', error)
+            }
+            document.addEventListener('click', handleClickOutside)
+        })
+        
         const user = computed(() => auth.user)
         const updateRef = ref(null)
         const deleteRef = ref(null)
         const reportRef = ref(null)
         
         const currentUserImage = computed(() => imageStore.currentUser)
+                
+        // Thêm console.log để debug
+        watch(() => auth.user, (newUser) => {
+            console.log('Auth user changed:', newUser)
+        })
+        
+        watch(() => imageStore.currentUser, (newUser) => {
+            console.log('Current image user changed:', newUser)
+        })
         
         const formatTime = (time) => {
             if (!time) return 'vừa xong';
@@ -144,6 +168,7 @@ export default {
         }
         
         onMounted(() => {
+            auth.initializeAuth()
             document.addEventListener('click', handleClickOutside)
         })
         
@@ -164,7 +189,7 @@ export default {
             user,
             updateRef,
             deleteRef,
-            reportRef
+            reportRef,
         }
     }
 }

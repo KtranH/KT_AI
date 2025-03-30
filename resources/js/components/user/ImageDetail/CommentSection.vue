@@ -3,6 +3,11 @@
         <!-- Header with profile info -->
         <HeaderSection />
 
+        <!-- Debugging info
+        <div class="p-2 bg-gray-200 text-xs">
+            <p>Image ID: {{ imageId }} ({{ typeof imageId }})</p>
+        </div>-->
+
         <!-- Loading indicator -->
         <div v-if="loading" class="flex justify-center items-center py-6">
             <span class="animate-pulse text-gray-500">Đang tải bình luận...</span>
@@ -43,7 +48,7 @@
 </template>
 
 <script>
-import { nextTick, onMounted } from 'vue'
+import { nextTick, onMounted, watch } from 'vue'
 import HeaderSection from './HeaderSection.vue'
 import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'
@@ -91,14 +96,27 @@ export default {
         onMounted(() => {
             if (props.imageId) {
                 fetchComments();
+            } else {
+                console.log("imageId không tồn tại hoặc không hợp lệ");
+            }
+        });
+
+        // Watch prop changes
+        watch(() => props.imageId, (newValue, oldValue) => {
+            console.log("imageId changed:", oldValue, "->", newValue);
+            if (newValue && newValue !== oldValue) {
+                console.log("Refreshing comments due to imageId change");
+                fetchComments();
             }
         });
 
         const handleStartReply = (index, username) => {
+            if (!props.imageId) return
             startReply(index, username)
         }
 
         const handleStartNestedReply = (index, username) => {
+            if (!props.imageId) return
             startNestedReply(index, username)
         }
 

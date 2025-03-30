@@ -40,10 +40,10 @@
 
 <script>
 import useLikes from '@/composables/user/useLikes'
-import { onMounted, onBeforeUnmount, watch, computed, ref } from 'vue'
+import { onMounted, watch, computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { decodedID } from '@/utils'
-import { isActionTooFast } from '@/utils'
+import { isActionTooQuick } from '@/utils'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 import { useImageStore } from '@/stores/user/imagesStore'
 
@@ -67,7 +67,7 @@ export default {
         })
 
         const userLikePost = async () => {
-            if (isActionTooFast(lastLikeTime.value)) {
+            if (isActionTooQuick(lastLikeTime.value)) {
                 toast.error('Vui lòng đợi 1 giây trước khi thực hiện thao tác khác', {
                     duration: 3000,            
                     position: 'bottom-right'

@@ -10,7 +10,7 @@ class CommentResource extends JsonResource
     public function toArray($request): array
     {
         $userId = Auth::id();
-        $listLike = json_decode($this->list_like ?? '[]', true);
+        $listLike = $this->list_like ?? [];
         
         return [
             'id' => $this->id,

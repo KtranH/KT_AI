@@ -77,7 +77,11 @@ export const likeAPI = {
 
 // Các gọi API bình luận
 export const commentAPI = {
-  getComments: (imageId) => apiClient.get(`/images/${imageId}/comments`),
+  getComments: (imageId, page = 1, commentId = null) => {
+    let url = `/images/${imageId}/comments?page=${page}`
+    if (commentId) url += `&comment_id=${commentId}`
+    return apiClient.get(url)
+  },
   createComment: (commentData) => apiClient.post('/comments', commentData),
   updateComment: (commentId, content) => apiClient.put(`/comments/${commentId}`, { content }),
   deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),

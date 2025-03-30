@@ -46,7 +46,7 @@
 
 <script>
 import { defineComponent, ref, watch } from 'vue';
-import { isFileImage, sizeImageUnder2MB } from '@/utils/index';
+import { isFileImage, isImageSizeValid } from '@/utils/index';
 
 export default defineComponent({
   name: 'ImageUploader',
@@ -84,7 +84,7 @@ export default defineComponent({
     
     const handleFile = (file) => {
       if (isFileImage(file)) {
-        if(sizeImageUnder2MB(file)) {
+        if(isImageSizeValid(file)) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreview.value = e.target.result;

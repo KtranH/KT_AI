@@ -188,8 +188,14 @@ export default {
     props: {
         comment: Object,
         index: Number,
-        replyingToIndex: Number,
-        replyingToNested: Boolean,
+        replyingToIndex: {
+            type: Number,
+            default: -1
+        },
+        replyingToNested: {
+            type: Boolean,
+            default: false
+        },
         replyToNestedUsername: String,
         loading: {
             type: Boolean,

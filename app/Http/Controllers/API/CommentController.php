@@ -90,45 +90,4 @@ class CommentController extends Controller
         $result = $this->commentService->toggleLike($comment);
         return response()->json($result);
     }
-
-    /**
-     * Format comment để trả về cho frontend
-     */
-    private function formatComment(Comment $comment): array
-    {
-        $userId = Auth::id();
-        $listLike = json_decode($comment->list_like ?? '[]', true);
-        
-        $formattedComment = [
-            'id' => $comment->id,
-            'username' => $comment->user->name,
-            'avatar' => $comment->user->avatar_url,
-            'text' => $comment->content,
-            'time' => $comment->created_at->diffForHumans(),
-            'likes' => $comment->sum_like,
-            'isLiked' => in_array($userId, $listLike),
-            'isOwner' => $userId === $comment->user_id,
-            'showAllReplies' => true,
-            'replies' => []
-        ];
-        
-        if ($comment->replies->count() > 0) {
-            foreach ($comment->replies as $reply) {
-                $replyListLike = json_decode($reply->list_like ?? '[]', true);
-                
-                $formattedComment['replies'][] = [
-                    'id' => $reply->id,
-                    'username' => $reply->user->name,
-                    'avatar' => $reply->user->avatar_url,
-                    'text' => $reply->content,
-                    'time' => $reply->created_at->diffForHumans(),
-                    'likes' => $reply->sum_like,
-                    'isLiked' => in_array($userId, $replyListLike),
-                    'isOwner' => $userId === $reply->user_id
-                ];
-            }
-        }
-        
-        return $formattedComment;
-    }
 }

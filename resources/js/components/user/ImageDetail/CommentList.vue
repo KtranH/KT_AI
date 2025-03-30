@@ -50,19 +50,19 @@ export default {
     props: {
         comments: {
             type: Array,
-            required: true
+            default: () => []
         },
         replyingToIndex: {
-            type: Number,
-            required: true
+            type: [Number, null],
+            default: null
         },
         replyingToNested: {
-            type: Boolean,
-            required: true
+            type: [Boolean, null],
+            default: null
         },
         replyToNestedUsername: {
             type: String,
-            required: true
+            default: ''
         },
         hasMoreComments: {
             type: Boolean,

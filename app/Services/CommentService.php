@@ -60,7 +60,7 @@ class CommentService
             'parent_id' => $data['parent_id'] ?? null,
             'content' => $data['content'],
             'sum_like' => 0,
-            'list_like' => json_encode([])
+            'list_like' => []
         ]);
 
         $this->incrementImageCommentCount($data['image_id']);
@@ -90,7 +90,7 @@ class CommentService
     public function toggleLike(Comment $comment): array
     {
         $userId = Auth::id();
-        $listLike = json_decode($comment->list_like ?? '[]', true);
+        $listLike = $comment->list_like ?? [];
         
         if (in_array($userId, $listLike)) {
             $listLike = array_diff($listLike, [$userId]);
@@ -100,7 +100,7 @@ class CommentService
             $comment->sum_like += 1;
         }
         
-        $comment->list_like = json_encode($listLike);
+        $comment->list_like = $listLike;
         $comment->save();
         
         return [
