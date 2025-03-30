@@ -15,10 +15,7 @@ use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
-    public function __construct(
-        private readonly CommentService $commentService
-    ) {
-    }
+    public function __construct( private readonly CommentService $commentService) {}
 
     //
     private const COMMENTS_PER_PAGE = 5;

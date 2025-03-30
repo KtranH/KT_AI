@@ -68,12 +68,18 @@ export function useTurnstile(siteKeyParam = null) {
     
     // Tạo và tải script
     const script = document.createElement('script')
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback'
     script.async = true
     script.defer = true
     
-    script.onload = () => {
+    // Định nghĩa hàm callback khi script tải xong
+    window.onloadTurnstileCallback = () => {
       renderTurnstileWidget()
+    }
+    
+    script.onload = () => {
+      // Script đã tải xong, nhưng chờ callback để hiển thị widget
+      console.log('Turnstile script loaded')
     }
     
     script.onerror = (error) => {

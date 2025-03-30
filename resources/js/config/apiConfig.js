@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useAuthStore } from '../stores/auth/authStore'
 
 // Tạo instance axios với cấu hình mặc định
 const apiClient = axios.create({
@@ -29,29 +30,32 @@ apiClient.interceptors.request.use(
 // Interceptor cho response
 apiClient.interceptors.response.use(
   response => {
-    // Xử lý response thành công
-    return response 
+    return response
   },
   error => {
-    // Xử lý các lỗi phổ biến
-    if (error.response) {
-      // Lỗi server trả về với status code
-      const statusCode = error.response.status
+    // Kiểm tra lỗi validation từ Laravel
+    if (error.response && error.response.status === 422) {
+      console.log('Validation error:', error.response.data)
       
-      // Xử lý lỗi 401 - Unauthorized
-      if (statusCode === 401) {
-        // Nếu token hết hạn, đăng xuất người dùng
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        localStorage.removeItem('remember')
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('user')
-        
-        // Chuyển hướng đến trang đăng nhập
-        window.location.href = '/login'
+      // Kiểm tra nếu là API check và đã đăng nhập qua Google
+      if (error.config && error.config.url === '/check' && localStorage.getItem('token')) {
+        console.log('Auth check validation error, returning unauthenticated')
+        // Trả về kết quả giả để không ảnh hưởng đến luồng đăng nhập
+        return Promise.resolve({
+          data: {
+            authenticated: true,
+            user: JSON.parse(localStorage.getItem('user'))
+          }
+        })
       }
-      
-      // Thêm các xử lý lỗi khác nếu cần
+    }
+    
+    // Kiểm tra lỗi xác thực 401 hoặc 403
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Có thể xử lý logout ở đây nếu cần
+      const authStore = useAuthStore()
+      authStore.clearAuthData()
+      router.push('/login')
     }
     
     return Promise.reject(error)

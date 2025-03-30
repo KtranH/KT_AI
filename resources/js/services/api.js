@@ -5,6 +5,7 @@ export const authAPI = {
   login: (credentials) => apiClient.post('/login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
+  
 }
 
 // Các gọi API xác minh người dùng

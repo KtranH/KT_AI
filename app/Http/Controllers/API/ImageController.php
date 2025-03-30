@@ -13,10 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class ImageController extends Controller
 {
-    public function __construct(
-        private readonly ImageService $imageService
-    ) {
-    }
+    public function __construct(private readonly ImageService $imageService) {}
 
     public function getImages($id): JsonResponse
     {

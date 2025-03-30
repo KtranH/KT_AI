@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\VerificationMail;
 use App\Models\User;
-use GrahamCampbell\ResultType\Success;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,9 +14,18 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
+use App\Services\MailService;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Mail\MailRequest;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly MailService $mailService, 
+                                private readonly LoginRequest $loginRequest, 
+                                private readonly RegisterRequest $registerRequest, 
+                                private readonly MailRequest $mailRequest) {}
+    
     public function check()
     {
         return response()->json([
@@ -28,12 +36,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'cf-turnstile-response' => ['required', 'string'],
-        ]);
+        $request->validate($this->registerRequest->rules());
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
@@ -57,16 +60,12 @@ class AuthController extends Controller
             'is_verified' => false
         ]);
 
-        $verificationcode = Str::random(6);
-        Redis::setex("verify_code:{$user->email}", 600, $verificationcode);
-        $detail = [
-            'title' => "Mã xác nhận từ KT-AI",
-            'begin' => "Xin chào " . $request->name,
-            'body' => "Chúng tôi nhận được lượt đăng ký tài khoản của bạn. Nhập mã dưới đây để hoàn tất xác minh (Lưu ý mã chỉ có khả dụng trong 10 phút)",
-            'code' => $verificationcode
-        ];
-        Mail::to($request->email)->send(new VerificationMail($detail));
-        
+        if (!$this->mailService->sendMail($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi gửi mã xác thực'
+            ], 500);
+        }
         return response()->json([
             'success' => true,
             'message' => 'Đã gửi mã xác thực'],
@@ -75,10 +74,7 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $request->validate($this->mailRequest->rules());
 
         $storedCode = Redis::get("verify_code:{$request->email}");
         
@@ -155,14 +151,12 @@ class AuthController extends Controller
         Redis::incr("verify_resend_count:{$request->email}");
         Redis::setex("verify_last_resend:{$request->email}", 600, time());
 
-        $detail = [
-            'title' => "Mã xác nhận từ KT-AI",
-            'begin' => "Xin chào " . $user->name,
-            'body' => "Chúng tôi nhận được yêu cầu gửi lại mã xác thực. Nhập mã dưới đây để hoàn tất xác minh (Lưu ý mã chỉ có khả dụng trong 10 phút)",
-            'code' => $verificationCode
-        ];
-        
-        Mail::to($request->email)->send(new VerificationMail($detail));
+        if (!$this->mailService->sendMailResend($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi gửi mã xác thực'
+            ], 500);
+        }
 
         return response()->json([
             'message' => 'Đã gửi lại mã xác thực.',
@@ -171,11 +165,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-            'cf-turnstile-response' => ['required', 'string'],
-        ]);
+        $request->validate($this->loginRequest->rules());
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
