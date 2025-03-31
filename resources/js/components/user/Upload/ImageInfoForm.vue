@@ -120,7 +120,7 @@ export default {
     const uploadRef = ref(null)
     const storeImg = useImageStore()
     const router = useRouter()
-    
+
     const calculateTotalSize = () => {
       const totalBytes = files.value.reduce((total, fileObj) => total + fileObj.file.size, 0)
       
@@ -191,49 +191,3 @@ export default {
   }
 }
 </script>
-<style scoped>
-/* Gradient text effect */
-.bg-gradient-text-v2 {
-  background: linear-gradient(
-    -45deg,
-    #3b82f6,
-    #6366f1,
-    #8b5cf6,
-    #ec4899,
-    #3b82f6
-  );
-  background-size: 400%;
-  animation: gradient-animation 8s ease infinite;
-
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.bg-gradient-text {
-  background: linear-gradient(
-    -45deg,
-    #3b82f6,
-    #6366f1,
-    #8b5cf6,
-    #ec4899,
-    #3b82f6
-  );
-  background-size: 400%;
-  animation: gradient-animation 8s ease infinite;
-}
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-@keyframes gradient-animation {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-</style>

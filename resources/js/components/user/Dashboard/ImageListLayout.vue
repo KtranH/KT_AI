@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white rounded-lg shadow-sm p-6 mt-6 container mx-auto">
+    <div class="bg-white rounded-lg p-6 mt-6 container mx-auto">
       <h2 class="text-lg font-semibold text-gray-900 mb-4">Danh sách ảnh</h2>
       
       <div v-if="isLoading" class="text-center py-8">
@@ -107,7 +107,7 @@
 import { onMounted, ref, watch, nextTick } from 'vue'
 import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
 import useImage from '@/composables/user/useImage'
-import Masonry from 'masonry-layout';
+import useMasonry from '@/composables/user/useMasonry'
 
 export default {
   name: 'ImageList',
@@ -122,30 +122,8 @@ export default {
   },
   setup(props) {
     const imageGroups = ref([])
-    const masonryContainer = ref(null)
-    const masonryInstance = ref(null)
+    const { masonryContainer, initMasonry, onImageLoaded } = useMasonry()
 
-    // Tạo masonry instance
-    const initMasonry = () => {
-      nextTick(() => {
-        if (masonryContainer.value) {
-          // Destroy previous instance if exists
-          if (masonryInstance.value) {
-            masonryInstance.value.destroy()
-          }
-          
-          // Initialize new Masonry
-          masonryInstance.value = new Masonry(masonryContainer.value, {
-            itemSelector: '.masonry-item',
-            columnWidth: '.masonry-item',
-            percentPosition: true,
-            gutter: 0,
-            transitionDuration: '0.2s',
-            initLayout: true
-          })
-        }
-      })
-    }
     // Sử dụng composable cải tiến
     const { 
       imagesCreatedByUser, 
@@ -272,13 +250,6 @@ export default {
       }
     })
     
-    // Xử lý khi hình ảnh được tải xong
-    const onImageLoaded = () => {
-      if (masonryInstance.value) {
-        masonryInstance.value.layout()
-      }
-    }
-
     return {
       imageGroups,
       setCurrentIndex,
@@ -293,53 +264,3 @@ export default {
   }
 }
 </script>
-<style scoped>
-.masonry-grid {
-  width: 120%;
-  margin: 0 10px;
-}
-
-.masonry-item {
-  width: 20%; /* Tạo 5 cột */
-  margin-bottom: 10px;
-  margin-right: 10px;
-  box-sizing: border-box;
-}
-
-/* Chắc chắn ảnh lấp đầy khung */
-.masonry-item img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-.masonry-item .h-full {
-  min-height: 200px;
-}
-
-/* Responsive grid sizing */
-@media (max-width: 1200px) {
-  .masonry-item {
-    width: 25%; /* 4 columns */
-  }
-}
-
-@media (max-width: 992px) {
-  .masonry-item {
-    width: 33.333%; /* 3 columns */
-  }
-}
-
-@media (max-width: 768px) {
-  .masonry-item {
-    width: 50%; /* 2 columns */
-  }
-}
-
-@media (max-width: 576px) {
-  .masonry-item {
-    width: 100%; /* 1 column */
-  }
-}
-</style>
