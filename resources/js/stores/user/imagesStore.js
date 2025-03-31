@@ -31,7 +31,7 @@ export const useImageStore = defineStore('image',
                 
                 // Đảm bảo ID được xử lý đúng cách
                 const processedId = String(id).trim();
-                
+
                 if (this.lastFetchedId === processedId && this.data !== null && this.images.length > 0) {
                     return;
                 }

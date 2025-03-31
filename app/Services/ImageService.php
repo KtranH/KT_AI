@@ -10,9 +10,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\FeatureService;
+use App\Services\UserService;
 
 class ImageService
 {
+    public function __construct(private readonly FeatureService $featureService, private readonly UserService $userService) {}
     /**
      * Lấy thông tin chi tiết của một hình ảnh
      */
@@ -182,6 +185,42 @@ class ImageService
                 'trace' => $e->getTraceAsString()
             ]);
             throw $e;
+        }
+    }
+
+    // Lưu trữ hình ảnh tải lên
+    public function storeImage($uploadedPaths, $user, $data)
+    {
+        try
+        {
+            Image::create([
+                'user_id' => $user->id,
+                'image_url' => json_encode($uploadedPaths),
+                'prompt' => $data['title'],
+                //'description' => $data['description'],
+                'features_id' => $data['feature_id'],
+                'status_image' => 'completed',
+                'sum_like' => 0,
+                'sum_comment' => 0,
+                'privacy_status' => 'public',
+                'metadata' => json_encode([]),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Tăng số lượng ảnh cho mục Feature
+            $this->featureService->increaseSumImg($data['feature_id']);
+            // Tăng số lượng ảnh cho user
+            $this->userService->increaseSumImg($user->id);
+            return true;
+        }
+        catch(\Exception $e)
+        {
+            Log::error('Store Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+            return false;
         }
     }
 } 

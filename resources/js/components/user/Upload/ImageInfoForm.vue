@@ -7,7 +7,7 @@
       <img :src="sticker" alt="Sticker" class="w-12 h-12 rounded-full ml-4" />
     </div>
     
-    <form @submit.prevent="submitForm" class="space-y-6">
+    <form @submit.prevent="handleUpload(featureId)" class="space-y-6">
       <div>
         <label for="title" class="block text-sm font-semibold text-gray-800">Tiêu đề:</label>
         <input 
@@ -66,6 +66,7 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           <span><i class="fa-solid fa-image mr-2"></i>{{ isSubmitting ? 'Đang xử lý...' : 'Tải lên hình ảnh' }}</span>
+          <ConfirmUpload ref="uploadRef" />
         </button>
       </div>
       
@@ -77,12 +78,22 @@
       </div>
     </form>
   </div>
+  <VueSonner theme="dark" />
 </template>
 
 <script>
-import { ref, inject } from 'vue';
+import { ref, inject } from 'vue'
+import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { encodedID } from '@/utils'
+import ConfirmUpload from '@/components/common/ConfirmUpload.vue'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { useRouter } from 'vue-router'
 
 export default {
+  components: {
+    ConfirmUpload,
+    VueSonner
+  },
   props: {
     featureId: {
       type: [Number, String, null],
@@ -97,70 +108,72 @@ export default {
   },
   setup(props) {
     // Lấy instance từ component cha
-    const imageUploadInstance = inject('imageUploadInstance');
-    const { files, clearAllFiles } = imageUploadInstance;
+    const imageUploadInstance = inject('imageUploadInstance')
+    const { files, uploadImages } = imageUploadInstance
     const sticker = ref("/img/upload.png")
-    const title = ref('');
-    const description = ref('');
-    const isSubmitting = ref(false);
-    const successMessage = ref('');
-    const errorMessage = ref('');
-    const { featureId, featureName } = props;
-
+    const title = ref('')
+    const description = ref('')
+    const isSubmitting = ref(false)
+    const successMessage = ref('')
+    const errorMessage = ref('')
+    const { featureId, featureName } = props
+    const uploadRef = ref(null)
+    const storeImg = useImageStore()
+    const router = useRouter()
+    
     const calculateTotalSize = () => {
-      const totalBytes = files.value.reduce((total, fileObj) => total + fileObj.file.size, 0);
+      const totalBytes = files.value.reduce((total, fileObj) => total + fileObj.file.size, 0)
       
       // Chuyển đổi sang đơn vị thích hợp
       if (totalBytes < 1024) {
-        return `${totalBytes} bytes`;
+        return `${totalBytes} bytes`
       } else if (totalBytes < 1024 * 1024) {
-        return `${(totalBytes / 1024).toFixed(2)} KB`;
+        return `${(totalBytes / 1024).toFixed(2)} KB`
       } else {
-        return `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`;
+        return `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
       }
-    };
-    
-    const submitForm = async () => {
-      if (files.value.length === 0) {
-        errorMessage.value = 'Vui lòng tải lên ít nhất một hình ảnh';
-        return;
+    }
+
+    // Thông báo thành công
+    const toastSuccess = (message) => {
+      toast.success(message, {
+        duration: 3000,
+        position: 'bottom-right'
+      })
+    }
+    // Thông báo thất bại
+    const toastError = (message) => {
+      toast.error(message, {
+        duration: 3000,
+        position: 'bottom-right'
+      })
+    }
+
+    const handleUpload = async (featureId) => {      
+      const result = await uploadRef.value.showAlert()
+      if (result.isConfirmed) {
+        isSubmitting.value = true
+        successMessage.value = ''
+        errorMessage.value = ''
+        try {
+          const result = await uploadImages(featureId, title.value, description.value)
+          if (result) {
+            storeImg.fetchImagesCreatedByUser()
+            successMessage.value = 'Tải lên thành công'
+            toastSuccess(successMessage.value)
+            setTimeout(() => {
+              router.push(`/createimage/${encodedID(featureId)}`)
+            }, 1000)
+          }
+        } catch (error) {
+          errorMessage.value = 'Tải lên thất bại'
+          toastError(errorMessage.value)
+        } finally {
+          isSubmitting.value = false
+        }
       }
-      
-      errorMessage.value = '';
-      successMessage.value = '';
-      isSubmitting.value = true;
-      
-      const formData = new FormData();
-      formData.append('title', title.value);
-      formData.append('description', description.value);
-      files.value.forEach((fileObj, index) => {
-        formData.append(`images[${index}]`, fileObj.file);
-      });
-    
-      try {
-        // Giả lập API call vì đây chỉ là mock-up
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Giả lập response thành công
-        console.log('Dữ liệu đã gửi:', {
-          title: title.value,
-          description: description.value,
-          totalImages: files.value.length
-        });
-        
-        successMessage.value = 'Tải lên thành công! Hình ảnh của bạn đã được lưu.';
-        title.value = '';
-        description.value = '';
-        // Reset files array bằng clearAllFiles từ instance
-        clearAllFiles();
-      } catch (error) {
-        console.error('Lỗi:', error);
-        errorMessage.value = 'Có lỗi xảy ra khi tải lên. Vui lòng thử lại sau.';
-      } finally {
-        isSubmitting.value = false;
-      }
-    };
-    
+    }
+
     return {
       files,
       title,
@@ -169,10 +182,11 @@ export default {
       successMessage,
       errorMessage,
       calculateTotalSize,
-      submitForm,
       featureId,
       featureName,
-      sticker
+      sticker,
+      handleUpload,
+      uploadRef
     };
   }
 }

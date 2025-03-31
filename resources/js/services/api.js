@@ -23,6 +23,15 @@ export const imageAPI = {
   unlikePost: (id) => apiClient.post(`/unlike_post/${id}`)
 }
 
+// Gọi API tải lên hình ảnh
+export const imageUploadAPI = {
+  store: (formData, featureId) => apiClient.post(`/upload_images/${featureId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
 // Các gọi API Google
 export const googleAPI = {
   getAuthUrl: () => apiClient.get('/auth/google/url'),

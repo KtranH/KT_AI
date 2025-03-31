@@ -14,7 +14,6 @@ class R2StorageService
         $this->disk = Storage::disk('r2');
         $this->urlR2 = env('R2_URL');
     }
-
     /**
      * Upload file lên R2
      */
@@ -29,6 +28,12 @@ class R2StorageService
     public function getUrl(string $path): string
     {
         return $this->disk->url($path);
+    }
+
+    // Lấy URL R2
+    public function getUrlR2(): string
+    {
+        return $this->urlR2;
     }
 
     /**

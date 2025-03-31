@@ -1,7 +1,6 @@
 import { ref, computed, onMounted } from 'vue'
 import router from '../../router'
-import { authAPI, googleAPI } from '../../services/api'
-import axios from 'axios'
+import { authAPI } from '../../services/api'
 
 // Reactive state
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)
@@ -68,40 +67,22 @@ export const useAuthStore = () => {
       
       if (!token.value || !user.value) return false
 
-      // Kiểm tra xác thực bằng cách tạo một request đến /api/check
-      // Đảm bảo token được gửi trong header Authorization
-      try {
-        const response = await authAPI.check()
-        
-        if (response.data.authenticated) {
-          if (isRemembered.value) {
-            saveAuthData(response.data.user, token.value, true)
-          } else {
-            saveAuthData(response.data.user, token.value, false)
-          }
-          return true
+      const response = await authAPI.check()
+      
+      if (response.data.authenticated) {
+        if (isRemembered.value) {
+          saveAuthData(response.data.user, token.value, true)
+        } else {
+          saveAuthData(response.data.user, token.value, false)
         }
-      } catch (error) {
-        // Nếu API /api/check trả về lỗi nhưng chúng ta vẫn có token và user
-        // Đặc biệt là sau khi đăng nhập bằng Google
-        // Giả định rằng người dùng đã được xác thực và bỏ qua lỗi validation
-        if (error.response && error.response.status === 422 && user.value && token.value) {
-          console.log('Bỏ qua lỗi validation từ API /check do đã đăng nhập qua Google');
-          return true;
-        }
-        
-        // Nếu lỗi khác, xóa dữ liệu
+        return true
+      } else {
         clearAuthData()
-        console.error('Error checking auth:', error)
         return false
       }
-      
-      // Nếu không authenticated
-      clearAuthData()
-      return false
     } catch (error) {
       clearAuthData()
-      console.error('Error in checkAuth:', error)
+      console.error('Error checking auth:', error)
       return false
     }
   }
@@ -110,7 +91,7 @@ export const useAuthStore = () => {
   const initializeAuth = () => {
     checkAuth()
   }
-
+  
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials)
@@ -137,56 +118,28 @@ export const useAuthStore = () => {
 
   const handleLoginByGoogle = async () => {
     try {
-      // Quay lại sử dụng axios trực tiếp như trước đây
       const response = await axios.get('/auth/google/url')
       const googleAuthUrl = response.data.url
   
       const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600')
-      
-      // Thiết lập sự kiện lắng nghe mà không dùng once: true để tránh bỏ lỡ thông báo
-      const messageHandler = (event) => {
-        // Kiểm tra event origin một cách linh hoạt hơn
-        // Có thể lọc chỉ các origin được phép nếu cần thiết
-        if (event.origin !== window.location.origin) {
-          console.log(`Ignored message from: ${event.origin}`)
-          return
-        }
   
-        // Kiểm tra dữ liệu có đúng định dạng không
+      // Lắng nghe phản hồi từ popup
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return
+  
         const { success, token, user } = event.data
-        if (success === undefined) return
-  
-        // Gỡ bỏ event listener sau khi xử lý thành công
-        window.removeEventListener('message', messageHandler)
   
         if (success) {
           console.log('Đăng nhập thành công:', user)
-          // Lưu thông tin đăng nhập
+          // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
           saveAuthData(user, token, true)
           
-          // Lấy đường dẫn redirect nếu có, nếu không thì về dashboard
-          const redirect = router.currentRoute.value.query.redirect || '/dashboard'
-          
-          // Chuyển hướng mạnh mẽ hơn - không dùng setTimeout
-          try {
-            // Cố gắng sử dụng Vue Router trước
-            router.push(redirect).catch(err => {
-              console.log('Lỗi Router, chuyển sang window.location:', err)
-              // Nếu router thất bại, dùng window.location trực tiếp
-              window.location.href = redirect
-            })
-          } catch (navigationError) {
-            console.log('Lỗi chuyển hướng, dùng window.location:', navigationError)
-            // Fallback an toàn
-            window.location.href = redirect
-          }
+          // Sử dụng router.push() thay vì window.location.reload()
+          router.push('/dashboard')
         } else {
           console.error('Đăng nhập thất bại:', event.data.message)
         }
-      }
-      
-      // Đăng ký event listener
-      window.addEventListener('message', messageHandler)
+      }, { once: true })
     } catch (error) {
       console.error('Lỗi trong quá trình đăng nhập:', error)
     }
@@ -201,7 +154,6 @@ export const useAuthStore = () => {
     login,
     logout,
     handleLoginByGoogle,
-    initializeAuth,
-    clearAuthData
+    initializeAuth
   }
 }

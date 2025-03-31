@@ -7,24 +7,16 @@ use App\Mail\VerificationMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
 use App\Services\MailService;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterRequest;
-use App\Http\Requests\Mail\MailRequest;
+use App\Services\UserService;
 
 class AuthController extends Controller
 {
     public function __construct(private readonly MailService $mailService, 
-                                private readonly LoginRequest $loginRequest, 
-                                private readonly RegisterRequest $registerRequest, 
-                                private readonly MailRequest $mailRequest) {}
+                                private readonly UserService $userService) {}
     
     public function check()
     {
@@ -36,7 +28,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate($this->registerRequest->rules());
+        $request->validate([
+            'name' => ['required', 'string', 'max:30'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'cf-turnstile-response' => ['required', 'string'],
+        ]);
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
@@ -47,18 +44,7 @@ class AuthController extends Controller
             ], 400);
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'avatar_url' => "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png",
-            'cover_image_url' => "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/cover_image.png",
-            'remaining_creadits' => 0,
-            'sum_img' => 0,
-            'sum_like' => 0,
-            'status_user' => 'active',
-            'is_verified' => false
-        ]);
+        $user = $this->userService->createUser($request);
 
         if (!$this->mailService->sendMail($user)) {
             return response()->json([
@@ -74,7 +60,10 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request)
     {
-        $request->validate($this->mailRequest->rules());
+        $request->validate([
+            'email' => ['required', 'email'],
+            'code' => ['required', 'string', 'size:6'],
+        ]);
 
         $storedCode = Redis::get("verify_code:{$request->email}");
         
@@ -90,7 +79,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = $this->userService->checkEmail($request->email);
         
         if (!$user) {
             throw ValidationException::withMessages([
@@ -165,7 +154,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate($this->loginRequest->rules());
+        $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+            'cf-turnstile-response' => ['required', 'string'],
+        ]);
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
@@ -182,7 +175,7 @@ class AuthController extends Controller
         }
 
         // Lấy user mới nhất từ database
-        $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find(Auth::user()->id);
+        $user = $this->userService->getUser();
         
         if (!$user->is_verified) {
             Auth::logout();
@@ -217,21 +210,40 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        if (method_exists($user, 'tokens')) {
-            // Nếu dùng token-based, xoá toàn bộ token
-            $user->tokens()->delete();
+        try {
+            $user = $request->user();
+            if ($user && method_exists($user, 'tokens')) {
+                // Nếu dùng token-based, xoá toàn bộ token
+                $user->tokens()->delete();
+            }
+
+            // Nếu dùng session-based (Google OAuth), logout session
+            Auth::guard('web')->logout();
+            
+            // Đảm bảo regenerate session
+            if ($request->session()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+
+            // Xóa dữ liệu user trong session
+            if ($request->session()) {
+                $request->session()->forget('user');
+            }
+            
+            // Clear cookies liên quan đến OAuth nếu có
+            $cookieNames = ['laravel_session', 'XSRF-TOKEN'];
+            $response = response()->json(['message' => 'Đã đăng xuất thành công']);
+            
+            foreach ($cookieNames as $cookieName) {
+                $response->withoutCookie($cookieName);
+            }
+            
+            return $response;
+        } catch (\Exception $e) {
+            report($e);
+            return response()->json(['message' => 'Đã xảy ra lỗi khi đăng xuất: ' . $e->getMessage()], 500);
         }
-
-        // Nếu dùng session-based (Google OAuth), logout session
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        // Xóa dữ liệu user trong session
-        $request->session()->forget('user');
-
-        return response()->json(['message' => 'Đã đăng xuất thành công']);
     }
 
     /*public function user(Request $request)

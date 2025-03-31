@@ -4,16 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ImageResource;
-use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Services\R2StorageService;
+use App\Services\ImageService;
 
 class ImageController extends Controller
 {
-    public function __construct(private readonly ImageService $imageService) {}
+    public function __construct(private readonly ImageService $imageService, 
+                                private readonly R2StorageService $r2StorageService) {}
 
     public function getImages($id): JsonResponse
     {
@@ -183,6 +186,52 @@ class ImageController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể bỏ thích bài viết',
+                'error' => config('app.debug') ? $e->getMessage() : 'Lỗi hệ thống'
+            ], 500);
+        }
+    }
+    public function store(Request $request, $featureId)
+    {
+        try {
+            // Kiểm tra xem có file được gửi lên không
+            if (!$request->hasFile('images')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng tải lên ít nhất một ảnh.'
+                ], 422);
+            }
+    
+            $files = $request->file('images'); // Laravel sẽ nhận mảng file ở đây
+        
+            // Duyệt qua từng file ảnh
+            $uploadedPaths = [];
+            foreach ($files as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $path = "uploads/features/{$featureId}/user/" . Auth::user()->email . '/' . $fileName;
+                $filePath = $this->r2StorageService->upload($path, $file, 'public');
+                $uploadedPaths[] = $this->r2StorageService->getUrlR2() . "/" . $path;
+            }
+    
+            // Lưu trữ vào database
+            $data = [
+                'title' => $request->title,
+                'description' => $request->description,
+                'feature_id' => $featureId
+            ];
+            $this->imageService->storeImage($uploadedPaths, Auth::user(), $data);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Tải lên thành công'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Store Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+    
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể tải lên',
                 'error' => config('app.debug') ? $e->getMessage() : 'Lỗi hệ thống'
             ], 500);
         }

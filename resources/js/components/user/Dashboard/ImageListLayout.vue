@@ -14,12 +14,12 @@
         <p>Không có ảnh nào</p>
       </div>
       
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"> 
+      <div v-else ref="masonryContainer" class="masonry-grid"> 
         <!-- Image cells -->
         <div 
           v-for="(imageGroup, index) in imageGroups" 
           :key="index" 
-          class="relative aspect-square border border-gray-200 rounded-lg overflow-hidden"
+          class="masonry-item relative border border-gray-200 rounded-lg overflow-hidden"
         >
           <!-- Image display -->
           <div class="h-full w-full">
@@ -29,6 +29,7 @@
               class="object-cover w-full h-full cursor-pointer"
               loading="lazy"
               @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)"
+              @load="onImageLoaded"
               alt="Image"
             >
             <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -103,11 +104,10 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref, watch, nextTick } from 'vue'
 import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
 import useImage from '@/composables/user/useImage'
-import { encodedID } from '@/utils'
+import Masonry from 'masonry-layout';
 
 export default {
   name: 'ImageList',
@@ -121,10 +121,31 @@ export default {
     }
   },
   setup(props) {
-    const router = useRouter()
-    const route = useRoute()
     const imageGroups = ref([])
+    const masonryContainer = ref(null)
+    const masonryInstance = ref(null)
 
+    // Tạo masonry instance
+    const initMasonry = () => {
+      nextTick(() => {
+        if (masonryContainer.value) {
+          // Destroy previous instance if exists
+          if (masonryInstance.value) {
+            masonryInstance.value.destroy()
+          }
+          
+          // Initialize new Masonry
+          masonryInstance.value = new Masonry(masonryContainer.value, {
+            itemSelector: '.masonry-item',
+            columnWidth: '.masonry-item',
+            percentPosition: true,
+            gutter: 0,
+            transitionDuration: '0.2s',
+            initLayout: true
+          })
+        }
+      })
+    }
     // Sử dụng composable cải tiến
     const { 
       imagesCreatedByUser, 
@@ -164,9 +185,10 @@ export default {
     }
     
     // Lấy và nhóm hình ảnh theo bộ lọc và ID
-    const fetchAndGroupImages = () => {
+    const fetchAndGroupImages = async () => {
         let allImages = []        
         if (props.filter === 'created') {
+            
             // Lấy từ store thông qua composable
             if (imagesCreatedByUser.value && imagesCreatedByUser.value.length > 0) {
                 allImages = imagesCreatedByUser.value.flatMap(item => {
@@ -213,6 +235,9 @@ export default {
 
         // Chuyển đổi thành mảng
         imageGroups.value = Object.values(groupedImages)
+        
+        await nextTick()
+        initMasonry()
     }
 
 
@@ -220,7 +245,22 @@ export default {
       fetchAndGroupImages()
     }, { immediate: true })
     
+    // Theo dõi sự thay đổi của imageGroups để khởi tạo lại Masonry
+    watch(() => imageGroups.value, () => {
+      nextTick(() => {
+        initMasonry()
+      })
+    }, { deep: true });
+    
+    // Theo dõi số lượng nhóm hình ảnh
+    watch(() => imageGroups.value.length, () => {
+      nextTick(() => {
+        initMasonry()
+      })
+    });
+    
     onMounted(() => {
+      // Fetch data first, then init masonry when data is available
       if (props.filter === 'created' && (!imagesCreatedByUser.value || imagesCreatedByUser.value.length === 0)) {
         fetchImagesCreatedByUser().then(() => {
           fetchAndGroupImages()
@@ -232,6 +272,13 @@ export default {
       }
     })
     
+    // Xử lý khi hình ảnh được tải xong
+    const onImageLoaded = () => {
+      if (masonryInstance.value) {
+        masonryInstance.value.layout()
+      }
+    }
+
     return {
       imageGroups,
       setCurrentIndex,
@@ -240,7 +287,59 @@ export default {
       goToImageDetail,
       isLoading,
       hasError,
+      masonryContainer,
+      onImageLoaded
     }
   }
 }
 </script>
+<style scoped>
+.masonry-grid {
+  width: 120%;
+  margin: 0 10px;
+}
+
+.masonry-item {
+  width: 20%; /* Tạo 5 cột */
+  margin-bottom: 10px;
+  margin-right: 10px;
+  box-sizing: border-box;
+}
+
+/* Chắc chắn ảnh lấp đầy khung */
+.masonry-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.masonry-item .h-full {
+  min-height: 200px;
+}
+
+/* Responsive grid sizing */
+@media (max-width: 1200px) {
+  .masonry-item {
+    width: 25%; /* 4 columns */
+  }
+}
+
+@media (max-width: 992px) {
+  .masonry-item {
+    width: 33.333%; /* 3 columns */
+  }
+}
+
+@media (max-width: 768px) {
+  .masonry-item {
+    width: 50%; /* 2 columns */
+  }
+}
+
+@media (max-width: 576px) {
+  .masonry-item {
+    width: 100%; /* 1 column */
+  }
+}
+</style>

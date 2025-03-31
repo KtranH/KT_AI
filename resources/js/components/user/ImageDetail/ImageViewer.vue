@@ -6,7 +6,7 @@
                 <div v-for="(image, index) in displayImages" :key="index" class="w-full min-w-full flex-shrink-0">
                     <img 
                         :src="image"
-                        class="w-full object-cover md:h-[600px] object-contain cursor-pointer" 
+                        class="w-90 mx-auto object-cover md:h-[600px] object-contain cursor-pointer" 
                         :alt="altText" 
                         @click="previewImage"
                     />

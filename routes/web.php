@@ -52,6 +52,8 @@ Route::prefix('api')->group(function () {
         Route::put('/comments/{comment}', [CommentController::class, 'update']); 
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
         Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
+        // Image Routes
+        Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
     });
 });
 

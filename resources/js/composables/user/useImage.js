@@ -36,7 +36,7 @@ export default function useImage() {
             hasError.value = true
             return
         }
-
+        
         isLoading.value = true
         hasError.value = false
         console.log('Đang tải dữ liệu cho ID:', id)
@@ -70,7 +70,6 @@ export default function useImage() {
     const fetchImagesCreatedByUser = async () => {
         isLoading.value = true
         hasError.value = false
-        
         try {
             await store.fetchImagesCreatedByUser()
         } catch (error) {

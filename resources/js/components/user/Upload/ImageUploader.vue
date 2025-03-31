@@ -69,7 +69,7 @@ export default {
     
     const toastError = (message) => {
       // Hiển thị thông báo lỗi
-      toast.error('Có lỗi xảy ra' + message, {
+      toast.error('Có lỗi xảy ra ' + message, {
                     duration: 3000,            
                     position: 'bottom-right'
                 })
