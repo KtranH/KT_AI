@@ -177,12 +177,7 @@ export default {
                 }).filter(item => item && item.url && item.id)
             } else {
                 // Dữ liệu mẫu
-                allImages = [
-                    { url: "https://picsum.photos/id/237/400/400", id: 1 },
-                    { url: "https://picsum.photos/id/238/400/400", id: 1 },
-                    { url: "https://picsum.photos/id/239/400/400", id: 1 },
-                    { url: "https://picsum.photos/id/240/400/400", id: 2 }
-                ]
+                allImages = []
             }
         } else if (props.filter === 'uploaded') {
             allImages = [

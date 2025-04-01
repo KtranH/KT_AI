@@ -49,6 +49,13 @@ class UserRepository implements UserRepositoryInterface
         return $user;
     }
 
+    // Lấy user theo Email
+    public function getUserByEmail($email)
+    {
+        $user = User::where('email', $email)->first();
+        return $user;
+    }
+
     // Lấy danh sách user
     public function getUsers(): Collection
     {
@@ -111,5 +118,14 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = User::find($id);
         return $user->sum_img;
+    }
+
+    // Cập nhật trạng thái email của user
+    public function updateUserStatus($id)
+    {
+        $user = User::find($id);
+        $user->is_verified = !$user->is_verified;
+        $user->save();
+        return $user;
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use App\Services\MailService;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -55,100 +56,6 @@ class AuthController extends Controller
             200);
     }
 
-    public function verifyEmail(Request $request)
-    {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'code' => ['required', 'string', 'size:6'],
-        ]);
-
-        $storedCode = Redis::get("verify_code:{$request->email}");
-        
-        if (!$storedCode) {
-            throw ValidationException::withMessages([
-                'code' => ['Mã xác thực đã hết hạn hoặc không tồn tại.'],
-            ]);
-        }
-
-        if ($request->code !== $storedCode) {
-            throw ValidationException::withMessages([
-                'code' => ['Mã xác thực không đúng.'],
-            ]);
-        }
-
-        $user = $this->userRepository->checkEmail($request->email);
-        
-        if (!$user) {
-            throw ValidationException::withMessages([
-                'email' => ['Không tìm thấy tài khoản.'],
-            ]);
-        }
-
-        $user->is_verified = true;
-        $user->save();
-
-        Redis::del("verify_code:{$request->email}");
-        Redis::del("verify_attempts:{$request->email}");
-        Redis::del("verify_last_attempt:{$request->email}");
-
-        return response()->json([
-            'message' => 'Xác thực email thành công.',
-            'user' => $user
-        ]);
-    }
-
-    public function resendVerification(Request $request)
-    {
-        $request->validate([
-            'email' => ['required', 'email'],
-        ]);
-
-        $resendCount = Redis::get("verify_resend_count:{$request->email}") ?: 0;
-        
-        if ($resendCount >= 2) {
-            throw ValidationException::withMessages([
-                'email' => ['Bạn đã vượt quá số lần gửi lại mã cho phép.'],
-            ]);
-        }
-
-        $lastResendTime = Redis::get("verify_last_resend:{$request->email}");
-        if ($lastResendTime && (time() - $lastResendTime) < 60) {
-            throw ValidationException::withMessages([
-                'email' => ['Vui lòng đợi 60 giây trước khi gửi lại mã.'],
-            ]);
-        }
-
-        $user = User::where('email', $request->email)->first();
-        
-        if (!$user) {
-            throw ValidationException::withMessages([
-                'email' => ['Không tìm thấy tài khoản.'],
-            ]);
-        }
-
-        if ($user->is_verified) {
-            throw ValidationException::withMessages([
-                'email' => ['Email này đã được xác thực.'],
-            ]);
-        }
-
-        $verificationCode = Str::random(6);
-        Redis::setex("verify_code:{$request->email}", 600, $verificationCode);
-        Redis::incr("verify_resend_count:{$request->email}");
-        Redis::setex("verify_last_resend:{$request->email}", 600, time());
-
-        if (!$this->mailService->sendMailResend($user)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi gửi mã xác thực'
-            ], 500);
-        }
-
-        return response()->json([
-            'message' => 'Đã gửi lại mã xác thực.',
-        ]);
-    }
-
     public function login(Request $request)
     {
         $request->validate([
@@ -156,7 +63,6 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
             'cf-turnstile-response' => ['required', 'string'],
         ]);
-
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
         if (!$turnstileResponse['success']) {
@@ -170,7 +76,6 @@ class AuthController extends Controller
                 'email' => ['Thông tin đăng nhập không chính xác.'],
             ]);
         }
-
         // Lấy user mới nhất từ database
         $user = $this->userRepository->getUser();
         
@@ -228,15 +133,15 @@ class AuthController extends Controller
                 $request->session()->forget('user');
             }
             
-            // Clear cookies liên quan đến OAuth nếu có
-            $cookieNames = ['laravel_session', 'XSRF-TOKEN'];
-            $response = response()->json(['message' => 'Đã đăng xuất thành công']);
+            // Lấy CSRF token mới
+            $token = csrf_token();
             
-            foreach ($cookieNames as $cookieName) {
-                $response->withoutCookie($cookieName);
-            }
+            // Chuẩn bị response với CSRF token mới
+            return response()->json([
+                'message' => 'Đã đăng xuất thành công',
+                'csrf_token' => $token
+            ])->cookie('XSRF-TOKEN', $token, 120, null, null, null, false);
             
-            return $response;
         } catch (\Exception $e) {
             report($e);
             return response()->json(['message' => 'Đã xảy ra lỗi khi đăng xuất: ' . $e->getMessage()], 500);

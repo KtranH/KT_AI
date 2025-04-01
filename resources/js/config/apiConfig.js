@@ -1,10 +1,52 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth/authStore'
 
+// Hàm lấy CSRF token mới từ server
+export const refreshCsrfToken = async () => {
+  try {
+    // Gọi đến route csrf của Laravel để lấy token mới
+    const response = await axios.get('/sanctum/csrf-cookie', {
+      withCredentials: true // Quan trọng để cookies được lưu
+    })
+    
+    // Cookie XSRF-TOKEN đã được tự động cập nhật bởi Laravel
+    // Lấy token từ cookie để cập nhật header
+    const cookies = document.cookie.split(';')
+    const xsrfCookie = cookies.find(cookie => cookie.trim().startsWith('XSRF-TOKEN='))
+    
+    if (xsrfCookie) {
+      const token = decodeURIComponent(xsrfCookie.trim().substring('XSRF-TOKEN='.length))
+      axios.defaults.headers.common['X-XSRF-TOKEN'] = token
+      apiClient.defaults.headers.common['X-XSRF-TOKEN'] = token
+      console.log('CSRF token đã được cập nhật thành công')
+      return token
+    } else {
+      console.error('Không tìm thấy XSRF-TOKEN cookie sau khi refresh')
+      return null
+    }
+  } catch (error) {
+    console.error('Lỗi khi cập nhật CSRF token:', error)
+    return null
+  }
+}
+
+// Hàm để lấy CSRF token từ cookie
+export const getCsrfTokenFromCookie = () => {
+  const cookies = document.cookie.split(';')
+  const xsrfCookie = cookies.find(cookie => cookie.trim().startsWith('XSRF-TOKEN='))
+  
+  if (xsrfCookie) {
+    return decodeURIComponent(xsrfCookie.trim().substring('XSRF-TOKEN='.length))
+  }
+  
+  return null
+}
+
 // Tạo instance axios với cấu hình mặc định
 const apiClient = axios.create({
   baseURL: '/api', // Base URL của API
   timeout: 30000, // Timeout mặc định là 30 giây
+  withCredentials: true, // Quan trọng để cookies được gửi trong mọi request
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
@@ -35,9 +77,12 @@ apiClient.interceptors.request.use(
     // Thêm token vào header nếu có
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      
-      // Debug token để giúp gỡ lỗi
-      console.log('Sending request with token:', token.substring(0, 10) + '...');
+    }
+    
+    // Thêm CSRF token từ cookie vào header nếu có
+    const csrfToken = getCsrfTokenFromCookie();
+    if (csrfToken) {
+      config.headers['X-XSRF-TOKEN'] = csrfToken;
     }
     
     return config;
@@ -52,8 +97,32 @@ apiClient.interceptors.response.use(
   response => {
     return response;
   },
-  error => {
+  async error => {
     console.error('API Error:', error.response ? error.response.status : error.message);
+    
+    // Xử lý lỗi CSRF token mismatch
+    if (error.response && error.response.status === 419) {
+      console.log('CSRF token mismatch. Đang làm mới token...');
+      
+      // Lưu lại request gốc
+      const originalRequest = error.config;
+      
+      // Đảm bảo không lặp vô hạn
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        // Lấy CSRF token mới
+        const newToken = await refreshCsrfToken();
+        
+        if (newToken) {
+          // Cập nhật header với token mới
+          originalRequest.headers['X-XSRF-TOKEN'] = newToken;
+          
+          // Thử lại request ban đầu với token mới
+          return apiClient(originalRequest);
+        }
+      }
+    }
     
     // Kiểm tra lỗi validation từ Laravel
     if (error.response && error.response.status === 422) {

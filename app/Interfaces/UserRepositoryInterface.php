@@ -30,6 +30,9 @@ interface UserRepositoryInterface
     // Lấy thông tin user theo ID
     public function getUserById($id);
 
+    // Lấy thông tin user theo Email
+    public function getUserByEmail($email);
+
     // Cập nhật mật khẩu user
     public function updatePassword($request, $id);
 
@@ -41,4 +44,7 @@ interface UserRepositoryInterface
 
     // Kiểm tra trạng thái đăng nhập
     public function checkStatus();
+
+    // Cập nhật trạng thái email của user
+    public function updateUserStatus($id);
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
+use App\Http\Controllers\MailController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -25,8 +26,8 @@ Route::prefix('api')->group(function () {
     Route::get('/check', [AuthController::class, 'checkStatus']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
+    Route::post('/verify-email', [MailController::class, 'verifyEmail']);
+    Route::post('/resend-verification', [MailController::class, 'resendVerification']);
         
     // Public API Routes
     Route::get('/load_features', [FeatureController::class, 'getFeatures']);
@@ -54,6 +55,8 @@ Route::prefix('api')->group(function () {
         Route::put('/comments/{comment}', [CommentController::class, 'update']); 
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
         Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
+        // Reply Routes
+        Route::post('/comments/{comment}/reply', [CommentController::class, 'storeReply']);
         // Image Routes
         Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
     });

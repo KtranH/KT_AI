@@ -7,7 +7,7 @@ use Illuminate\Support\Collection;
 interface FeatureRepositoryInterface
 {
     // Lấy danh sách feature
-    public function getFeatures(): Collection;
+    public function getFeatures();
 
     // Lấy thông tin feature theo ID
     public function getFeatureById($id);

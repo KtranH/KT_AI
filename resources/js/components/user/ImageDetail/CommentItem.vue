@@ -239,11 +239,21 @@ export default {
         }
 
         const onReplySubmit = (data) => {
-            emit('reply-submit', data)
+            // Đảm bảo data có định dạng đúng cho handleReplySubmit
+            const replyData = {
+                commentId: props.index,
+                content: data.content
+            };
+            emit('reply-submit', replyData);
         }
 
         const onNestedReplySubmit = (data) => {
-            emit('nested-reply-submit', data)
+            // Đảm bảo data có định dạng đúng cho handleNestedReplySubmit
+            const replyData = {
+                commentId: props.index,
+                content: data.content
+            };
+            emit('nested-reply-submit', replyData);
         }
 
         // Xử lý thích bình luận và phản hồi

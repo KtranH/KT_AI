@@ -10,7 +10,7 @@ class FeatureRepository implements FeatureRepositoryInterface
     // Lấy danh sách feature
     public function getFeatures()
     {
-        return AIFeature::where('status', 'active')->get();
+        return AIFeature::where('status_feature', 'active')->get();
     }
     // Lấy thông tin feature theo ID
     public function getFeatureById($id)

@@ -1,31 +1,29 @@
 import { ref } from 'vue'
 
 export default function useReply(props, emit) {
-    // State cho form trả lời
+    // Khai báo biến lưu trữ nội dung phản hồi
     const replyText = ref('')
-
-    /**
-     * Gửi phản hồi
-     */
+    
+    // Hàm gửi phản hồi
     const submitReply = () => {
-        if (replyText.value.trim() === '') return
+        if (!replyText.value.trim()) return
         
+        // Emit sự kiện reply-submitted với nội dung phản hồi
         emit('reply-submitted', {
             commentId: props.commentId,
-            text: replyText.value.trim()
+            content: replyText.value.trim()
         })
         
+        // Reset nội dung phản hồi
         replyText.value = ''
     }
-
-    /**
-     * Hủy phản hồi
-     */
+    
+    // Hàm hủy phản hồi
     const cancelReply = () => {
         replyText.value = ''
         emit('cancel-reply')
     }
-
+    
     return {
         replyText,
         submitReply,

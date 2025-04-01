@@ -1,7 +1,7 @@
 <template>
     <div class="comment-reply-form mt-2" v-if="isReplying">
         <div class="flex space-x-2">
-            <img src="https://www.elle.vn/wp-content/uploads/2017/07/25/hinh-anh-dep-1.jpg" class="w-6 h-6 rounded-full" alt="Your profile" />
+            <img :src="user.avatar_url" class="w-6 h-6 rounded-full" alt="Your profile" />
             <!-- Container chính -->
             <div class="flex items-center w-full bg-gray-50 rounded-lg p-1 relative overflow-visible">
             <!-- Nút Emoji -->
@@ -55,7 +55,8 @@
 </template>
 
 <script>
-import { defineProps, defineEmits, computed } from 'vue';
+import { computed } from 'vue';
+import { useAuthStore } from '@/stores/auth/authStore'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import useEmoji from '@/composables/user/useEmoji'
@@ -82,6 +83,8 @@ export default {
     },
     emits: ['reply-submitted', 'cancel-reply'],
     setup(props, { emit }) {
+        const authStore = useAuthStore()
+        const user = authStore.user
         // Sử dụng composable function
         const { replyText, submitReply, cancelReply } = useReply(props, emit);
         const { showEmojiPicker, toggleEmojiPicker, addEmoji } = useEmoji(replyText)
@@ -105,7 +108,8 @@ export default {
             toggleEmojiPicker,
             addEmoji,
             canSubmit,
-            handleSubmitReply
+            handleSubmitReply,
+            user
         }
     }
 }

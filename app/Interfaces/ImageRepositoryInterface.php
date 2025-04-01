@@ -11,10 +11,10 @@ use Illuminate\Support\Collection;
 interface ImageRepositoryInterface
 {
     // Tìm hình ảnh theo ID
-    public function getImages(int $id): ?Image;
+    public function getImages(int $id): array;
     
     // Lấy danh sách hình ảnh theo feature
-    public function getImagesByFeature(int $featureId, int $perPage = 5): LengthAwarePaginator;
+    public function getImagesByFeature(int $featureId, int $perPage = 5): array;
     
     // Lấy danh sách hình ảnh của người dùng
     public function getImagesCreatedByUser(): Collection;
@@ -28,9 +28,9 @@ interface ImageRepositoryInterface
     // Tăng số lượng ảnh cho user
     public function increaseSumImgUser(int $userId): void;
     
-    // Giảm số lượng ảnh cho mục Feature
+    /*// Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void;
     
     // Giảm số lượng ảnh cho user
-    public function decreaseSumImgUser(int $userId): void;
+    public function decreaseSumImgUser(int $userId): void;*/
 } 

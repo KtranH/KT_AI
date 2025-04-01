@@ -4,8 +4,10 @@ namespace App\Repositories;
 
 use App\Interfaces\CommentRepositoryInterface;
 use App\Models\Comment;
+use App\Models\Image;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class CommentRepository implements CommentRepositoryInterface
 {
@@ -68,6 +70,24 @@ class CommentRepository implements CommentRepositoryInterface
         $comment->load(['user', 'replies.user']);
         
         return $comment;
+    }
+
+    public function storeReply(array $data, Comment $comment): Comment
+    {
+        $reply = Comment::create([
+            'user_id' => Auth::id(),
+            'image_id' => $comment->image_id,
+            'parent_id' => $comment->id,
+            'content' => $data['content'],
+            'sum_like' => 0,
+            'list_like' => []
+        ]);
+        
+        $this->incrementImageCommentCount($comment->image_id);
+        
+        $reply->load(['user']);
+        
+        return $reply;
     }
     
     public function updateComment(Comment $comment, string $content): Comment

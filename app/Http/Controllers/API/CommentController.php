@@ -5,12 +5,15 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
+use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Resources\CommentResource;
 use App\Interfaces\CommentRepositoryInterface;
+use App\Models\Comment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -49,12 +52,22 @@ class CommentController extends Controller
     }
 
     /**
+     * Tạo phản hồi cho một bình luận
+     */
+    public function storeReply(StoreReplyRequest $request, Comment $comment): JsonResponse
+    {
+        dd($comment);
+        $reply = $this->commentRepository->storeReply($request->validated(), $comment);
+        return response()->json(new CommentResource($reply), 201);
+    }
+
+    /**
      * Xóa một bình luận
      */
     public function destroy(Comment $comment): JsonResponse
     {
         if (Gate::denies('delete', $comment)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['message' => 'Không được phép xóa bình luận này'], 403);
         }
         
         $this->commentRepository->deleteComment($comment);
@@ -67,7 +80,7 @@ class CommentController extends Controller
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
         if (Gate::denies('update', $comment)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['message' => 'Không được phép cập nhật bình luận này'], 403);
         }
         
         $comment = $this->commentRepository->updateComment($comment, $request->input('content'));

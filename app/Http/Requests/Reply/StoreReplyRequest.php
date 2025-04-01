@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Comment;
+namespace App\Http\Requests\Reply;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Route;
 
-class StoreCommentRequest extends FormRequest
+class StoreReplyRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -21,10 +20,9 @@ class StoreCommentRequest extends FormRequest
         ];
         
         if (!$isReply) {
-            $rules['image_id'] = 'required|exists:images,id';
-            $rules['parent_id'] = 'nullable|exists:comments,id';
+            $rules['parent_id'] = 'required|exists:comments,id';
         }
         
         return $rules;
     }
-} 
+}

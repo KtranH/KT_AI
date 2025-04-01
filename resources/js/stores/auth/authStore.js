@@ -1,6 +1,9 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import router from '../../router'
 import { authAPI } from '../../services/api'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { useLikeStore } from '@/stores/user/likeStore'
+import { refreshCsrfToken } from '../../config/apiConfig'
 
 // Reactive state
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)
@@ -8,9 +11,9 @@ const token = ref(localStorage.getItem('token') || null)
 const isRemembered = ref(localStorage.getItem('remember') === 'true')
 const isAuthenticated = computed(() => !!user.value)
 
-
 export const useAuthStore = () => {
-  
+  const storeImage = useImageStore()
+  const storeLike = useLikeStore()
   const saveAuthData = (userData, userToken, remember = false) => {
     user.value = userData
     token.value = userToken
@@ -88,12 +91,19 @@ export const useAuthStore = () => {
   }
 
   // Hàm khởi tạo để thay thế onMounted
-  const initializeAuth = () => {
-    checkAuth()
+  const initializeAuth = async () => {
+    // Luôn lấy CSRF token mới khi khởi động ứng dụng
+    await refreshCsrfToken()
+    
+    // Kiểm tra trạng thái đăng nhập
+    await checkAuth()
   }
   
   const login = async (credentials) => {
     try {
+      // Lấy CSRF token mới trước khi đăng nhập
+      await refreshCsrfToken()
+      
       const response = await authAPI.login(credentials)
       if (response.data.needs_verification) {
         return response.data
@@ -102,17 +112,37 @@ export const useAuthStore = () => {
       router.push(router.currentRoute.value.query.redirect || '/dashboard')
       return response.data
     } catch (error) {
+      // Lỗi đã được xử lý tự động bởi interceptor, không cần xử lý thêm lỗi CSRF ở đây nữa
       throw error
     }
   }
 
   const logout = async () => {
     try {
-      await authAPI.logout()
+      // Lấy CSRF token mới trước khi đăng xuất
+      await refreshCsrfToken()
+      
+      const response = await authAPI.logout()
+      storeImage.clearImages()
+      storeImage.clearImagesCreatedByUser()
+      storeLike.clearLikes()
       clearAuthData()
-      router.push('/login')
+      
+      // Cập nhật CSRF token mới từ phản hồi
+      if (response.data && response.data.csrf_token) {
+        document.cookie = `XSRF-TOKEN=${response.data.csrf_token}; path=/`
+      }
+      
+      // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
+      await refreshCsrfToken()
+      window.location.reload()
+      setTimeout(() => {
+        router.push('/login')
+      }, 100)
     } catch (error) {
       console.error('Logout error:', error)
+      // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi
+      await refreshCsrfToken()
     }
   }
 

@@ -93,6 +93,7 @@ export const commentAPI = {
     return apiClient.get(url)
   },
   createComment: (commentData) => apiClient.post('/comments', commentData),
+  createReply: (commentId, replyData) => apiClient.post(`/comments/${commentId}/reply`, replyData),
   updateComment: (commentId, content) => apiClient.put(`/comments/${commentId}`, { content }),
   deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),
   toggleLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)

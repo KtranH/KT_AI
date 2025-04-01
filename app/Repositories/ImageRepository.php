@@ -3,15 +3,18 @@
 namespace App\Repositories;
 
 use App\Interfaces\ImageRepositoryInterface;
+use App\Interfaces\FeatureRepositoryInterface;
+use App\Interfaces\UserRepositoryInterface;
 use App\Models\Image;
 use App\Models\Interaction;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ImageRepository implements ImageRepositoryInterface
 {
-    public function __construct(private readonly FeatureService $featureService, private readonly UserService $userService) {}
+    public function __construct(private readonly FeatureRepositoryInterface $featureRepository, private readonly UserRepositoryInterface $userRepository) {}
     /**
      * Lấy thông tin chi tiết của một hình ảnh
      */
@@ -63,7 +66,7 @@ class ImageRepository implements ImageRepositoryInterface
     }
     
     // Lưu trữ hình ảnh tải lên
-    public function storeImage($uploadedPaths, $user, $data)
+    public function storeImage($uploadedPaths, $user, $data): bool
     {
         try
         {
@@ -83,9 +86,9 @@ class ImageRepository implements ImageRepositoryInterface
             ]);
 
             // Tăng số lượng ảnh cho mục Feature
-            $this->featureService->increaseSumImg($data['feature_id']);
+            $this->featureRepository->increaseSumImg($data['feature_id']);
             // Tăng số lượng ảnh cho user
-            $this->userService->increaseSumImg($user->id);
+            $this->userRepository->increaseSumImg($user->id);
             return true;
         }
         catch(\Exception $e)
