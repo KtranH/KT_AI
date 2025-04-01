@@ -7,6 +7,7 @@ use App\Http\Controllers\API\TurnstileController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\API\LikeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -21,20 +22,21 @@ use Illuminate\Support\Facades\Redis;
 Route::prefix('api')->group(function () {
     
     // Auth Routes
-    Route::get('/check', [AuthController::class, 'check']);
+    Route::get('/check', [AuthController::class, 'checkStatus']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
         
     // Public API Routes
-    Route::get('/load_features', [FeatureController::class, 'load_feature']);
-    Route::get('/load_features/{id}', [FeatureController::class, 'get_feature']);
+    Route::get('/load_features', [FeatureController::class, 'getFeatures']);
+    Route::get('/load_features/{id}', [FeatureController::class, 'getFeatureById']);
     Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']); 
     Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
     Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
     Route::get('/get_images_by_feature/{id}', [ImageController::class, 'getImagesByFeature']);
-    Route::get('/get_likes_information/{id}', [ImageController::class, 'getLikes']);
+    // Public API Get Like
+    Route::get('/get_likes_information/{id}', [LikeController::class, 'getLikes']);
     
     // Protected API Routes
     Route::middleware(['auth:sanctum'])->group(function () {
@@ -43,9 +45,9 @@ Route::prefix('api')->group(function () {
         });
         Route::post('/logout', [AuthController::class, 'logout']);
         // Like Routes
-        Route::get('/check_liked/{id}', [ImageController::class, 'checkLiked']);
-        Route::post('/like_post/{id}', [ImageController::class, 'likePost']);
-        Route::post('/unlike_post/{id}', [ImageController::class, 'unlikePost']);
+        Route::get('/check_liked/{id}', [LikeController::class, 'checkLiked']);
+        Route::post('/like_post/{id}', [LikeController::class, 'likePost']);
+        Route::post('/unlike_post/{id}', [LikeController::class, 'unlikePost']);
         // Comment Routes
         Route::get('/images/{imageId}/comments', [CommentController::class, 'getComments']);
         Route::post('/comments', [CommentController::class, 'store']);

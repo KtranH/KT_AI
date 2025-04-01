@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Repositories;
 
+use App\Interfaces\CommentRepositoryInterface;
 use App\Models\Comment;
-use App\Models\Image;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
 
-class CommentService
+class CommentRepository implements CommentRepositoryInterface
 {
     private const COMMENTS_PER_PAGE = 5;
     private const REPLIES_PER_PAGE = 3;
@@ -21,7 +21,7 @@ class CommentService
         return $this->getMainComments($imageId, $page);
     }
     
-    private function getReplies(int $commentId, int $page): array
+    public function getReplies(int $commentId, int $page): array
     {
         $replies = Comment::with(['user'])
             ->where('parent_id', $commentId)
@@ -34,7 +34,7 @@ class CommentService
         ];
     }
     
-    private function getMainComments(int $imageId, int $page): array
+    public function getMainComments(int $imageId, int $page): array
     {
         $comments = Comment::with(['user', 'replies' => function ($query) {
             $query->with('user')
@@ -109,7 +109,7 @@ class CommentService
         ];
     }
     
-    private function incrementImageCommentCount(int $imageId): void
+    public function incrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);
         if ($image) {
@@ -117,11 +117,11 @@ class CommentService
         }
     }
     
-    private function decrementImageCommentCount(int $imageId): void
+    public function decrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);
         if ($image) {
             $image->decrement('sum_comment');
         }
     }
-} 
+}

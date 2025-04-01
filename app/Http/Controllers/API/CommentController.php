@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
-use App\Models\Comment;
-use App\Services\CommentService;
+use App\Interfaces\CommentRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -15,11 +14,7 @@ use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
-    public function __construct( private readonly CommentService $commentService) {}
-
-    //
-    private const COMMENTS_PER_PAGE = 5;
-    private const REPLIES_PER_PAGE = 3;
+    public function __construct( private readonly CommentRepositoryInterface $commentRepository) {}
 
     /**
      * Lấy danh sách bình luận cho một hình ảnh
@@ -29,7 +24,7 @@ class CommentController extends Controller
         $page = $request->input('page', 1);
         $commentId = $request->input('comment_id');
         
-        $result = $this->commentService->getComments($imageId, $commentId, $page);
+        $result = $this->commentRepository->getComments($imageId, $commentId, $page);
         
         if (isset($result['replies'])) {
             return response()->json([
@@ -49,7 +44,7 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request): JsonResponse
     {
-        $comment = $this->commentService->storeComment($request->validated());
+        $comment = $this->commentRepository->storeComment($request->validated());
         return response()->json(new CommentResource($comment), 201);
     }
 
@@ -62,7 +57,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         
-        $this->commentService->deleteComment($comment);
+        $this->commentRepository->deleteComment($comment);
         return response()->json(['message' => 'Bình luận đã được xóa thành công']);
     }
 
@@ -75,7 +70,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         
-        $comment = $this->commentService->updateComment($comment, $request->input('content'));
+        $comment = $this->commentRepository->updateComment($comment, $request->input('content'));
         return response()->json(new CommentResource($comment));
     }
 
@@ -84,7 +79,7 @@ class CommentController extends Controller
      */
     public function toggleLike(Comment $comment): JsonResponse
     {
-        $result = $this->commentService->toggleLike($comment);
+        $result = $this->commentRepository->toggleLike($comment);
         return response()->json($result);
     }
 }

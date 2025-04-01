@@ -11,19 +11,16 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use App\Services\MailService;
-use App\Services\UserService;
+use App\Repositories\UserRepository;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly MailService $mailService, 
-                                private readonly UserService $userService) {}
+    public function __construct(private readonly MailService $mailService, private readonly UserRepository $userRepository) {}
     
-    public function check()
+    public function checkStatus()
     {
-        return response()->json([
-            'authenticated' => Auth::check(),
-            'user' => Auth::user()
-        ]);
+        return $this->userRepository->checkStatus();
     }
 
     public function register(Request $request)
@@ -44,7 +41,7 @@ class AuthController extends Controller
             ], 400);
         }
 
-        $user = $this->userService->createUser($request);
+        $user = $this->userRepository->store($request);
 
         if (!$this->mailService->sendMail($user)) {
             return response()->json([
@@ -79,7 +76,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user = $this->userService->checkEmail($request->email);
+        $user = $this->userRepository->checkEmail($request->email);
         
         if (!$user) {
             throw ValidationException::withMessages([
@@ -175,7 +172,7 @@ class AuthController extends Controller
         }
 
         // Lấy user mới nhất từ database
-        $user = $this->userService->getUser();
+        $user = $this->userRepository->getUser();
         
         if (!$user->is_verified) {
             Auth::logout();

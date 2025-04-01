@@ -3,24 +3,18 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\AIFeature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Interfaces\FeatureRepositoryInterface;
 
 class FeatureController extends Controller
 {
+    public function __construct(private readonly FeatureRepositoryInterface $featureRepository) {}
     //
-    public function load_feature()
+    public function getFeatures()
     {
-        try {
-            Log::info('Bắt đầu tải danh sách chức năng');
-            
-            $features = AIFeature::where('status_feature', 'active')
-                ->orderBy('id')            
-                ->get();
-
-            Log::info('Đã tải ' . $features->count() . ' chức năng');
-
+        try {            
+            $features = $this->featureRepository->getFeatures();
             return response()->json([
                 'success' => true,
                 'data' => $features,
@@ -41,12 +35,10 @@ class FeatureController extends Controller
             ]);
         }
     }
-    public function get_feature($id)
+    public function getFeatureById($id)
     {
         try {
-            $feature = AIFeature::where('id', $id)
-                ->where('status_feature', 'active')
-                ->first();
+            $feature = $this->featureRepository->getFeatureById($id);
             if ($feature) {
                 return response()->json([
                     'success' => true,
