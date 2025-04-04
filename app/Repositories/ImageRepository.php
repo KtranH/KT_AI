@@ -60,12 +60,15 @@ class ImageRepository implements ImageRepositoryInterface
      */
     public function getImagesCreatedByUser(): Collection
     {
-        $images = Image::where('user_id', Auth::id())
+        $images = Image::with('user')
+            ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
             
-        return $images->map(function ($image) {
-            return [
+        $result = collect();
+        
+        foreach ($images as $image) {
+            $result->push([
                 'id' => $image->id,
                 'image_url' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
                 'prompt' => $image->prompt,
@@ -75,8 +78,10 @@ class ImageRepository implements ImageRepositoryInterface
                 'created_at' => $image->created_at,
                 'updated_at' => $image->updated_at,
                 'user' => $image->user
-            ];
-        })->values();
+            ]);
+        }
+        
+        return $result;
     }
     
     // Lưu trữ hình ảnh tải lên

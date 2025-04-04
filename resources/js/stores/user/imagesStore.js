@@ -87,26 +87,95 @@ export const useImageStore = defineStore('image',
                 try {
                     const response = await imageAPI.getImagesCreatedByUser()
                     if (response.data && response.data.success) {
-                        this.imagesCreatedByUser = response.data.data.map(item => {
-                            const imageUrls = item.image_url || [];
-                            return {
-                                id: item.id,
-                                prompt: item.prompt,
-                                sum_like: item.sum_like,
-                                sum_comment: item.sum_comment,
-                                created_at: item.created_at,
-                                updated_at: item.updated_at,
-                                url: imageUrls,
-                                image_url: imageUrls
-                            };
-                        });
+                        if (Array.isArray(response.data.data)) {
+                            this.imagesCreatedByUser = response.data.data.map(item => {
+                                const imageUrls = item.image_url || [];
+                                return {
+                                    id: item.id,
+                                    prompt: item.prompt,
+                                    sum_like: item.sum_like || 0,
+                                    sum_comment: item.sum_comment || 0,
+                                    created_at: item.created_at,
+                                    updated_at: item.updated_at,
+                                    user: item.user || null,
+                                    url: imageUrls,
+                                    image_url: imageUrls
+                                };
+                            });
+                        } else {
+                            console.error('Dữ liệu trả về không phải là mảng:', response.data.data);
+                            this.imagesCreatedByUser = [];
+                        }
+                        
+                        // Cập nhật thông tin phân trang
+                        if (response.data.pagination) {
+                            this.currentPage = response.data.pagination.current_page;
+                            this.lastPage = response.data.pagination.last_page;
+                            this.totalImages = response.data.pagination.total;
+                        }
                     } else {
-                        console.error('Error:', response.statusText)
-                        this.error_message = response.data.message
+                        console.error('Error:', response.statusText || 'Unknown error')
+                        this.error_message = response.data?.message || 'Không thể tải dữ liệu'
+                        this.imagesCreatedByUser = [];
                     }
                 } catch (error) {
                     console.error('Error fetching images:', error)
-                    this.error_message = 'An error occurred'
+                    this.error_message = error.message || 'Đã xảy ra lỗi'
+                    this.imagesCreatedByUser = [];
+                } finally {
+                    this.isLoading = false
+                }
+            },
+            async fetchImagesCreatedByUserPage(url, page) {
+                this.error_message = null
+                this.isLoading = true
+                try {
+                    const response = await imageAPI.getImagesCreatedByUserPage(url)
+                    if (response.data && response.data.success) {
+                        if (Array.isArray(response.data.data)) {
+                            const newImages = response.data.data.map(item => {
+                                const imageUrls = item.image_url || [];
+                                return {
+                                    id: item.id,
+                                    prompt: item.prompt,
+                                    sum_like: item.sum_like || 0,
+                                    sum_comment: item.sum_comment || 0,
+                                    created_at: item.created_at,
+                                    updated_at: item.updated_at,
+                                    user: item.user || null,
+                                    url: imageUrls,
+                                    image_url: imageUrls
+                                };
+                            });
+
+                            // Thêm vào mảng hiện có nếu đang tải thêm (trang > 1)
+                            if (page && page > 1) {
+                                this.imagesCreatedByUser = [...this.imagesCreatedByUser, ...newImages];
+                            } else {
+                                this.imagesCreatedByUser = newImages;
+                            }
+                            
+                            // Cập nhật thông tin phân trang
+                            if (response.data.pagination) {
+                                this.currentPage = response.data.pagination.current_page;
+                                this.lastPage = response.data.pagination.last_page;
+                                this.totalImages = response.data.pagination.total;
+                            }
+                            
+                            return true;
+                        } else {
+                            console.error('Dữ liệu trả về không phải là mảng:', response.data.data);
+                            return false;
+                        }
+                    } else {
+                        console.error('Error:', response.statusText || 'Unknown error')
+                        this.error_message = response.data?.message || 'Không thể tải dữ liệu'
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error fetching more images:', error)
+                    this.error_message = error.message || 'Đã xảy ra lỗi'
+                    return false;
                 } finally {
                     this.isLoading = false
                 }

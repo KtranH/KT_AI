@@ -29,6 +29,10 @@ export default function useImage() {
     const lastPage = computed(() => store.lastPage)
     const totalImages = computed(() => store.totalImages)
     
+    const hasMoreUserImages = computed(() => {
+        return currentPage.value < lastPage.value;
+    });
+    
     // Phương thức fetch dữ liệu
     const fetchImages = async (id) => {
         if (!id) {
@@ -101,8 +105,31 @@ export default function useImage() {
     const loadMoreImages = async (id) => {
         if (currentPage.value < lastPage.value) {
             const nextPage = currentPage.value + 1;
-            console.log(`Đang tải thêm ảnh trang ${nextPage}...`);
+            console.log(`Đang tải thêm ảnh cho feature ${id}, trang ${nextPage}...`);
             return await fetchImagesByFeature(id, nextPage);
+        }
+    }
+    
+    // Phương thức mới để tải thêm ảnh người dùng đã tạo 
+    const loadMoreUserImages = async (page) => {
+        if (page) {
+            console.log(`Đang tải thêm ảnh người dùng trang ${page}...`);
+            isLoading.value = true;
+            hasError.value = false;
+            
+            try {
+                // Tạo URL API với tham số phân trang
+                const apiUrl = `/get_images_created_by_user?page=${page}`;
+                // Dùng store để tải dữ liệu theo trang
+                await store.fetchImagesCreatedByUserPage(apiUrl, page);
+                return true;
+            } catch (error) {
+                console.error("Lỗi khi tải thêm ảnh người dùng:", error);
+                hasError.value = true;
+                return false;
+            } finally {
+                isLoading.value = false;
+            }
         }
     }
     
@@ -114,6 +141,7 @@ export default function useImage() {
         currentPage,
         lastPage,
         totalImages,
+        hasMoreUserImages,
         
         // Computed properties
         imageUrls,
@@ -128,6 +156,7 @@ export default function useImage() {
         fetchImagesCreatedByUser,
         fetchImagesByFeature,
         loadMoreImages,
-        goToImageDetail
+        goToImageDetail,
+        loadMoreUserImages
     }
 }

@@ -205,85 +205,101 @@ export default {
     const fetchAndGroupImages = async (isLoadMore = false, forceRefresh = false) => {
         let allImages = []        
         if (props.filter === 'created') {
-            // Tải ảnh từ API với phân trang
-            if (!isLoadMore) {
-                // Tải trang đầu tiên hoặc làm mới dữ liệu
-                const response = await fetchImagesCreatedByUser(1, false, forceRefresh);
-                
-                // Nếu đang sử dụng dữ liệu cache và không bắt buộc làm mới dữ liệu
-                if (response && response.fromCache && !forceRefresh) {
-                    console.log('Sử dụng dữ liệu đã lưu trong cache');
-                }
-                
-                currentPage.value = 1;
-                
-                // Lấy toàn bộ dữ liệu từ store
-                if (imagesCreatedByUser.value && imagesCreatedByUser.value.length > 0) {
-                    allImages = imagesCreatedByUser.value.flatMap(item => {
-                        if (!item || !item.url) return []
-                        return Array.isArray(item.url) 
-                            ? item.url.map(url => ({ url, id: item.id }))
-                            : [{ url: item.url, id: item.id }]
-                    }).filter(item => item && item.url && item.id)
+            try {
+                // Tải ảnh từ API với phân trang
+                if (!isLoadMore) {
+                    // Tải trang đầu tiên hoặc làm mới dữ liệu
+                    await fetchImagesCreatedByUser();
+                    
+                    currentPage.value = 1;
+                    
+                    // Lấy toàn bộ dữ liệu từ store
+                    if (imagesCreatedByUser && 
+                        typeof imagesCreatedByUser === 'object' && 
+                        imagesCreatedByUser.value && 
+                        Array.isArray(imagesCreatedByUser.value) && 
+                        imagesCreatedByUser.value.length > 0) {
+                        
+                        allImages = imagesCreatedByUser.value.flatMap(item => {
+                            if (!item || !item.url) return []
+                            // Đảm bảo url là mảng
+                            const urls = Array.isArray(item.url) ? item.url : [item.url];
+                            return urls.filter(Boolean).map(url => ({ url, id: item.id }))
+                        }).filter(item => item && item.url && item.id)
+                    } else {
+                        // Nếu không có dữ liệu
+                        allImages = []
+                    }
+                    
+                    // Nhóm hình ảnh theo ID
+                    const groupedImages = {}
+                    allImages.forEach(image => {
+                        if (!image || !image.id || !image.url) return
+                        
+                        if (!groupedImages[image.id]) {
+                            groupedImages[image.id] = {
+                                id: image.id,
+                                currentIndex: 0,
+                                images: []
+                            }
+                        }
+                        groupedImages[image.id].images.push(image)
+                    })
+                    
+                    // Khởi tạo mảng mới
+                    imageGroups.value = Object.values(groupedImages)
                 } else {
-                    // Dữ liệu mẫu
-                    allImages = []
+                    // Khi tải thêm, chỉ lấy các ảnh mới
+                    // Theo dõi các ID ảnh đã có
+                    const existingIds = new Set(imageGroups.value.map(group => group.id));
+                    
+                    // Đảm bảo imagesCreatedByUser là mảng hợp lệ với kiểm tra tương tự phía trên
+                    let createdImages = [];
+                    if (imagesCreatedByUser && 
+                        typeof imagesCreatedByUser === 'object' && 
+                        imagesCreatedByUser.value && 
+                        Array.isArray(imagesCreatedByUser.value)) {
+                        createdImages = imagesCreatedByUser.value;
+                    }
+                    
+                    // Chỉ xử lý các ảnh mới được thêm vào từ trang mới nhất
+                    const newImages = createdImages
+                        .filter(item => !existingIds.has(item.id))
+                        .flatMap(item => {
+                            if (!item || !item.url) return []
+                            // Đảm bảo url là mảng
+                            const urls = Array.isArray(item.url) ? item.url : [item.url];
+                            return urls.filter(Boolean).map(url => ({ url, id: item.id }))
+                        }).filter(item => item && item.url && item.id);
+                    
+                    // Nhóm các ảnh mới theo ID
+                    const newGroupedImages = {}
+                    newImages.forEach(image => {
+                        if (!image || !image.id || !image.url) return
+                        
+                        if (!newGroupedImages[image.id]) {
+                            newGroupedImages[image.id] = {
+                                id: image.id,
+                                currentIndex: 0,
+                                images: []
+                            }
+                        }
+                        newGroupedImages[image.id].images.push(image)
+                    })
+                    
+                    // Thêm các nhóm mới vào mảng hiện có
+                    const newGroups = Object.values(newGroupedImages)
+                    imageGroups.value = [...imageGroups.value, ...newGroups]
                 }
                 
-                // Nhóm hình ảnh theo ID
-                const groupedImages = {}
-                allImages.forEach(image => {
-                    if (!image || !image.id || !image.url) return
-                    
-                    if (!groupedImages[image.id]) {
-                        groupedImages[image.id] = {
-                            id: image.id,
-                            currentIndex: 0,
-                            images: []
-                        }
-                    }
-                    groupedImages[image.id].images.push(image)
-                })
-                
-                // Khởi tạo mảng mới
-                imageGroups.value = Object.values(groupedImages)
-            } else {
-                // Khi tải thêm, chỉ lấy các ảnh mới
-                // Theo dõi các ID ảnh đã có
-                const existingIds = new Set(imageGroups.value.map(group => group.id));
-                
-                // Chỉ xử lý các ảnh mới được thêm vào từ trang mới nhất
-                const newImages = imagesCreatedByUser.value
-                    .filter(item => !existingIds.has(item.id))
-                    .flatMap(item => {
-                        if (!item || !item.url) return []
-                        return Array.isArray(item.url) 
-                            ? item.url.map(url => ({ url, id: item.id }))
-                            : [{ url: item.url, id: item.id }]
-                    }).filter(item => item && item.url && item.id);
-                
-                // Nhóm các ảnh mới theo ID
-                const newGroupedImages = {}
-                newImages.forEach(image => {
-                    if (!image || !image.id || !image.url) return
-                    
-                    if (!newGroupedImages[image.id]) {
-                        newGroupedImages[image.id] = {
-                            id: image.id,
-                            currentIndex: 0,
-                            images: []
-                        }
-                    }
-                    newGroupedImages[image.id].images.push(image)
-                })
-                
-                // Thêm các nhóm mới vào mảng hiện có
-                const newGroups = Object.values(newGroupedImages)
-                imageGroups.value = [...imageGroups.value, ...newGroups]
+                // Kiểm tra xem còn ảnh để tải không
+                hasMoreImages.value = hasMoreUserImages && typeof hasMoreUserImages === 'object' ? 
+                    (hasMoreUserImages.value || false) : 
+                    (lastPage && currentPage.value < lastPage.value);
+            } catch (error) {
+                console.error('Lỗi khi tải dữ liệu:', error);
+                hasError.value = true;
             }
-            
-            // Kiểm tra xem còn ảnh để tải không
-            hasMoreImages.value = hasMoreUserImages.value;
         } else if (props.filter === 'uploaded') {
             allImages = [
                 { url: "https://picsum.photos/id/241/400/400", id: 1 }
@@ -350,12 +366,23 @@ export default {
             if (props.filter === 'created') {
                 // Tăng số trang và tải dữ liệu mới
                 currentPage.value++
-                await loadMoreUserImages()
-                // Cập nhật giao diện với dữ liệu mới
-                await fetchAndGroupImages(true)
+                
+                // Gọi phương thức mới để tải thêm ảnh người dùng
+                const success = await loadMoreUserImages(currentPage.value)
+                
+                if (success) {
+                    // Cập nhật giao diện với dữ liệu mới
+                    await fetchAndGroupImages(true)
+                } else {
+                    console.error('Không thể tải thêm ảnh')
+                    // Nếu thất bại, giảm lại trang về trạng thái cũ
+                    currentPage.value--
+                }
             }
         } catch (error) {
             console.error('Lỗi khi tải thêm ảnh:', error)
+            // Nếu có lỗi, giảm lại trang về trạng thái cũ
+            currentPage.value--
         } finally {
             isLoadingMore.value = false
         }

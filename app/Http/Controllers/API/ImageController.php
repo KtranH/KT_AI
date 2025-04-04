@@ -70,18 +70,34 @@ class ImageController extends Controller
     public function getImagesCreatedByUser(Request $request): JsonResponse
     {
         try {
-            $images = $this->imageRepository->getImagesCreatedByUser();
-            
-            // Thực hiện phân trang trên Collection
             $perPage = (int)$request->input('per_page', 5);
             $page = (int)$request->input('page', 1);
             
+            // Lấy tất cả hình ảnh của người dùng
+            $images = $this->imageRepository->getImagesCreatedByUser();
+            
+            // Nếu không có ảnh nào
+            if ($images->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'pagination' => [
+                        'current_page' => $page,
+                        'last_page' => 1,
+                        'per_page' => $perPage,
+                        'total' => 0
+                    ]
+                ]);
+            }
+            
+            // Phân trang thủ công
             $totalItems = $images->count();
-            $paginatedData = $images->forPage($page, $perPage);
+            $offset = ($page - 1) * $perPage;
+            $paginatedData = $images->slice($offset, $perPage)->values()->all();
             
             return response()->json([
                 'success' => true,
-                'data' => ImageResource::collection($paginatedData),
+                'data' => $paginatedData,
                 'pagination' => [
                     'current_page' => $page,
                     'last_page' => ceil($totalItems / $perPage),
