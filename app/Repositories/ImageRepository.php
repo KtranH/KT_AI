@@ -58,21 +58,25 @@ class ImageRepository implements ImageRepositoryInterface
     /**
      * Lấy danh sách hình ảnh của người dùng hiện tại
      */
-    public function getImagesCreatedByUser(int $perPage = 5): array
+    public function getImagesCreatedByUser(): Collection
     {
         $images = Image::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->get();
             
-        return [
-            'data' => $images,
-            'pagination' => [
-                'current_page' => $images->currentPage(),
-                'last_page' => $images->lastPage(),
-                'per_page' => $images->perPage(),
-                'total' => $images->total()
-            ]
-        ];
+        return $images->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'image_url' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
+                'prompt' => $image->prompt,
+                'features_id' => $image->features_id,
+                'sum_like' => $image->sum_like,
+                'sum_comment' => $image->sum_comment,
+                'created_at' => $image->created_at,
+                'updated_at' => $image->updated_at,
+                'user' => $image->user
+            ];
+        })->values();
     }
     
     // Lưu trữ hình ảnh tải lên

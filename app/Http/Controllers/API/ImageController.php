@@ -70,15 +70,24 @@ class ImageController extends Controller
     public function getImagesCreatedByUser(Request $request): JsonResponse
     {
         try {
-            $perPage = $request->input('per_page', 5);
-            $page = $request->input('page', 1);
+            $images = $this->imageRepository->getImagesCreatedByUser();
             
-            $result = $this->imageRepository->getImagesCreatedByUser($perPage);
+            // Thực hiện phân trang trên Collection
+            $perPage = (int)$request->input('per_page', 5);
+            $page = (int)$request->input('page', 1);
+            
+            $totalItems = $images->count();
+            $paginatedData = $images->forPage($page, $perPage);
             
             return response()->json([
                 'success' => true,
-                'data' => ImageResource::collection($result['data']),
-                'pagination' => $result['pagination']
+                'data' => ImageResource::collection($paginatedData),
+                'pagination' => [
+                    'current_page' => $page,
+                    'last_page' => ceil($totalItems / $perPage),
+                    'per_page' => $perPage,
+                    'total' => $totalItems
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Get Images Created By User Error: ' . $e->getMessage(), [
