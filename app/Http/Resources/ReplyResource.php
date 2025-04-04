@@ -22,7 +22,7 @@ class ReplyResource extends JsonResource
             'isLiked' => in_array($userId, $listLike),
             'isOwner' => $userId === $this->user_id,
             'showAllReplies' => true,
-            'replies' => CommentResource::collection($this->whenLoaded('replies')),
+            'replies' => ReplyResource::collection($this->whenLoaded('replies')),
         ];
     }
 }

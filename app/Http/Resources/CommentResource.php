@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\ReplyResource;
 
 class CommentResource extends JsonResource
 {
@@ -22,7 +23,7 @@ class CommentResource extends JsonResource
             'isLiked' => in_array($userId, $listLike),
             'isOwner' => $userId === $this->user_id,
             'showAllReplies' => true,
-            'replies' => CommentResource::collection($this->whenLoaded('replies')),
+            'replies' => ReplyResource::collection($this->whenLoaded('replies')),
         ];
     }
 } 

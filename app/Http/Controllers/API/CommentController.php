@@ -7,6 +7,7 @@ use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\ReplyResource;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Models\Comment;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +32,7 @@ class CommentController extends Controller
         
         if (isset($result['replies'])) {
             return response()->json([
-                'replies' => CommentResource::collection($result['replies']),
+                'replies' => ReplyResource::collection($result['replies']),
                 'hasMore' => $result['hasMore']
             ]);
         }

@@ -58,11 +58,21 @@ class ImageRepository implements ImageRepositoryInterface
     /**
      * Lấy danh sách hình ảnh của người dùng hiện tại
      */
-    public function getImagesCreatedByUser(): Collection
+    public function getImagesCreatedByUser(int $perPage = 5): array
     {
-        return Image::where('user_id', Auth::id())
+        $images = Image::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+            
+        return [
+            'data' => $images,
+            'pagination' => [
+                'current_page' => $images->currentPage(),
+                'last_page' => $images->lastPage(),
+                'per_page' => $images->perPage(),
+                'total' => $images->total()
+            ]
+        ];
     }
     
     // Lưu trữ hình ảnh tải lên
@@ -103,12 +113,12 @@ class ImageRepository implements ImageRepositoryInterface
     // Tăng số lượng ảnh cho mục Feature
     public function increaseSumImg(int $featureId): void
     {
-        $this->featureService->increaseSumImg($featureId);
+        $this->featureRepository->increaseSumImg($featureId);
     }
     // Tăng số lượng ảnh cho user
     public function increaseSumImgUser(int $userId): void
     {
-        $this->userService->increaseSumImg($userId);
+        $this->userRepository->increaseSumImg($userId);
     }
     /*// Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void

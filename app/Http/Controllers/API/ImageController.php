@@ -67,14 +67,18 @@ class ImageController extends Controller
         }
     }
     
-    public function getImagesCreatedByUser(): JsonResponse
+    public function getImagesCreatedByUser(Request $request): JsonResponse
     {
         try {
-            $images = $this->imageRepository->getImagesCreatedByUser();
+            $perPage = $request->input('per_page', 5);
+            $page = $request->input('page', 1);
+            
+            $result = $this->imageRepository->getImagesCreatedByUser($perPage);
             
             return response()->json([
                 'success' => true,
-                'data' => ImageResource::collection($images),
+                'data' => ImageResource::collection($result['data']),
+                'pagination' => $result['pagination']
             ]);
         } catch (\Exception $e) {
             Log::error('Get Images Created By User Error: ' . $e->getMessage(), [
