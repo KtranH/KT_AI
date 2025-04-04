@@ -55,12 +55,11 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import useEmoji from '@/composables/user/useEmoji'
-import useReply from '@/composables/user/useReply';
 
 export default {
     // Props and emits
@@ -76,6 +75,10 @@ export default {
         isReplying: {
             type: Boolean,
             required: true
+        },
+        replyId: {
+            type: [Number, String, null],
+            default: null
         }
     },
     components: {
@@ -85,8 +88,31 @@ export default {
     setup(props, { emit }) {
         const authStore = useAuthStore()
         const user = authStore.user
-        // Sử dụng composable function
-        const { replyText, submitReply, cancelReply } = useReply(props, emit);
+        
+        // Không sử dụng composable useReply để tránh xung đột
+        const replyText = ref('')
+        
+        // Xử lý gửi phản hồi
+        const submitReply = () => {
+            if (!replyText.value.trim()) return
+            
+            // Emit sự kiện reply-submitted với nội dung phản hồi và replyId nếu có
+            emit('reply-submitted', {
+                commentId: props.commentId,
+                content: replyText.value.trim(),
+                replyId: props.replyId
+            })
+            
+            // Reset nội dung phản hồi
+            replyText.value = ''
+        }
+        
+        // Xử lý hủy phản hồi
+        const cancelReply = () => {
+            replyText.value = ''
+            emit('cancel-reply')
+        }
+        
         const { showEmojiPicker, toggleEmojiPicker, addEmoji } = useEmoji(replyText)
         
         const canSubmit = computed(() => {

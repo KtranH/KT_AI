@@ -26,6 +26,7 @@
             :replyingToIndex="replyingToIndex"
             :replyingToNested="replyingToNested"
             :replyToNestedUsername="replyToNestedUsername"
+            :replyingToId="replyingToId"
             @reply="handleStartReply"
             @nested-reply="handleStartNestedReply"
             @cancel-reply="handleCancelReply"
@@ -80,6 +81,7 @@ export default {
             replyingToIndex, 
             replyingToNested, 
             replyToNestedUsername, 
+            replyingToId,
             startReply, 
             startNestedReply, 
             cancelReply, 
@@ -115,9 +117,9 @@ export default {
             startReply(index, username)
         }
 
-        const handleStartNestedReply = (index, username) => {
+        const handleStartNestedReply = (index, username, replyId) => {
             if (!props.imageId) return
-            startNestedReply(index, username)
+            startNestedReply(index, username, replyId)
         }
 
         const handleCancelReply = () => {
@@ -145,6 +147,7 @@ export default {
             replyingToIndex,
             replyingToNested,
             replyToNestedUsername,
+            replyingToId,
             loading,
             error,
             fetchComments,

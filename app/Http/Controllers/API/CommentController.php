@@ -57,7 +57,8 @@ class CommentController extends Controller
      */
     public function storeReply(StoreReplyRequest $request, Comment $comment): JsonResponse
     {
-        dd($comment);
+        // Tạo phản hồi và lưu comment_id làm parent_id
+        // Phản hồi có thể cho bình luận gốc hoặc cho phản hồi khác (phản hồi lồng nhau)
         $reply = $this->commentRepository->storeReply($request->validated(), $comment);
         return response()->json(new CommentResource($reply), 201);
     }

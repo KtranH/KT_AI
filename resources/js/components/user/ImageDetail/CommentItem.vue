@@ -120,7 +120,7 @@
                             <div class="flex items-center text-xs text-gray-500 mt-1">
                                 <span>{{ reply.time }}</span>
                                 <span class="mx-1">•</span>
-                                <button class="font-medium hover:underline" @click="onNestedReply(index, reply.username)">Trả lời</button>
+                                <button class="font-medium hover:underline" @click="onNestedReply(index, reply.username, reply.id)">Trả lời</button>
                                 
                                 <!-- Nút xóa và sửa chỉ hiển thị cho chủ sở hữu phản hồi -->
                                 <template v-if="reply.isOwner">
@@ -146,6 +146,79 @@
                                     <button @click="cancelReplyDelete(replyIndex)" class="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300">Hủy</button>
                                 </div>
                             </div>
+                            
+                            <!-- Phản hồi lồng nhau -->
+                            <div v-if="reply.nested_replies && reply.nested_replies.length > 0" class="mt-2 ml-4 space-y-3">
+                                <div v-for="(nestedReply, nestedIndex) in reply.nested_replies" :key="nestedReply.id" class="flex space-x-2 nested-reply-indicator">
+                                    <img :src="nestedReply.avatar" class="w-6 h-6 rounded-full" :alt="nestedReply.username" />
+                                    <div class="flex-1">
+                                        <div class="flex items-start">
+                                            <span class="font-semibold">{{ nestedReply.username }}</span>
+                                            
+                                            <!-- Thông tin debug parent_id -->
+                                            <span v-if="isDev" class="text-xs text-gray-400 mx-2"><i class="fa-solid fa-comment"></i> <span class="font-bold">{{ nestedReply.parent_name }}</span></span>
+                                            
+                                            <!-- Nội dung phản hồi lồng nhau - chế độ xem -->
+                                            <span v-if="!isEditingNestedReply[`${replyIndex}_${nestedIndex}`]" class="flex-1" v-html="nestedReply.text"></span>
+                                            
+                                            <!-- Form chỉnh sửa phản hồi lồng nhau -->
+                                            <div v-else class="flex-1">
+                                                <div class="flex w-full">
+                                                    <input
+                                                        type="text"
+                                                        v-model="editNestedReplyText"
+                                                        class="flex-1 p-1 border rounded-md text-sm"
+                                                        @keyup.enter="submitNestedReplyEdit(nestedReply, replyIndex, nestedIndex)"
+                                                    />
+                                                    <div class="flex space-x-1 ml-1">
+                                                        <button 
+                                                            @click="submitNestedReplyEdit(nestedReply, replyIndex, nestedIndex)" 
+                                                            class="text-blue-500 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                                                        >
+                                                            Lưu
+                                                        </button>
+                                                        <button 
+                                                            @click="cancelNestedReplyEdit(replyIndex, nestedIndex)" 
+                                                            class="text-gray-500 text-sm px-2 py-1 hover:bg-gray-50 rounded"
+                                                        >
+                                                            Hủy
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center text-xs text-gray-500 mt-1">
+                                            <span>{{ nestedReply.time }}</span>
+                                            <span class="mx-1">•</span>
+                                            <button class="font-medium hover:underline" @click="onNestedReply(index, nestedReply.username, nestedReply.id)">Trả lời</button>
+                                            
+                                            <!-- Nút xóa và sửa chỉ hiển thị cho chủ sở hữu phản hồi lồng nhau -->
+                                            <template v-if="nestedReply.isOwner">
+                                                <button class="font-medium ml-2 hover:underline" @click="confirmNestedReplyDelete(replyIndex, nestedIndex)">Xóa</button>
+                                                <button class="font-medium ml-2 hover:underline" @click="startNestedReplyEdit(nestedReply, replyIndex, nestedIndex)">Sửa</button>
+                                            </template>
+                                            
+                                            <div class="flex items-center ml-2">
+                                                <button @click="onLikeNestedReply(comment, nestedReply)" class="flex items-center focus:outline-none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'text-red-500 fill-current': nestedReply.isLiked}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                    </svg>
+                                                    <span class="ml-1">{{ nestedReply.likes }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Xác nhận xóa phản hồi lồng nhau -->
+                                        <div v-if="showDeleteNestedReplyConfirm[`${replyIndex}_${nestedIndex}`]" class="mt-2 p-2 bg-gray-50 rounded-lg">
+                                            <p class="text-sm text-gray-800">Bạn có chắc muốn xóa phản hồi này?</p>
+                                            <div class="flex space-x-2 mt-2">
+                                                <button @click="deleteNestedReply(nestedReply)" class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">Xóa</button>
+                                                <button @click="cancelNestedReplyDelete(replyIndex, nestedIndex)" class="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300">Hủy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -166,6 +239,7 @@
                         :commentId="index"
                         :replyToUsername="replyToNestedUsername"
                         :isReplying="replyingToIndex === index && replyingToNested"
+                        :replyId="replyingToId"
                         @reply-submitted="onNestedReplySubmit"
                         @cancel-reply="onCancelReply"
                     />
@@ -197,6 +271,10 @@ export default {
             default: false
         },
         replyToNestedUsername: String,
+        replyingToId: {
+            type: [Number, String, null],
+            default: null
+        },
         loading: {
             type: Boolean,
             default: false
@@ -215,6 +293,9 @@ export default {
     setup(props, { emit }) {
         const { likeComment, likeReply } = useLikes()
         
+        // Định nghĩa biến isDev
+        const isDev = import.meta.env.DEV || false
+        
         // State cho chỉnh sửa và xóa
         const isEditing = ref(false)
         const editText = ref('')
@@ -225,13 +306,18 @@ export default {
         const editReplyText = ref('')
         const showDeleteReplyConfirm = ref({})
 
+        // State cho chỉnh sửa và xóa phản hồi lồng nhau
+        const isEditingNestedReply = ref({})
+        const editNestedReplyText = ref('')
+        const showDeleteNestedReplyConfirm = ref({})
+
         // Xử lý trả lời bình luận
         const onReply = (index, username) => {
             emit('reply', index, username)
         }
 
-        const onNestedReply = (index, username) => {
-            emit('nested-reply', index, username)
+        const onNestedReply = (index, username, replyId) => {
+            emit('nested-reply', index, username, replyId)
         }
 
         const onCancelReply = () => {
@@ -251,7 +337,8 @@ export default {
             // Đảm bảo data có định dạng đúng cho handleNestedReplySubmit
             const replyData = {
                 commentId: props.index,
-                content: data.content
+                content: data.content,
+                replyId: data.replyId
             };
             emit('nested-reply-submit', replyData);
         }
@@ -355,6 +442,56 @@ export default {
             emit('load-more-replies', commentId)
         }
 
+        const onLikeNestedReply = (comment, nestedReply) => {
+            likeReply(comment, nestedReply)
+        }
+        
+        // Xử lý chỉnh sửa phản hồi lồng nhau
+        const startNestedReplyEdit = (nestedReply, replyIndex, nestedIndex) => {
+            const key = `${replyIndex}_${nestedIndex}`
+            editNestedReplyText.value = nestedReply.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
+            isEditingNestedReply.value = { ...isEditingNestedReply.value, [key]: true }
+        }
+        
+        const cancelNestedReplyEdit = (replyIndex, nestedIndex) => {
+            const key = `${replyIndex}_${nestedIndex}`
+            isEditingNestedReply.value = { ...isEditingNestedReply.value, [key]: false }
+            editNestedReplyText.value = ''
+        }
+        
+        const submitNestedReplyEdit = (nestedReply, replyIndex, nestedIndex) => {
+            if (editNestedReplyText.value.trim() === '') return
+            
+            emit('update', {
+                commentId: nestedReply.id,
+                content: editNestedReplyText.value,
+                isReply: true,
+                parentIndex: props.index
+            })
+            
+            const key = `${replyIndex}_${nestedIndex}`
+            isEditingNestedReply.value = { ...isEditingNestedReply.value, [key]: false }
+        }
+        
+        // Xử lý xóa phản hồi lồng nhau
+        const confirmNestedReplyDelete = (replyIndex, nestedIndex) => {
+            const key = `${replyIndex}_${nestedIndex}`
+            showDeleteNestedReplyConfirm.value = { ...showDeleteNestedReplyConfirm.value, [key]: true }
+        }
+        
+        const cancelNestedReplyDelete = (replyIndex, nestedIndex) => {
+            const key = `${replyIndex}_${nestedIndex}`
+            showDeleteNestedReplyConfirm.value = { ...showDeleteNestedReplyConfirm.value, [key]: false }
+        }
+        
+        const deleteNestedReply = (nestedReply) => {
+            emit('delete', {
+                commentId: nestedReply.id,
+                isReply: true,
+                parentIndex: props.index
+            })
+        }
+
         return {
             onReply,
             onNestedReply,
@@ -380,8 +517,36 @@ export default {
             confirmReplyDelete,
             cancelReplyDelete,
             deleteReply,
-            loadMoreReplies
+            loadMoreReplies,
+            onLikeNestedReply,
+            isEditingNestedReply,
+            editNestedReplyText,
+            startNestedReplyEdit,
+            cancelNestedReplyEdit,
+            submitNestedReplyEdit,
+            showDeleteNestedReplyConfirm,
+            confirmNestedReplyDelete,
+            cancelNestedReplyDelete,
+            deleteNestedReply,
+            isDev
         }
     }
 }
-</script> 
+</script>
+
+<style scoped>
+/* CSS cho phản hồi lồng nhau */
+.nested-reply-indicator {
+    position: relative;
+}
+
+.nested-reply-indicator::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e5e7eb;
+}
+</style> 

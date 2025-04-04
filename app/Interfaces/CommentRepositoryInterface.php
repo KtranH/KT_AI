@@ -21,6 +21,7 @@ interface CommentRepositoryInterface
     public function storeComment(array $data): Comment;
     
     // Tạo phản hồi cho một bình luận
+    // Comment $comment có thể là bình luận gốc hoặc phản hồi khác (cho phản hồi lồng nhau)
     public function storeReply(array $data, Comment $comment): Comment;
     
     // Cập nhật bình luận

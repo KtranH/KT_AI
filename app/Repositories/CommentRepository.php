@@ -29,7 +29,6 @@ class CommentRepository implements CommentRepositoryInterface
             ->where('parent_id', $commentId)
             ->latest()
             ->paginate(self::REPLIES_PER_PAGE, ['*'], 'page', $page);
-            
         return [
             'replies' => $replies->items(),
             'hasMore' => $replies->hasMorePages()
@@ -48,10 +47,46 @@ class CommentRepository implements CommentRepositoryInterface
         ->latest()
         ->paginate(self::COMMENTS_PER_PAGE, ['*'], 'page', $page);
         
+        // Sắp xếp lại replies để các phản hồi lồng nhau được hiển thị đúng
+        $commentsWithNestedReplies = $comments->items();
+        
+        foreach ($commentsWithNestedReplies as $comment) {
+            $this->processReplies($comment);
+        }
+        
         return [
-            'comments' => $comments->items(),
+            'comments' => $commentsWithNestedReplies,
             'hasMore' => $comments->hasMorePages()
         ];
+    }
+    
+    /**
+     * Xử lý phản hồi lồng nhau
+     */
+    private function processReplies($comment): void
+    {
+        // Lấy tất cả ID của replies
+        $replyIds = $comment->replies->pluck('id')->toArray();
+        
+        // Nếu không có replies, không cần xử lý
+        if (empty($replyIds)) {
+            return;
+        }
+        
+        // Lấy danh sách tất cả nested replies (những phản hồi có parent_id là một trong các replies hiện tại)
+        $nestedReplies = Comment::with('user')
+            ->whereIn('parent_id', $replyIds)
+            ->get();
+            
+        // Nếu không có nested replies, không cần xử lý thêm
+        if ($nestedReplies->isEmpty()) {
+            return;
+        }
+        
+        // Thêm nested_replies attribute vào mỗi reply
+        foreach ($comment->replies as $reply) {
+            $reply->nested_replies = $nestedReplies->where('parent_id', $reply->id)->values();
+        }
     }
     
     public function storeComment(array $data): Comment

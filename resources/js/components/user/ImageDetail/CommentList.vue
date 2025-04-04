@@ -15,6 +15,7 @@
                 :replyingToIndex="replyingToIndex"
                 :replyingToNested="replyingToNested"
                 :replyToNestedUsername="replyToNestedUsername"
+                :replyingToId="replyingToId"
                 @reply="handleReply"
                 @nested-reply="handleNestedReply"
                 @cancel-reply="handleCancelReply"
@@ -71,6 +72,10 @@ export default {
         loading: {
             type: Boolean,
             default: false
+        },
+        replyingToId: {
+            type: [Number, String, null],
+            default: null
         }
     },
     emits: [
@@ -89,8 +94,8 @@ export default {
             emit('reply', index, username)
         }
 
-        const handleNestedReply = (index, username) => {
-            emit('nested-reply', index, username)
+        const handleNestedReply = (index, username, replyId) => {
+            emit('nested-reply', index, username, replyId)
         }
 
         const handleCancelReply = () => {

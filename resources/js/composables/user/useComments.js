@@ -8,6 +8,7 @@ export default function useComments(imageId) {
     const replyingToIndex = ref(-1)
     const replyingToNested = ref(false)
     const replyToNestedUsername = ref('')
+    const replyingToId = ref(null)
     const loading = ref(false)
     const error = ref(null)
     const currentPage = ref(1)
@@ -78,10 +79,11 @@ export default function useComments(imageId) {
     }
 
     // Bắt đầu trả lời một reply
-    const startNestedReply = (index, username) => {
+    const startNestedReply = (index, username, replyId) => {
         replyingToIndex.value = index  // Đảm bảo lưu lại index của comment cha
         replyingToNested.value = true
         replyToNestedUsername.value = username
+        replyingToId.value = replyId  // Lưu lại ID của reply đang được trả lời
     }
 
     // Hủy trả lời
@@ -89,6 +91,7 @@ export default function useComments(imageId) {
         replyingToIndex.value = -1
         replyingToNested.value = false
         replyToNestedUsername.value = ''
+        replyingToId.value = null // Reset ID khi hủy
     }
 
     // Gửi reply cho một comment
@@ -259,8 +262,41 @@ export default function useComments(imageId) {
             return
         }
         
-        // Gọi handleReplySubmit với dữ liệu phù hợp
-        await handleReplySubmit(data)
+        try {
+            const parentIndex = replyingToIndex.value;
+            if (parentIndex < 0 || parentIndex >= comments.value.length) {
+                throw new Error('Không tìm thấy bình luận cha');
+            }
+            
+            const parentComment = comments.value[parentIndex];
+            // Xác định ID của phản hồi mà người dùng đang trả lời
+            // Sử dụng replyingToId đã lưu trước đó
+            const replyId = replyingToId.value;
+            
+            console.log('Gửi phản hồi lồng nhau cho:', replyId ? `phản hồi ID ${replyId}` : `comment ID ${parentComment.id}`, 'với nội dung:', data.content);
+            
+            // Gọi API tạo phản hồi với ID của phản hồi hoặc comment gốc
+            const targetId = replyId || parentComment.id;
+            const replyData = {
+                content: data.content.trim()
+            };
+            
+            const response = await commentAPI.createReply(targetId, replyData);
+            
+            console.log('Kết quả reply nested:', response.data);
+            
+            // Thêm reply mới vào cuối danh sách replies của comment cha
+            if (!parentComment.replies) {
+                parentComment.replies = [];
+            }
+            parentComment.replies.push(response.data);
+            
+            cancelReply();
+            toast.success('Đã trả lời bình luận thành công!');
+        } catch (err) {
+            console.error("Lỗi khi trả lời bình luận lồng nhau:", err);
+            toast.error('Không thể trả lời bình luận. Vui lòng thử lại sau.');
+        }
     }
 
     return {
@@ -271,6 +307,7 @@ export default function useComments(imageId) {
         replyingToIndex,
         replyingToNested,
         replyToNestedUsername,
+        replyingToId,
         fetchComments,
         addComment,
         startReply,
