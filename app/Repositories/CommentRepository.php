@@ -49,7 +49,6 @@ class CommentRepository implements CommentRepositoryInterface
         
         // Sắp xếp lại replies để các phản hồi lồng nhau được hiển thị đúng
         $commentsWithNestedReplies = $comments->items();
-        
         foreach ($commentsWithNestedReplies as $comment) {
             $this->processReplies($comment);
         }
@@ -77,7 +76,9 @@ class CommentRepository implements CommentRepositoryInterface
         $allNestedReplies = $this->getAllNestedReplies($replyIds);
         
         // Gộp các phản hồi và sắp xếp theo thời gian tạo
-        $allReplies = $comment->replies->concat($allNestedReplies)->sortBy('created_at');
+        $allReplies = $comment->replies->concat($allNestedReplies)
+            ->unique('id') // Loại bỏ các reply trùng lặp
+            ->sortByDesc('created_at'); // Sắp xếp theo thời gian tạo mới nhất
         
         // Thay thế collection replies bằng collection mới đã gộp và sắp xếp
         $comment->setRelation('replies', $allReplies);
@@ -93,9 +94,23 @@ class CommentRepository implements CommentRepositoryInterface
         }
         
         // Lấy tất cả phản hồi cho các parent_id
-        return Comment::with('user')
+        $replies = Comment::with('user')
             ->whereIn('parent_id', $parentIds)
             ->get();
+            
+        // Lấy ID của tất cả các replies đã tìm được
+        $replyIds = $replies->pluck('id')->toArray();
+        
+        // Nếu có replies, tiếp tục đệ quy để lấy các replies lồng nhau sâu hơn
+        if (!empty($replyIds)) {
+            // Gọi đệ quy để lấy các replies của replies
+            $nestedReplies = $this->getAllNestedReplies($replyIds);
+            
+            // Gộp replies hiện tại với các replies lồng nhau
+            return $replies->concat($nestedReplies);
+        }
+        
+        return $replies;
     }
     
     public function storeComment(array $data): Comment
