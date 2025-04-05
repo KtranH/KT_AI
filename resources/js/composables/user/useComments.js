@@ -6,9 +6,9 @@ export default function useComments(imageId) {
     const comments = ref([])
     const newComment = ref('')
     const replyingToIndex = ref(-1)
-    const replyingToNested = ref(false)
-    const replyToNestedUsername = ref('')
-    const replyingToId = ref(null)
+    const replyingToReply = ref(false)
+    const replyToUsername = ref('')
+    const replyToParentId = ref(null)
     const loading = ref(false)
     const error = ref(null)
     const currentPage = ref(1)
@@ -71,30 +71,31 @@ export default function useComments(imageId) {
         }
     }
 
-    // Bắt đầu trả lời bình luận
-    const startReply = (index, username) => {
+    // Bắt đầu trả lời bình luận hoặc phản hồi
+    const startReply = (index, username, replyId = null) => {
         replyingToIndex.value = index
-        replyingToNested.value = false
-        replyToNestedUsername.value = username
-    }
-
-    // Bắt đầu trả lời một reply
-    const startNestedReply = (index, username, replyId) => {
-        replyingToIndex.value = index  // Đảm bảo lưu lại index của comment cha
-        replyingToNested.value = true
-        replyToNestedUsername.value = username
-        replyingToId.value = replyId  // Lưu lại ID của reply đang được trả lời
+        replyToUsername.value = username
+        
+        if (replyId) {
+            // Đang trả lời một phản hồi
+            replyingToReply.value = true
+            replyToParentId.value = replyId
+        } else {
+            // Đang trả lời bình luận gốc
+            replyingToReply.value = false
+            replyToParentId.value = null
+        }
     }
 
     // Hủy trả lời
     const cancelReply = () => {
         replyingToIndex.value = -1
-        replyingToNested.value = false
-        replyToNestedUsername.value = ''
-        replyingToId.value = null // Reset ID khi hủy
+        replyingToReply.value = false
+        replyToUsername.value = ''
+        replyToParentId.value = null
     }
 
-    // Gửi reply cho một comment
+    // Gửi reply cho một comment hoặc một reply khác
     const handleReplySubmit = async (data) => {
         if (!data || !data.content || data.content.trim() === '' || !imageId) {
             error.value = 'Bình luận không hợp lệ. Vui lòng nhập bình luận.'
@@ -108,30 +109,35 @@ export default function useComments(imageId) {
                 throw new Error('Không tìm thấy bình luận cha');
             }
             
+            // Xác định ID của bình luận cha
             const parentComment = comments.value[parentIndex]
-            // Sử dụng phương thức mới để tạo reply
+            const targetCommentId = replyingToReply.value && replyToParentId.value 
+                ? replyToParentId.value  // Trả lời một phản hồi
+                : parentComment.id;      // Trả lời bình luận gốc
+            
+            // Tạo dữ liệu phản hồi
             const replyData = {
                 content: data.content.trim()
             }
             
-            console.log('Gửi phản hồi cho comment:', parentComment.id, 'với nội dung:', replyData.content)
+            console.log('Gửi phản hồi cho:', targetCommentId, 'với nội dung:', replyData.content)
             
-            // Gọi API tạo phản hồi với commentId của bình luận cha
-            const response = await commentAPI.createReply(parentComment.id, replyData)
+            // Gọi API tạo phản hồi
+            const response = await commentAPI.createReply(targetCommentId, replyData)
             
-            console.log('Kết quả reply comment:', response.data)
+            console.log('Kết quả phản hồi:', response.data)
             
-            // Thêm reply mới vào cuối danh sách replies của comment cha
+            // Thêm phản hồi mới vào danh sách
             if (!parentComment.replies) {
                 parentComment.replies = []
             }
             parentComment.replies.push(response.data)
             
             cancelReply()
-            toast.success('Đã trả lời bình luận thành công!')
+            toast.success('Đã trả lời thành công!')
         } catch (err) {
-            console.error("Lỗi khi trả lời bình luận:", err)
-            toast.error('Không thể trả lời bình luận. Vui lòng thử lại sau.')
+            console.error("Lỗi khi trả lời:", err)
+            toast.error('Không thể trả lời. Vui lòng thử lại sau.')
         }
     }
 
@@ -235,12 +241,21 @@ export default function useComments(imageId) {
             const repliesData = response.data.replies || []
             const hasMoreReplies = response.data.hasMore || false
             
-            // Thêm replies mới vào cuối danh sách replies hiện tại
-            const parentComment = comments.value[commentIndex]
+            // Tìm comment theo index hoặc id
+            const parentComment = (commentIndex !== undefined) 
+                ? comments.value[commentIndex]
+                : comments.value.find(c => c.id === commentId);
+                
+            if (!parentComment) {
+                throw new Error('Không tìm thấy bình luận cha');
+            }
+            
+            // Đảm bảo replies là một mảng
             if (!parentComment.replies) {
                 parentComment.replies = []
             }
             
+            // Thêm replies mới vào cuối danh sách replies hiện tại
             parentComment.replies = [...parentComment.replies, ...repliesData]
             parentComment.hasMoreReplies = hasMoreReplies
             
@@ -254,72 +269,24 @@ export default function useComments(imageId) {
         }
     }
 
-    // Gửi nested reply
-    const handleNestedReplySubmit = async (data) => {
-        if (!data || !data.content || data.content.trim() === '' || !imageId || replyingToIndex.value === -1) {
-            error.value = 'Bình luận không hợp lệ hoặc bình luận cha không được chọn.'
-            toast.error(error.value)
-            return
-        }
-        
-        try {
-            const parentIndex = replyingToIndex.value;
-            if (parentIndex < 0 || parentIndex >= comments.value.length) {
-                throw new Error('Không tìm thấy bình luận cha');
-            }
-            
-            const parentComment = comments.value[parentIndex];
-            // Xác định ID của phản hồi mà người dùng đang trả lời
-            // Sử dụng replyingToId đã lưu trước đó
-            const replyId = replyingToId.value;
-            
-            console.log('Gửi phản hồi lồng nhau cho:', replyId ? `phản hồi ID ${replyId}` : `comment ID ${parentComment.id}`, 'với nội dung:', data.content);
-            
-            // Gọi API tạo phản hồi với ID của phản hồi hoặc comment gốc
-            const targetId = replyId || parentComment.id;
-            const replyData = {
-                content: data.content.trim()
-            };
-            
-            const response = await commentAPI.createReply(targetId, replyData);
-            
-            console.log('Kết quả reply nested:', response.data);
-            
-            // Thêm reply mới vào cuối danh sách replies của comment cha
-            if (!parentComment.replies) {
-                parentComment.replies = [];
-            }
-            parentComment.replies.push(response.data);
-            
-            cancelReply();
-            toast.success('Đã trả lời bình luận thành công!');
-        } catch (err) {
-            console.error("Lỗi khi trả lời bình luận lồng nhau:", err);
-            toast.error('Không thể trả lời bình luận. Vui lòng thử lại sau.');
-        }
-    }
-
     return {
         comments,
         newComment,
+        replyingToIndex,
+        replyingToReply,
+        replyToUsername,
+        replyToParentId,
         loading,
         error,
-        replyingToIndex,
-        replyingToNested,
-        replyToNestedUsername,
-        replyingToId,
         fetchComments,
         addComment,
         startReply,
-        startNestedReply,
         cancelReply,
         handleReplySubmit,
-        handleNestedReplySubmit,
         deleteComment,
         updateComment,
         toggleLikeComment,
         loadMoreComments,
-        loadMoreReplies,
-        hasMoreComments
+        loadMoreReplies
     }
 }

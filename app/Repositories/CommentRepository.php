@@ -65,28 +65,37 @@ class CommentRepository implements CommentRepositoryInterface
      */
     private function processReplies($comment): void
     {
-        // Lấy tất cả ID của replies
+        // Không làm gì nếu không có replies
+        if ($comment->replies->isEmpty()) {
+            return;
+        }
+        
+        // Lấy tất cả ID của replies trực tiếp
         $replyIds = $comment->replies->pluck('id')->toArray();
         
-        // Nếu không có replies, không cần xử lý
-        if (empty($replyIds)) {
-            return;
+        // Lấy tất cả phản hồi lồng nhau dựa trên parent_id
+        $allNestedReplies = $this->getAllNestedReplies($replyIds);
+        
+        // Gộp các phản hồi và sắp xếp theo thời gian tạo
+        $allReplies = $comment->replies->concat($allNestedReplies)->sortBy('created_at');
+        
+        // Thay thế collection replies bằng collection mới đã gộp và sắp xếp
+        $comment->setRelation('replies', $allReplies);
+    }
+    
+    /**
+     * Lấy tất cả phản hồi lồng nhau cho một danh sách ID bình luận
+     */
+    private function getAllNestedReplies(array $parentIds): \Illuminate\Support\Collection
+    {
+        if (empty($parentIds)) {
+            return collect([]);
         }
         
-        // Lấy danh sách tất cả nested replies (những phản hồi có parent_id là một trong các replies hiện tại)
-        $nestedReplies = Comment::with('user')
-            ->whereIn('parent_id', $replyIds)
+        // Lấy tất cả phản hồi cho các parent_id
+        return Comment::with('user')
+            ->whereIn('parent_id', $parentIds)
             ->get();
-            
-        // Nếu không có nested replies, không cần xử lý thêm
-        if ($nestedReplies->isEmpty()) {
-            return;
-        }
-        
-        // Thêm nested_replies attribute vào mỗi reply
-        foreach ($comment->replies as $reply) {
-            $reply->nested_replies = $nestedReplies->where('parent_id', $reply->id)->values();
-        }
     }
     
     public function storeComment(array $data): Comment

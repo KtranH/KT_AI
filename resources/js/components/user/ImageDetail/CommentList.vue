@@ -13,14 +13,12 @@
                 :comment="comment"
                 :index="index"
                 :replyingToIndex="replyingToIndex"
-                :replyingToNested="replyingToNested"
-                :replyToNestedUsername="replyToNestedUsername"
-                :replyingToId="replyingToId"
+                :replyingToReply="replyingToReply"
+                :replyToUsername="replyToUsername"
+                :replyToParentId="replyToParentId"
                 @reply="handleReply"
-                @nested-reply="handleNestedReply"
                 @cancel-reply="handleCancelReply"
                 @reply-submit="handleReplySubmit"
-                @nested-reply-submit="handleNestedReplySubmit"
                 @delete="handleDelete"
                 @update="handleUpdate"
                 @load-more-replies="handleLoadMoreReplies"
@@ -57,13 +55,17 @@ export default {
             type: [Number, null],
             default: null
         },
-        replyingToNested: {
-            type: [Boolean, null],
-            default: null
+        replyingToReply: {
+            type: Boolean,
+            default: false
         },
-        replyToNestedUsername: {
+        replyToUsername: {
             type: String,
             default: ''
+        },
+        replyToParentId: {
+            type: [Number, String, null],
+            default: null
         },
         hasMoreComments: {
             type: Boolean,
@@ -72,30 +74,20 @@ export default {
         loading: {
             type: Boolean,
             default: false
-        },
-        replyingToId: {
-            type: [Number, String, null],
-            default: null
         }
     },
     emits: [
         'reply', 
-        'nested-reply', 
         'cancel-reply', 
-        'reply-submit', 
-        'nested-reply-submit',
+        'reply-submit',
         'delete',
         'update',
         'load-more-comments',
         'load-more-replies'
     ],
     setup(props, { emit }) {
-        const handleReply = (index, username) => {
-            emit('reply', index, username)
-        }
-
-        const handleNestedReply = (index, username, replyId) => {
-            emit('nested-reply', index, username, replyId)
+        const handleReply = (index, username, replyId = null) => {
+            emit('reply', index, username, replyId)
         }
 
         const handleCancelReply = () => {
@@ -104,10 +96,6 @@ export default {
 
         const handleReplySubmit = (data) => {
             emit('reply-submit', data)
-        }
-
-        const handleNestedReplySubmit = (data) => {
-            emit('nested-reply-submit', data)
         }
         
         const handleDelete = (data) => {
@@ -122,16 +110,20 @@ export default {
             emit('load-more-comments')
         }
 
-        const handleLoadMoreReplies = (commentId) => {
-            emit('load-more-replies', commentId)
+        const handleLoadMoreReplies = (commentId, index) => {
+            if (index === undefined) {
+                index = props.comments.findIndex(comment => comment.id === commentId);
+            }
+            
+            if (index !== -1) {
+                emit('load-more-replies', commentId, index);
+            }
         }
 
         return {
             handleReply,
-            handleNestedReply,
             handleCancelReply,
             handleReplySubmit,
-            handleNestedReplySubmit,
             handleDelete,
             handleUpdate,
             handleLoadMoreComments,

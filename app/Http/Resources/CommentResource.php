@@ -22,8 +22,11 @@ class CommentResource extends JsonResource
             'likes' => $this->sum_like,
             'isLiked' => in_array($userId, $listLike),
             'isOwner' => $userId === $this->user_id,
-            'showAllReplies' => true,
             'replies' => ReplyResource::collection($this->whenLoaded('replies')),
+            'reply_count' => $this->whenLoaded('replies', function() {
+                return $this->replies->count();
+            }, 0),
+            'created_at' => $this->created_at,
         ];
     }
 } 

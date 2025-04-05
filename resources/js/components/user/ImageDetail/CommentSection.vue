@@ -24,16 +24,18 @@
             v-else
             :comments="comments"
             :replyingToIndex="replyingToIndex"
-            :replyingToNested="replyingToNested"
-            :replyToNestedUsername="replyToNestedUsername"
-            :replyingToId="replyingToId"
+            :replyingToReply="replyingToReply"
+            :replyToUsername="replyToUsername"
+            :replyToParentId="replyToParentId"
+            :hasMoreComments="hasMoreComments"
+            :loading="loading"
             @reply="handleStartReply"
-            @nested-reply="handleStartNestedReply"
             @cancel-reply="handleCancelReply"
             @reply-submit="handleReplySubmit"
-            @nested-reply-submit="handleNestedReplySubmit"
             @delete="handleDeleteComment"
             @update="handleUpdateComment"
+            @load-more-comments="loadMoreComments"
+            @load-more-replies="loadMoreReplies"
         />
 
         <!-- Post actions (like, comment, share) -->
@@ -79,20 +81,21 @@ export default {
             newComment,
             addComment,
             replyingToIndex, 
-            replyingToNested, 
-            replyToNestedUsername, 
-            replyingToId,
+            replyingToReply, 
+            replyToUsername, 
+            replyToParentId,
             startReply, 
-            startNestedReply, 
             cancelReply, 
             handleReplySubmit, 
-            handleNestedReplySubmit,
             deleteComment,
             updateComment,
             toggleLikeComment,
             loading,
             error,
-            fetchComments
+            fetchComments,
+            loadMoreComments,
+            loadMoreReplies,
+            hasMoreComments
         } = useComments(props.imageId)
         
         onMounted(() => {
@@ -112,14 +115,9 @@ export default {
             }
         });
 
-        const handleStartReply = (index, username) => {
+        const handleStartReply = (index, username, replyId = null) => {
             if (!props.imageId) return
-            startReply(index, username)
-        }
-
-        const handleStartNestedReply = (index, username, replyId) => {
-            if (!props.imageId) return
-            startNestedReply(index, username, replyId)
+            startReply(index, username, replyId)
         }
 
         const handleCancelReply = () => {
@@ -145,20 +143,21 @@ export default {
             comments,
             newComment,
             replyingToIndex,
-            replyingToNested,
-            replyToNestedUsername,
-            replyingToId,
+            replyingToReply,
+            replyToUsername,
+            replyToParentId,
             loading,
             error,
             fetchComments,
             handleStartReply,
-            handleStartNestedReply,
             handleCancelReply,
             handleReplySubmit,
-            handleNestedReplySubmit,
-            handleAddComment,
             handleDeleteComment,
-            handleUpdateComment
+            handleUpdateComment,
+            loadMoreReplies,
+            handleAddComment,
+            loadMoreComments,
+            hasMoreComments
         }
     }
 }

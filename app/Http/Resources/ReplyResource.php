@@ -21,14 +21,14 @@ class ReplyResource extends JsonResource
             'likes' => $this->sum_like,
             'isLiked' => in_array($userId, $listLike),
             'isOwner' => $userId === $this->user_id,
-            'showAllReplies' => true,
             'parent_id' => $this->parent_id,
-            'parent_name' => $this->when($this->parent, function() {
-                return $this->parent->user->name ?? null;
-            }, null),
-            'nested_replies' => $this->when($this->nested_replies, function() {
-                return ReplyResource::collection($this->nested_replies);
-            }, []),
+            'reply_to' => $this->when($this->parent && $this->parent->user, function() {
+                return [
+                    'id' => $this->parent->user->id,
+                    'name' => $this->parent->user->name
+                ];
+            }),
+            'created_at' => $this->created_at,
         ];
     }
 }
