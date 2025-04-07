@@ -98,11 +98,12 @@ export default {
             hasMoreComments
         } = useComments(props.imageId)
         
-        onMounted(() => {
+        onMounted(async () => {
             if (props.imageId) {
-                fetchComments();
+                await fetchComments();
+                console.log(hasMoreComments.value)
             } else {
-                console.log("imageId không tồn tại hoặc không hợp lệ");
+                console.log("imageId không tồn tại hoặc không hợp lệ")
             }
         });
 
@@ -161,4 +162,4 @@ export default {
         }
     }
 }
-</script> 
+</script>

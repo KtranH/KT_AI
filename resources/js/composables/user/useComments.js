@@ -50,7 +50,7 @@ export default function useComments(imageId) {
         }
     }
 
-    // Thêm bình luận mới
+    // Thêm bình luận mớiư
     const addComment = async () => {
         if (!newComment.value.trim() || !imageId) return
         
@@ -287,6 +287,7 @@ export default function useComments(imageId) {
         updateComment,
         toggleLikeComment,
         loadMoreComments,
-        loadMoreReplies
+        loadMoreReplies,
+        hasMoreComments
     }
 }

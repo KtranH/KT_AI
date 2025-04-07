@@ -3,7 +3,7 @@
         <!-- Image Slider -->
         <div class="w-full h-full max-w-full relative overflow-hidden">
             <div class="flex transition-transform duration-300 ease-in-out h-full" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
-                <div v-for="(image, index) in displayImages" :key="index" class="w-full min-w-full flex-shrink-0">
+                <div v-for="(image, index) in displayImages" :key="index" class="w-full h-full min-w-full flex-shrink-0">
                     <img 
                         :src="image"
                         class="w-90 mx-auto object-cover md:h-[600px] object-contain cursor-pointer" 
