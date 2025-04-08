@@ -80,7 +80,7 @@
                                 
                                 <!-- Nội dung phản hồi - chế độ xem -->
                                 <span v-if="!isEditingReply[replyIndex]" class="flex-1">
-                                    <span v-if="reply.reply_to" class="text-blue-500 mr-1">@{{ reply.reply_to.name }}</span>
+                                    <span v-if="reply.reply_to && reply.reply_to.id != reply.userid" class="text-blue-500 mr-1">@{{ reply.reply_to.name }}</span>
                                     <span v-html="reply.text"></span>
                                 </span>
                                 
@@ -159,10 +159,19 @@
 
     <!-- Reply form cho phản hồi lồng nhau -->
     <CommentReply
-        v-if="replyingToReply && replyingToIndex === index"
+        v-if="replyingToReply && replyingToIndex === index && replyToParentId"
         :commentId="replyToParentId"
         :replyToUsername="replyToUsername"
         :isReplying="replyingToReply && replyingToIndex === index"
+        @reply-submitted="onReplySubmit"
+        @cancel-reply="onCancelReply"
+    />
+    <!-- Reply form cho phản hồi bình luận gốc -->
+    <CommentReply
+        v-if="replyingToIndex === index"
+        :commentId="comment.id"
+        :replyToUsername="replyToUsername"
+        :isReplying="replyingToIndex === index"
         @reply-submitted="onReplySubmit"
         @cancel-reply="onCancelReply"
     />
