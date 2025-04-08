@@ -40,7 +40,7 @@ class CommentRepository implements CommentRepositoryInterface
         $comments = Comment::with(['user', 'replies' => function ($query) {
             $query->with('user')
                 ->latest()
-                ->limit(self::REPLIES_PER_PAGE);
+                ->paginate(self::REPLIES_PER_PAGE);
         }])
         ->where('image_id', $imageId)
         ->whereNull('parent_id')
@@ -78,7 +78,7 @@ class CommentRepository implements CommentRepositoryInterface
         // Gộp các phản hồi và sắp xếp theo thời gian tạo
         $allReplies = $comment->replies->concat($allNestedReplies)
             ->unique('id') // Loại bỏ các reply trùng lặp
-            ->sortByDesc('created_at'); // Sắp xếp theo thời gian tạo mới nhất
+            ->sortBy('created_at'); // Sắp xếp theo thời gian tạo mới nhất
         
         // Thay thế collection replies bằng collection mới đã gộp và sắp xếp
         $comment->setRelation('replies', $allReplies);

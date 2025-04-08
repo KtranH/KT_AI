@@ -33,7 +33,7 @@ class CommentController extends Controller
         if (isset($result['replies'])) {
             return response()->json([
                 'replies' => ReplyResource::collection($result['replies']),
-                'hasMore' => $result['hasMore']
+                'hasMore' => $result['hasMore'],
             ]);
         }
         

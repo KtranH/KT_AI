@@ -26,7 +26,10 @@ class CommentResource extends JsonResource
             'reply_count' => $this->whenLoaded('replies', function() {
                 return $this->replies->count();
             }, 0),
+            'hasMoreReplies' => $this->whenLoaded('replies', function() {
+                return count($this->replies) >= 3; // Giả định có thêm replies nếu đã đạt số lượng tối đa hiển thị
+            }, false),
             'created_at' => $this->created_at,
         ];
     }
-} 
+}
