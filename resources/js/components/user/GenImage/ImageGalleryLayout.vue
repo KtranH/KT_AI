@@ -108,7 +108,7 @@
       <div v-if="currentPage < lastPage" class="text-center mt-8">
         <button 
           @click="loadMore" 
-          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="px-6 py-2 bg-gradient-text text-white rounded-lg hover:bg-blue-700 transition-colors"
           :disabled="isLoading"
         >
           {{ isLoading ? 'Đang tải...' : 'Xem thêm' }}
