@@ -9,11 +9,9 @@
             <!-- List User name Liked -->
             <div class="flex items-center">
                 <div v-if="listLikes.length > 0" class="flex items-center">
-                    <div v-for="(like, index) in listLikes" :key="index" class="flex items-center">    
-                        <span class="ml-2 text-gray-500 text-sm font-medium">{{ like.user_name }}</span>
-                        <span v-if="index < listLikes.length - 1">,</span>
-                    </div>
-                    <span v-if="listLikes.length < currentImageLikes" class="text-gray-500 text-sm font-medium ml-2"> và {{ currentImageLikes - listLikes.length }} người khác</span>
+                    <span v-if="isLiked && listLikes.length > 1" class="text-gray-500 text-sm font-medium">Bạn và {{ listLikes.length - 1 }} người khác</span>
+                    <span v-else-if="isLiked && listLikes.length === 1" class="text-gray-500 text-sm font-medium">Bạn đã thích</span>
+                    <span v-else-if="listLikes.length > 1" class="text-gray-500 text-sm font-medium">{{ listLikes.length }} người khác đã thích</span>
                 </div>
                 <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
             </div>
