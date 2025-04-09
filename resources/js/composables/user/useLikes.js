@@ -6,6 +6,7 @@ import { decodedID } from '@/utils'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { isActionTooQuick } from '@/utils'
 
 export default function useLikes() {
     const likeStore = useLikeStore()
@@ -14,6 +15,7 @@ export default function useLikes() {
     const totalLikes = ref(imageStore.data?.sum_like || 0)
     const listLikes = computed(() => likeStore.likes)
     const route = useRoute()
+    const lastActionTime = ref(null)
 
     const fetchLikes = async (id) => {
         await likeStore.checkLiked(id)
@@ -67,6 +69,10 @@ export default function useLikes() {
     }
 
     const likeComment = async (comment) => {
+        if (isActionTooQuick(lastActionTime.value)) {
+            toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
+            return
+        }
         try {
             const originalLiked = comment.isLiked
             const originalLikes = comment.likes
@@ -85,9 +91,14 @@ export default function useLikes() {
             
             toast.error('Không thể thích/bỏ thích bình luận')
         }
+        lastActionTime.value = new Date()
     }
 
     const likeReply = async (comment, reply) => {
+        if (isActionTooQuick(lastActionTime.value)) {
+            toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
+            return
+        }
         try {
             const originalLiked = reply.isLiked
             const originalLikes = reply.likes
@@ -106,8 +117,9 @@ export default function useLikes() {
             
             toast.error('Không thể thích/bỏ thích phản hồi')
         }
+        lastActionTime.value = new Date()
     }
-
+    
     return {
         isLiked,
         totalLikes,

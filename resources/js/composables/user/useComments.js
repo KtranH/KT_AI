@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { commentAPI } from '@/services/api'
+import { isActionTooQuick } from '@/utils'
 
 export default function useComments(imageId) {
     const comments = ref([])
@@ -52,6 +53,10 @@ export default function useComments(imageId) {
 
     // Thêm bình luận mớiư
     const addComment = async () => {
+        if (isActionTooQuick(lastActionTime.value)) {
+            toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
+            return
+        }
         if (!newComment.value.trim() || !imageId) return
         
         try {
@@ -69,6 +74,7 @@ export default function useComments(imageId) {
             console.error("Lỗi khi thêm bình luận:", err)
             toast.error('Không thể thêm bình luận. Vui lòng thử lại sau.')
         }
+        lastActionTime.value = new Date()
     }
 
     // Bắt đầu trả lời bình luận hoặc phản hồi
@@ -97,6 +103,10 @@ export default function useComments(imageId) {
 
     // Gửi reply cho một comment hoặc một reply khác
     const handleReplySubmit = async (data) => {
+        if (isActionTooQuick(lastActionTime.value)) {
+            toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
+            return
+        }
         if (!data || !data.content || data.content.trim() === '' || !imageId) {
             error.value = 'Bình luận không hợp lệ. Vui lòng nhập bình luận.'
             toast.error(error.value)
@@ -139,6 +149,7 @@ export default function useComments(imageId) {
             console.error("Lỗi khi trả lời:", err)
             toast.error('Không thể trả lời. Vui lòng thử lại sau.')
         }
+        lastActionTime.value = new Date()
     }
 
     // Xóa bình luận
@@ -186,35 +197,6 @@ export default function useComments(imageId) {
         } catch (err) {
             console.error("Lỗi khi cập nhật bình luận:", err)
             toast.error('Không thể cập nhật bình luận. Vui lòng thử lại sau.')
-        }
-    }
-
-    // Toggle like comment
-    const toggleLikeComment = async (commentId, isReply, parentIndex) => {
-        try {
-            const response = await commentAPI.toggleLike(commentId)
-            
-            if (isReply && parentIndex !== null) {
-                // Cập nhật likes trong reply
-                const parentComment = comments.value[parentIndex]
-                const replyIndex = parentComment.replies.findIndex(reply => reply.id === commentId)
-                if (replyIndex !== -1) {
-                    const reply = parentComment.replies[replyIndex]
-                    reply.likes = response.data.likes
-                    reply.isLiked = response.data.isLiked
-                }
-            } else {
-                // Cập nhật likes trong comment chính
-                const commentIndex = comments.value.findIndex(comment => comment.id === commentId)
-                if (commentIndex !== -1) {
-                    const comment = comments.value[commentIndex]
-                    comment.likes = response.data.likes
-                    comment.isLiked = response.data.isLiked
-                }
-            }
-        } catch (err) {
-            console.error("Lỗi khi thích/bỏ thích bình luận:", err)
-            toast.error('Không thể thích/bỏ thích bình luận. Vui lòng thử lại sau.')
         }
     }
 
@@ -285,7 +267,6 @@ export default function useComments(imageId) {
         handleReplySubmit,
         deleteComment,
         updateComment,
-        toggleLikeComment,
         loadMoreComments,
         loadMoreReplies,
         hasMoreComments

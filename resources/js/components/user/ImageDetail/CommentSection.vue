@@ -89,7 +89,6 @@ export default {
             handleReplySubmit, 
             deleteComment,
             updateComment,
-            toggleLikeComment,
             loading,
             error,
             fetchComments,

@@ -14,7 +14,7 @@ export const useLikeStore = defineStore('like',
                 try {
                     const response = await likeAPI.getLikesByID(id)
                     if (response.data && response.data.success) {
-                        this.likes = response.data.data
+                        this.likes = response.data.like
                     } else {
                         this.error_message = response.data.message
                     }

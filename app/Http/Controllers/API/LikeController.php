@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Interfaces\LikeRepositoryInterface;
+use App\Http\Resources\LikeResource;
 
 
 class LikeController extends Controller
@@ -45,13 +46,7 @@ class LikeController extends Controller
             
             return response()->json([
                 'success' => true,
-                'data' => $likes->map(function ($like) {
-                    return [
-                        'id' => $like->id,
-                        'user_id' => $like->user_id,
-                        'user_name' => $like->user->name,
-                    ];
-                }),
+                'like' => LikeResource::collection($likes),
             ]);
         } catch (\Exception $e) {
             Log::error('Get Likes Error: ' . $e->getMessage(), [

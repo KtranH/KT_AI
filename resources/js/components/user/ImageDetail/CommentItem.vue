@@ -66,7 +66,7 @@
 
             <!-- Replies -->
             <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-4">
-                <div v-if="!comment.showReplies && comment.reply_count > 3" class="text-xs text-blue-500 hover:underline cursor-pointer mt-1" @click="showAllReplies">
+                <div v-if="!comment.showReplies && comment.reply_count > 3" class="text-xs text-blue-500 font-bold hover:underline cursor-pointer mt-1" @click="showAllReplies">
                     Xem {{ comment.reply_count }} câu trả lời
                 </div>
                 
@@ -168,7 +168,7 @@
     />
     <!-- Reply form cho phản hồi bình luận gốc -->
     <CommentReply
-        v-if="replyingToIndex === index"
+        v-if="replyingToIndex === index && !replyingToReply"
         :commentId="comment.id"
         :replyToUsername="replyToUsername"
         :isReplying="replyingToIndex === index"
@@ -218,10 +218,11 @@ export default {
     ],
     setup(props, { emit }) {
         const { likeComment, likeReply } = useLikes()
-        
-        // Định nghĩa biến isDev
-        const isDev = import.meta.env.DEV || false
-        
+
+        // Tham chiếu tới DOM của phản hồi và phản hồi lồng nhau
+        const replyRef = ref(null)
+        const replyNestedRef = ref(null)
+                
         // State cho chỉnh sửa và xóa
         const isEditing = ref(false)
         const editText = ref('')
@@ -388,7 +389,8 @@ export default {
             loadMoreReplies,
             showAllReplies,
             onReplyToReply,
-            isDev
+            replyRef,
+            replyNestedRef
         }
     }
 }
