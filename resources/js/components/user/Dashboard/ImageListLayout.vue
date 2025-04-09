@@ -165,11 +165,9 @@ export default {
       loadMoreUserImages,
       goToImageDetail,
       hasMoreUserImages,
-      totalImages,
       lastPage,
       showRefreshButton,
       checkNeedRefreshUserImages,
-      refreshUserImages
     } = useImage()
     
     // Thay đổi currentIndex cho một nhóm hình ảnh

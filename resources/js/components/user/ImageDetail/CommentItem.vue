@@ -430,7 +430,7 @@ export default {
             showAllReplies,
             onReplyToReply,
             replyRef,
-            replyNestedRef
+            replyNestedRef,
         }
     }
 }

@@ -15,9 +15,10 @@
                 </div>
                 <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
             </div>
-            <div class="ml-auto">
-                Ảnh được đăng trong mục:
-            </div>
+            <router-link
+                :to="{ name: 'createimage', params: { encodedID: encodedID(featureImage?.id || 1) }}"
+                class="text-blue-500 hover:underline ml-auto text-sm font-medium">
+            <i class="fa-solid fa-square-caret-right" style="color: #74C0FC;"></i> {{ featureImage?.title || 'Lỗi 404' }}</router-link>
             <!--<button class="mr-4 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -41,9 +42,9 @@
 <script>
 import useImage from '@/composables/user/useImage'
 import useLikes from '@/composables/user/useLikes'
-import { onMounted, watch, ref, toRaw } from 'vue'
+import { onMounted, watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { decodedID } from '@/utils'
+import { decodedID, encodedID } from '@/utils'
 import { isActionTooQuick } from '@/utils'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
@@ -52,14 +53,15 @@ export default {
     components: {
         VueSonner
     },
-    setup() {
+    setup() { 
         const isFast = ref(false)
         const lastLikeTime = ref(0)
         const route = useRoute()
-        const { dataImage } = useImage()
+        const { dataImage, goToImageDetail } = useImage()
+        const featureImage = ref(null)
         
         // Lấy dữ liệu từ composable useLikes
-        const { isLiked, totalLikes, likePost, listLikes, fetchLikes } = useLikes()
+        const { isLiked, likePost, listLikes, fetchLikes } = useLikes()
 
         const userLikePost = async () => {
             if (isActionTooQuick(lastLikeTime.value)) {
@@ -85,6 +87,7 @@ export default {
         onMounted(async () => {
             // Lấy thông tin like khi component được mount
             await fetchLikes(decodedID(route.params.encodedID))
+            featureImage.value = dataImage.value.ai_feature
         })
 
         return {
@@ -93,7 +96,9 @@ export default {
             listLikes,
             userLikePost,
             isFast,
-            dataImage
+            featureImage,
+            goToImageDetail,
+            encodedID
         }
     }
 }

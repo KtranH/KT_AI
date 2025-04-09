@@ -50,7 +50,7 @@ export const useImageStore = defineStore('image',
                     const response = await imageAPI.getImages(processedId)
                     if (response.data && response.data.success) {
                         this.images = response.data.images
-                        this.data = response.data.data
+                        this.data = toRaw(response.data.data)
                         if (response.data.user) {
                             this.user = toRaw(response.data.user)
                             this.lastUser = { ...toRaw(response.data.user) }
