@@ -13,6 +13,7 @@
 
             <!-- Input -->
             <input 
+                ref="inputRef"
                 type="text" 
                 v-model="replyText" 
                 class="flex-1 bg-transparent text-sm focus:outline-none ml-2"
@@ -55,7 +56,7 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUpdated, nextTick } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
@@ -85,7 +86,7 @@ export default {
         EmojiPicker
     },
     emits: ['reply-submitted', 'cancel-reply'],
-    setup(props, { emit }) {
+    setup(props, { emit, expose }) {
         const authStore = useAuthStore()
         const user = authStore.user
         
@@ -126,6 +127,40 @@ export default {
             submitReply()
         }
 
+        // Thêm phương thức focus để có thể gọi từ component cha
+        const inputRef = ref(null)
+        
+        // Phương thức focus sẽ tập trung vào input
+        const focus = () => {
+            // Đảm bảo inputRef đã được gán và có phương thức focus
+            nextTick(() => {
+                if (inputRef.value) {
+                    inputRef.value.focus()
+                }
+            })
+        }
+        
+        // Tự động focus khi component được render
+        onMounted(() => {
+            nextTick(() => {
+                if (props.isReplying && inputRef.value) {
+                    inputRef.value.focus()
+                }
+            })
+        })
+        
+        // Tự động focus khi isReplying thay đổi từ false sang true
+        onUpdated(() => {
+            if (props.isReplying && inputRef.value) {
+                inputRef.value.focus()
+            }
+        })
+        
+        // Expose phương thức focus để component cha có thể gọi
+        expose({
+            focus
+        })
+        
         return {
             replyText,
             submitReply,
@@ -135,7 +170,9 @@ export default {
             addEmoji,
             canSubmit,
             handleSubmitReply,
-            user
+            user,
+            inputRef,
+            focus
         }
     }
 }
@@ -146,5 +183,15 @@ export default {
 input:focus {
     box-shadow: none;
     border-color: #e2e8f0;
+}
+
+/* Thêm animation khi hiển thị reply form */
+.comment-reply-form {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>

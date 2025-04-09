@@ -159,6 +159,7 @@
 
     <!-- Reply form cho phản hồi lồng nhau -->
     <CommentReply
+        ref="replyNestedRef"
         v-if="replyingToReply && replyingToIndex === index && replyToParentId"
         :commentId="replyToParentId"
         :replyToUsername="replyToUsername"
@@ -168,6 +169,7 @@
     />
     <!-- Reply form cho phản hồi bình luận gốc -->
     <CommentReply
+        ref="replyRef"
         v-if="replyingToIndex === index && !replyingToReply"
         :commentId="comment.id"
         :replyToUsername="replyToUsername"
@@ -178,7 +180,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import CommentReply from '@/components/user/ImageDetail/ReplyLayout.vue'
 import useLikes from '@/composables/user/useLikes'
 
@@ -236,8 +238,50 @@ export default {
         // Xử lý trả lời bình luận
         const onReply = (index, username) => {
             emit('reply', index, username)
+            
+            // Sử dụng nextTick để đảm bảo DOM đã được cập nhật
+            nextTick(() => {
+                setTimeout(() => {
+                    if (replyRef.value) {
+                        // Cuộn đến form reply với behavior smooth và block start
+                        replyRef.value.$el.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'nearest'
+                        })
+                        
+                        // Sử dụng phương thức focus trực tiếp từ component con
+                        if (typeof replyRef.value.focus === 'function') {
+                            replyRef.value.focus()
+                        }
+                    }
+                }, 100)
+            })
         }
 
+        // Xử lý trả lời phản hồi
+        const onReplyToReply = (index, username, replyId) => {
+            emit('reply', index, username, replyId)
+            
+            // Sử dụng nextTick để đảm bảo DOM đã được cập nhật
+            nextTick(() => {
+                setTimeout(() => {
+                    if (replyNestedRef.value) {
+                        // Cuộn đến form reply với behavior smooth và block start
+                        replyNestedRef.value.$el.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'nearest'
+                        })
+                        
+                        // Sử dụng phương thức focus trực tiếp từ component con
+                        if (typeof replyNestedRef.value.focus === 'function') {
+                            replyNestedRef.value.focus()
+                        }
+                    }
+                }, 100)
+            })
+        }
+
+        // Xử lý hủy trả lời
         const onCancelReply = () => {
             emit('cancel-reply')
         }
@@ -359,10 +403,6 @@ export default {
             }
         }
 
-        const onReplyToReply = (index, username, replyId) => {
-            emit('reply', index, username, replyId)
-        }
-
         return {
             onReply,
             onCancelReply,
@@ -411,4 +451,4 @@ export default {
     width: 2px;
     background-color: #e5e7eb;
 }
-</style> 
+</style>
