@@ -78,6 +78,7 @@ export const useImageStore = defineStore('image',
                 this.images = [];
                 this.imageUrls = [];
                 this.data = null;
+                this.feature = null;
                 this.user = null;
                 this.error_message = null;
             },

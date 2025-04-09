@@ -15,6 +15,9 @@
                 </div>
                 <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
             </div>
+            <div class="ml-auto">
+                Ảnh được đăng trong mục:
+            </div>
             <!--<button class="mr-4 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -31,19 +34,18 @@
                 </svg>
             </button>-->
         </div>
-        <div class="font-semibold mb-1">{{ currentImageLikes }} lượt thích</div>
         <VueSonner />
     </div>
 </template>
 
 <script>
+import useImage from '@/composables/user/useImage'
 import useLikes from '@/composables/user/useLikes'
-import { onMounted, watch, computed, ref } from 'vue'
+import { onMounted, watch, ref, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import { decodedID } from '@/utils'
 import { isActionTooQuick } from '@/utils'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
-import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
     name: 'LikeSection',
@@ -54,15 +56,10 @@ export default {
         const isFast = ref(false)
         const lastLikeTime = ref(0)
         const route = useRoute()
-        const imageStore = useImageStore()
+        const { dataImage } = useImage()
         
         // Lấy dữ liệu từ composable useLikes
         const { isLiked, totalLikes, likePost, listLikes, fetchLikes } = useLikes()
-        
-        // Tạo một computed để luôn lấy giá trị mới nhất từ imageStore
-        const currentImageLikes = computed(() => {
-            return imageStore.data?.sum_like || 0
-        })
 
         const userLikePost = async () => {
             if (isActionTooQuick(lastLikeTime.value)) {
@@ -92,11 +89,11 @@ export default {
 
         return {
             isLiked,
-            currentImageLikes,
             likePost,
             listLikes,
             userLikePost,
-            isFast
+            isFast,
+            dataImage
         }
     }
 }

@@ -11,6 +11,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\AIFeature;
+use App\Http\Resources\ImageResource;
 
 class ImageRepository implements ImageRepositoryInterface
 {
@@ -20,7 +22,7 @@ class ImageRepository implements ImageRepositoryInterface
      */
     public function getImages(int $id): array
     {
-        $image = Image::with('user')->find($id);
+        $image = Image::with('user')->with('aiFeature')->find($id);
         
         if (!$image) {
             throw new \Exception('Không tìm thấy ảnh với ID: ' . $id);
