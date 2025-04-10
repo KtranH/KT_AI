@@ -105,6 +105,7 @@
                                             >
                                                 Lưu
                                             </button>
+                                            <ConfirmUpdate :ref="el => { if(el) updateReplyRef[replyIndex] = el }" />
                                             <button 
                                                 @click="cancelReplyEdit(replyIndex)" 
                                                 class="text-gray-500 text-sm px-2 py-1 hover:bg-gray-50 rounded"
@@ -246,6 +247,7 @@ export default {
         const editReplyText = ref('')
         const showDeleteReplyConfirm = ref({})
         const updateRef = ref(null)
+        const updateReplyRef = ref([])
         const deleteRef = ref(null)
 
         // Xử lý trả lời bình luận
@@ -386,8 +388,14 @@ export default {
         const submitReplyEdit = async (reply, replyIndex) => {
             if (editReplyText.value.trim() === '') return
             
+            // Kiểm tra tồn tại của ref trước khi gọi
+            if (!updateReplyRef.value[replyIndex]) {
+                console.warn('Update ref not found for reply index:', replyIndex)
+                return
+            }
+            
             // Gọi showAlert và đợi kết quả xác nhận từ người dùng
-            const result = await updateRef.value.showAlert()
+            const result = await updateReplyRef.value[replyIndex].showAlert()
             
             // Chỉ cập nhật khi người dùng đã xác nhận
             if (result.isConfirmed) {
@@ -485,6 +493,7 @@ export default {
             replyRef,
             replyNestedRef,
             updateRef,
+            updateReplyRef,
             deleteRef,
             isNotNewValue
         }

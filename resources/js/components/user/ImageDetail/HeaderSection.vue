@@ -45,7 +45,10 @@
     <!-- Post Title -->
     <div class="px-4 py-2 border-b">
         <div class="flex items-center">
-            <h1 class="text-base font-bold">{{ dataImage && dataImage.prompt ? dataImage.prompt : title }}</h1>
+            <h1 class="text-xl font-bold">{{dataImage && dataImage.title? dataImage.title : title}}</h1>
+        </div>
+        <div class="flex items-center">
+            <h1 class="text-sm">{{ dataImage && dataImage.prompt ? dataImage.prompt : title }}</h1>
         </div>
     </div>
 </template>
@@ -107,6 +110,7 @@ export default {
                 // In ra console để debug
                 console.log('Thông tin người dùng sau khi kiểm tra xác thực:', auth.user)
                 console.log('Thông tin chủ bài viết:', imageStore.currentUser)
+                console.log('Thông tin bài viết:', dataImage.value)
             } catch (error) {
                 console.error('Lỗi khi kiểm tra xác thực:', error)
             }
