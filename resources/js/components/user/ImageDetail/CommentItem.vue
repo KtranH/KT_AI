@@ -20,10 +20,13 @@
                         <div class="flex space-x-1 ml-1">
                             <button 
                                 @click="submitEdit" 
+                                :disabled="isNotNewValue"
                                 class="text-blue-500 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                                :class="{ 'opacity-50': isNotNewValue }"
                             >
                                 Lưu
                             </button>
+                            <ConfirmUpdate ref="updateRef" />
                             <button 
                                 @click="cancelEdit" 
                                 class="text-gray-500 text-sm px-2 py-1 hover:bg-gray-50 rounded"
@@ -66,11 +69,11 @@
 
             <!-- Replies -->
             <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 ml-4">
-                <div v-if="!comment.showReplies && comment.reply_count > 3" class="text-xs text-blue-500 font-bold hover:underline cursor-pointer mt-1" @click="showAllReplies">
+                <div v-if="!comment.showReplies && comment.reply_count > 1" class="text-xs text-blue-500 font-bold hover:underline cursor-pointer mt-1" @click="showAllReplies">
                     Xem {{ comment.reply_count }} câu trả lời
                 </div>
                 
-                <div v-if="comment.showReplies || comment.reply_count <= 3" class="space-y-3 mt-2">
+                <div v-if="comment.showReplies || comment.reply_count <= 1" class="space-y-3 mt-2">
                     <!-- Comment Reply Item -->
                     <div v-for="(reply, replyIndex) in comment.replies" :key="reply.id" class="flex space-x-2">
                         <img :src="reply.avatar" class="w-6 h-6 rounded-full" :alt="reply.username" />
@@ -96,7 +99,9 @@
                                         <div class="flex space-x-1 ml-1">
                                             <button 
                                                 @click="submitReplyEdit(reply, replyIndex)" 
+                                                :disabled="isNotNewValue"
                                                 class="text-blue-500 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                                                :class="{ 'opacity-50': isNotNewValue }"
                                             >
                                                 Lưu
                                             </button>
@@ -180,14 +185,18 @@
 </template>
 
 <script>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import CommentReply from '@/components/user/ImageDetail/ReplyLayout.vue'
 import useLikes from '@/composables/user/useLikes'
+import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
+import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
 
 export default {
     name: 'CommentItem',
     components: {
-        CommentReply
+        CommentReply,
+        ConfirmUpdate,
+        ConfirmDelete
     },
     props: {
         comment: Object,
@@ -226,14 +235,18 @@ export default {
         const replyNestedRef = ref(null)
                 
         // State cho chỉnh sửa và xóa
+        const textOriginal = ref('')
         const isEditing = ref(false)
         const editText = ref('')
         const showDeleteConfirm = ref(false)
         
         // State cho chỉnh sửa và xóa phản hồi
+        const isNotNewValue = ref(true)
         const isEditingReply = ref({})
         const editReplyText = ref('')
         const showDeleteReplyConfirm = ref({})
+        const updateRef = ref(null)
+        const deleteRef = ref(null)
 
         // Xử lý trả lời bình luận
         const onReply = (index, username) => {
@@ -308,7 +321,18 @@ export default {
         const startEdit = () => {
             editText.value = props.comment.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
             isEditing.value = true
+            textOriginal.value = editText.value
         }
+
+        // Xem thử giá trị của editText có thay đổi không
+        watch(editText, (newValue) => {
+            if(newValue !== textOriginal.value && newValue !== '') {
+                isNotNewValue.value = false
+            }   
+            else {
+                isNotNewValue.value = true
+            }
+        })
         
         const cancelEdit = () => {
             isEditing.value = false
@@ -316,6 +340,7 @@ export default {
         }
         
         const submitEdit = () => {
+            updateRef.value.showAlert()
             if (editText.value.trim() === '') return
             
             emit('update', {
@@ -326,6 +351,42 @@ export default {
             })
             
             isEditing.value = false
+        }
+
+         // Xử lý chỉnh sửa phản hồi
+        const startReplyEdit = (reply, replyIndex) => {
+            editReplyText.value = reply.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
+            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: true }
+            textOriginal.value = editReplyText.value
+        }
+
+        // Xem thử giá trị của editReplyText
+        watch(editReplyText, (newValue) => {
+            if(newValue !== textOriginal.value && newValue !== '') {
+                isNotNewValue.value = false
+            }   
+            else {
+                isNotNewValue.value = true
+            }
+        })
+        
+        const cancelReplyEdit = (replyIndex) => {
+            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
+            editReplyText.value = ''
+        }
+        
+        const submitReplyEdit = (reply, replyIndex) => {
+            updateRef.value.showAlert()
+            if (editReplyText.value.trim() === '') return
+            
+            emit('update', {
+                commentId: reply.id,
+                content: editReplyText.value,
+                isReply: true,
+                parentIndex: props.index
+            })
+            
+            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
         }
         
         // Xử lý xóa bình luận
@@ -341,30 +402,6 @@ export default {
             })
             
             showDeleteConfirm.value = false
-        }
-        
-        // Xử lý chỉnh sửa phản hồi
-        const startReplyEdit = (reply, replyIndex) => {
-            editReplyText.value = reply.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
-            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: true }
-        }
-        
-        const cancelReplyEdit = (replyIndex) => {
-            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
-            editReplyText.value = ''
-        }
-        
-        const submitReplyEdit = (reply, replyIndex) => {
-            if (editReplyText.value.trim() === '') return
-            
-            emit('update', {
-                commentId: reply.id,
-                content: editReplyText.value,
-                isReply: true,
-                parentIndex: props.index
-            })
-            
-            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
         }
         
         // Xử lý xóa phản hồi
@@ -431,6 +468,9 @@ export default {
             onReplyToReply,
             replyRef,
             replyNestedRef,
+            updateRef,
+            deleteRef,
+            isNotNewValue
         }
     }
 }
