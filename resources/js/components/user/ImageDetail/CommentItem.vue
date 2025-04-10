@@ -339,18 +339,25 @@ export default {
             editText.value = ''
         }
         
-        const submitEdit = () => {
-            updateRef.value.showAlert()
+        const submitEdit = async () => {
             if (editText.value.trim() === '') return
             
-            emit('update', {
-                commentId: props.comment.id,
-                content: editText.value,
-                isReply: false,
-                parentIndex: null
-            })
+            // Gọi showAlert và đợi kết quả xác nhận từ người dùng
+            const result = await updateRef.value.showAlert()
             
-            isEditing.value = false
+            // Chỉ cập nhật khi người dùng đã xác nhận
+            if (result.isConfirmed) {
+                emit('update', {
+                    commentId: props.comment.id,
+                    content: editText.value,
+                    isReply: false,
+                    parentIndex: null
+                })
+                
+                isEditing.value = false
+                textOriginal.value = ''
+                isNotNewValue.value = true
+            }
         }
 
          // Xử lý chỉnh sửa phản hồi
@@ -375,18 +382,25 @@ export default {
             editReplyText.value = ''
         }
         
-        const submitReplyEdit = (reply, replyIndex) => {
-            updateRef.value.showAlert()
+        const submitReplyEdit = async (reply, replyIndex) => {
             if (editReplyText.value.trim() === '') return
             
-            emit('update', {
-                commentId: reply.id,
-                content: editReplyText.value,
-                isReply: true,
-                parentIndex: props.index
-            })
+            // Gọi showAlert và đợi kết quả xác nhận từ người dùng
+            const result = await updateRef.value.showAlert()
             
-            isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
+            // Chỉ cập nhật khi người dùng đã xác nhận
+            if (result.isConfirmed) {
+                emit('update', {
+                    commentId: reply.id,
+                    content: editReplyText.value,
+                    isReply: true,
+                    parentIndex: props.index
+                })
+                
+                isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
+                textOriginal.value = ''
+                isNotNewValue.value = true
+            }
         }
         
         // Xử lý xóa bình luận
