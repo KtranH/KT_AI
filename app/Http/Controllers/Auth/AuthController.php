@@ -3,35 +3,36 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\VerificationMail;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use App\Services\MailService;
 use App\Repositories\UserRepository;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use App\Http\Requests\Auth\LoginRequest;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly MailService $mailService, private readonly UserRepository $userRepository) {}
+    public function __construct(
+        private readonly MailService $mailService, 
+        private readonly UserRepository $userRepository
+    ) {}
     
     public function checkStatus()
     {
-        return $this->userRepository->checkStatus();
+        try {
+            return $this->userRepository->checkStatus();
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Lỗi khi kiểm tra trạng thái xác thực',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'cf-turnstile-response' => ['required', 'string'],
-        ]);
+        $request->validate($this->signUpRequest->rules());
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
@@ -58,11 +59,9 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-            'cf-turnstile-response' => ['required', 'string'],
-        ]);
+        // Tạo instance của LoginRequest và validate
+        $loginRequest = new LoginRequest();
+        $request->validate($loginRequest->rules());
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
         if (!$turnstileResponse['success']) {
@@ -165,3 +164,4 @@ class AuthController extends Controller
         return $response->json();
     }
 } 
+

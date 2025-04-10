@@ -14,10 +14,21 @@ class UserRepository implements UserRepositoryInterface
     // Kiểm tra trạng thái đăng nhập 
     public function checkStatus()
     {
-        return response()->json([
-            'authenticated' => Auth::check(),
-            'user' => Auth::user()
-        ]);
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+                return response()->json([
+                    'authenticated' => true,
+                    'user' => $user
+                ]);
+            }
+            
+            return response()->json([
+                'authenticated' => false
+            ]);
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
     // Tăng số lượng ảnh tải lên của tài khoản
     public function increaseSumImg($id)
