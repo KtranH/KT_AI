@@ -176,9 +176,9 @@ export default function useComments(imageId) {
     // Cập nhật bình luận
     const updateComment = async (commentId, content, isReply, parentIndex) => {
         try {
-            const response = await commentAPI.updateComment(commentId, content.trim())
+            await commentAPI.updateComment(commentId, content.trim())
             
-            if (isReply && parentIndex !== null) {
+            /*if (isReply && parentIndex !== null) {
                 // Cập nhật reply trong danh sách replies của comment cha
                 const parentComment = comments.value[parentIndex]
                 const replyIndex = parentComment.replies.findIndex(reply => reply.id === commentId)
@@ -191,8 +191,7 @@ export default function useComments(imageId) {
                 if (commentIndex !== -1) {
                     comments.value[commentIndex] = response.data
                 }
-            }
-            
+            }*/
             toast.success('Đã cập nhật bình luận thành công!')
         } catch (err) {
             console.error("Lỗi khi cập nhật bình luận:", err)

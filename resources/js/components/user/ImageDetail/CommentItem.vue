@@ -354,6 +354,7 @@ export default {
                     parentIndex: null
                 })
                 
+                props.comment.text = editText.value
                 isEditing.value = false
                 textOriginal.value = ''
                 isNotNewValue.value = true
@@ -397,6 +398,7 @@ export default {
                     parentIndex: props.index
                 })
                 
+                props.comment.replies[replyIndex].text = editReplyText.value
                 isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
                 textOriginal.value = ''
                 isNotNewValue.value = true
