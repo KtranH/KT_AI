@@ -18,11 +18,11 @@ export const useAuthStore = () => {
     user.value = userData
     token.value = userToken
     isRemembered.value = remember
-    
+
     localStorage.setItem('user', JSON.stringify(userData))
     localStorage.setItem('token', userToken)
     localStorage.setItem('remember', remember)
-    
+
     // Nếu không remember, dữ liệu sẽ bị xóa khi đóng trình duyệt
     if (!remember) {
       sessionStorage.setItem('user', JSON.stringify(userData))
@@ -40,7 +40,7 @@ export const useAuthStore = () => {
     sessionStorage.removeItem('user')
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('remember')
-    
+
     // Xóa dữ liệu trong các store khác nếu cần
     if (window.$pinia) {
       const stores = window.$pinia._s
@@ -58,20 +58,20 @@ export const useAuthStore = () => {
       if (!isRemembered.value) {
         const sessionToken = sessionStorage.getItem('token')
         const sessionUser = sessionStorage.getItem('user')
-        
+
         if (!sessionToken || !sessionUser) {
           clearAuthData()
           return false
         }
-        
+
         token.value = sessionToken
         user.value = JSON.parse(sessionUser)
       }
-      
+
       if (!token.value || !user.value) return false
 
       const response = await authAPI.check()
-      
+
       if (response.data.authenticated) {
         if (isRemembered.value) {
           saveAuthData(response.data.user, token.value, true)
@@ -94,16 +94,16 @@ export const useAuthStore = () => {
   const initializeAuth = async () => {
     // Luôn lấy CSRF token mới khi khởi động ứng dụng
     await refreshCsrfToken()
-    
+
     // Kiểm tra trạng thái đăng nhập
     await checkAuth()
   }
-  
+
   const login = async (credentials) => {
     try {
       // Lấy CSRF token mới trước khi đăng nhập
       await refreshCsrfToken()
-      
+
       const response = await authAPI.login(credentials)
       if (response.data.needs_verification) {
         return response.data
@@ -121,27 +121,46 @@ export const useAuthStore = () => {
     try {
       // Lấy CSRF token mới trước khi đăng xuất
       await refreshCsrfToken()
-      
+
       const response = await authAPI.logout()
       storeImage.clearImages()
       storeImage.clearImagesCreatedByUser()
       storeLike.clearLikes()
       clearAuthData()
-      
+
       // Cập nhật CSRF token mới từ phản hồi
       if (response.data && response.data.csrf_token) {
         document.cookie = `XSRF-TOKEN=${response.data.csrf_token}; path=/`
       }
-      
+
       // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
       await refreshCsrfToken()
-      window.location.reload()
-      setTimeout(() => {
-        router.push('/login')
-      }, 100)
+
+      router.replace({path: '/login'})
+
     } catch (error) {
       console.error('Logout error:', error)
-      // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi
+
+      // Xử lý lỗi CSRF token mismatch (419)
+      if (error.response && error.response.status === 419) {
+        // Vẫn xóa dữ liệu người dùng
+        storeImage.clearImages()
+        storeImage.clearImagesCreatedByUser()
+        storeLike.clearLikes()
+        clearAuthData()
+
+        // Làm mới trang để cập nhật CSRF token
+        window.location.reload()
+
+        // Chuyển hướng đến trang đăng nhập sau khi làm mới
+        setTimeout(() => {
+          router.push('/login')
+        }, 100)
+
+        return
+      }
+
+      // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi khác
       await refreshCsrfToken()
     }
   }
@@ -150,20 +169,20 @@ export const useAuthStore = () => {
     try {
       const response = await axios.get('/auth/google/url')
       const googleAuthUrl = response.data.url
-  
+
       const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600')
-  
+
       // Lắng nghe phản hồi từ popup
       window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin) return
-  
+
         const { success, token, user } = event.data
-  
+
         if (success) {
           console.log('Đăng nhập thành công:', user)
           // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
           saveAuthData(user, token, true)
-          
+
           // Sử dụng router.push() thay vì window.location.reload()
           router.push('/dashboard')
         } else {
@@ -175,7 +194,7 @@ export const useAuthStore = () => {
     }
   }
 
-  
+
   return {
     user,
     token,

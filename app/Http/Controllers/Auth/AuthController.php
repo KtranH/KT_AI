@@ -10,6 +10,7 @@ use App\Services\MailService;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\SignUpRequest;
 
 class AuthController extends Controller
 {
@@ -32,10 +33,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate($this->signUpRequest->rules());
+        $signUpRequest = new SignUpRequest();
+        $request->validate($signUpRequest->rules());
 
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        
         if (!$turnstileResponse['success']) {
             return response()->json([
                 'success' => false,
@@ -59,11 +62,12 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Tạo instance của LoginRequest và validate
         $loginRequest = new LoginRequest();
         $request->validate($loginRequest->rules());
+
         // Xác thực Turnstile
         $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+
         if (!$turnstileResponse['success']) {
             throw ValidationException::withMessages([
                 'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
