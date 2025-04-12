@@ -190,14 +190,12 @@ import { ref, nextTick, watch } from 'vue'
 import CommentReply from '@/components/user/ImageDetail/ReplyLayout.vue'
 import useLikes from '@/composables/user/useLikes'
 import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
-import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
 
 export default {
     name: 'CommentItem',
     components: {
         CommentReply,
         ConfirmUpdate,
-        ConfirmDelete
     },
     props: {
         comment: Object,
@@ -248,7 +246,6 @@ export default {
         const showDeleteReplyConfirm = ref({})
         const updateRef = ref(null)
         const updateReplyRef = ref([])
-        const deleteRef = ref(null)
 
         // Xử lý trả lời bình luận
         const onReply = (index, username) => {
@@ -494,7 +491,6 @@ export default {
             replyNestedRef,
             updateRef,
             updateReplyRef,
-            deleteRef,
             isNotNewValue
         }
     }
