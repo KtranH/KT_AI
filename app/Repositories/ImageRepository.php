@@ -95,8 +95,8 @@ class ImageRepository implements ImageRepositoryInterface
             Image::create([
                 'user_id' => $user->id,
                 'image_url' => json_encode($uploadedPaths),
-                'prompt' => $data['title'],
-                //'description' => $data['description'],
+                'title' => $data['title'],
+                'prompt' => $data['description'],
                 'features_id' => $data['feature_id'],
                 'status_image' => 'completed',
                 'sum_like' => 0,

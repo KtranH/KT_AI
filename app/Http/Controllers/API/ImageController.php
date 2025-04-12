@@ -134,7 +134,7 @@ class ImageController extends Controller
                 ], 422);
             }
     
-            $files = $request->file('images'); // Laravel sẽ nhận mảng file ở đây
+            $files = $request->file('images');
         
             // Duyệt qua từng file ảnh
             $uploadedPaths = [];
