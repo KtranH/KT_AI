@@ -56,6 +56,7 @@
                         <span class="ml-1">{{ comment.likes }}</span>
                     </button>
                 </div>
+                <span v-if="comment.updated_at !== comment.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
             </div>
 
             <!-- Xác nhận xóa bình luận -->
@@ -135,6 +136,7 @@
                                         <span class="ml-1">{{ reply.likes }}</span>
                                     </button>
                                 </div>
+                                <span v-if="reply.updated_at !== reply.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
                             </div>
                             
                             <!-- Xác nhận xóa phản hồi -->
@@ -353,7 +355,11 @@ export default {
                     parentIndex: null
                 })
                 
+                // Cập nhật thông tin bình luận
                 props.comment.text = editText.value
+                props.comment.updated_at = new Date().toISOString()
+
+                // Xử lý trạng thái
                 isEditing.value = false
                 textOriginal.value = ''
                 isNotNewValue.value = true
@@ -403,7 +409,11 @@ export default {
                     parentIndex: props.index
                 })
                 
+                // Cập nhật thông tin phản hồi
                 props.comment.replies[replyIndex].text = editReplyText.value
+                props.comment.replies[replyIndex].updated_at = new Date().toISOString()
+
+                // Xử lý trạng thái
                 isEditingReply.value = { ...isEditingReply.value, [replyIndex]: false }
                 textOriginal.value = ''
                 isNotNewValue.value = true

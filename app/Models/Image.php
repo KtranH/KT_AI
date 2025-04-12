@@ -14,6 +14,7 @@ class Image extends Model
     protected $fillable = [
         'user_id',
         'features_id',
+        'title',
         'prompt',
         'image_url',
         'sum_like',
