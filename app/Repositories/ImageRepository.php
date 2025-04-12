@@ -7,12 +7,13 @@ use App\Interfaces\FeatureRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use App\Models\Image;
 use App\Models\Interaction;
+use App\Models\AIFeature;
+use App\Http\Resources\ImageResource;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\AIFeature;
-use App\Http\Resources\ImageResource;
+
 
 class ImageRepository implements ImageRepositoryInterface
 {
@@ -127,11 +128,12 @@ class ImageRepository implements ImageRepositoryInterface
     {
         try
         {
-            $image->delete();
             // Giảm số lượng ảnh cho mục Feature
             $this->featureRepository->decreaseSumImg($image->features_id);
             // Giảm số lượng ảnh cho user
             $this->userRepository->decreaseSumImg($image->user_id);
+            // Xóa hình ảnh
+            $image->delete();
             return true;
         }
         catch(\Exception $e)
@@ -177,11 +179,11 @@ class ImageRepository implements ImageRepositoryInterface
     //Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void
     {
-        $this->featureService->decreaseSumImg($featureId);
+        $this->featureRepository->decreaseSumImg($featureId);
     }
     // Giảm số lượng ảnh cho user
     public function decreaseSumImgUser(int $userId): void
     {
-        $this->userService->decreaseSumImg($userId);
+        $this->userRepository->decreaseSumImg($userId);
     }
 } 

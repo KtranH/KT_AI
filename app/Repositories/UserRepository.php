@@ -3,11 +3,11 @@
 namespace App\Repositories;
 
 use App\Interfaces\UserRepositoryInterface;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
-use App\Models\User;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -35,6 +35,14 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = User::find($id);
         $user->sum_img++;
+        $user->save();
+        return $user;
+    }
+    // Giảm số lượng ảnh tải lên của tài khoản
+    public function decreaseSumImg($id)
+    {
+        $user = User::find($id);
+        $user->sum_img--;
         $user->save();
         return $user;
     }

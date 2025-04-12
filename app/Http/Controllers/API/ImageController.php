@@ -4,14 +4,17 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ImageResource;
+use App\Models\Image;
+use App\Services\R2StorageService;
+use App\Repositories\ImageRepository;
+use App\Policies\ImagePolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Services\R2StorageService;
-use App\Repositories\ImageRepository;
+use Illuminate\Support\Facades\Gate;
 
 class ImageController extends Controller
 {
@@ -171,7 +174,6 @@ class ImageController extends Controller
     public function update(Request $request, Image $image): JsonResponse
     {
         try {
-            dd("Check");
             $this->imageRepository->updateImage($image, $request->title, $request->prompt);
             return response()->json([
                 'success' => true,

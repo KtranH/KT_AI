@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Interfaces\FeatureRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Interfaces\FeatureRepositoryInterface;
 
 class FeatureController extends Controller
 {

@@ -144,7 +144,7 @@ export default function useImage() {
             if (response.data.success) {
                 toast.success('Xóa bài viết thành công!')
                 // Chuyển hướng về trang chủ hoặc trang profile
-                router.push('/profile')
+                router.push('/dashboard')
                 return true
             } else {
                 toast.error(response.data.message || 'Không thể xóa bài viết')

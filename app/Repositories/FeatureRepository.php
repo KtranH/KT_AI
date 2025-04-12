@@ -24,4 +24,11 @@ class FeatureRepository implements FeatureRepositoryInterface
         $feature->sum_img = $feature->sum_img + 1;
         $feature->save();
     }
+    // Giảm số lượng ảnh khi người dùng xóa ảnh
+    public function decreaseSumImg(int $featureId)
+    {
+        $feature = AIFeature::find($featureId);
+        $feature->sum_img = $feature->sum_img - 1;
+        $feature->save();
+    }
 }
