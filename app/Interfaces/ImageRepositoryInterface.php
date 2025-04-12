@@ -22,15 +22,21 @@ interface ImageRepositoryInterface
     // Lưu trữ hình ảnh tải lên
     public function storeImage($uploadedPaths, $user, $data): bool;
     
+    // Cập nhật thông tin hình ảnh
+    public function updateImage(Image $image, string $title, string $prompt): bool;
+    
+    // Xóa hình ảnh
+    public function deleteImage(Image $image): bool;
+    
     // Tăng số lượng ảnh cho mục Feature
     public function increaseSumImg(int $featureId): void;
     
     // Tăng số lượng ảnh cho user
     public function increaseSumImgUser(int $userId): void;
     
-    /*// Giảm số lượng ảnh cho mục Feature
+    // Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void;
     
     // Giảm số lượng ảnh cho user
-    public function decreaseSumImgUser(int $userId): void;*/
+    public function decreaseSumImgUser(int $userId): void;
 } 

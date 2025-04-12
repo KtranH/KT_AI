@@ -5,7 +5,7 @@ export const authAPI = {
   login: (credentials) => apiClient.post('/login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
-  
+
 }
 
 // Các gọi API xác minh người dùng
@@ -21,7 +21,9 @@ export const imageAPI = {
   getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
   getLikes: (id) => apiClient.get(`/get_likes_information/${id}`),
   likePost: (id) => apiClient.post(`/like_post/${id}`),
-  unlikePost: (id) => apiClient.post(`/unlike_post/${id}`)
+  unlikePost: (id) => apiClient.post(`/unlike_post/${id}`),
+  deleteImage: (id) => apiClient.delete(`/images/${id}`),
+  updateImage: (id, data) => apiClient.put(`/images/${id}`, data)
 }
 
 // Gọi API tải lên hình ảnh

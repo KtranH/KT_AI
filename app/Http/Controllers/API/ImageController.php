@@ -166,4 +166,52 @@ class ImageController extends Controller
             ], 500);
         }
     }
+
+    // Cập nhật thông tin hình ảnh
+    public function update(Request $request, Image $image): JsonResponse
+    {
+        try {
+            $this->imageRepository->updateImage($image, $request->title, $request->prompt);
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật thành công'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Update Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể cập nhật',
+                'error' => config('app.debug') ? $e->getMessage() : 'Lỗi hệ thống'
+            ], 500);
+        }
+    }
+
+    // Xóa hình ảnh
+    public function destroy(Image $image): JsonResponse
+    {
+        if (Gate::denies('delete', $image)) {
+            return response()->json(['message' => 'Không được phép xóa hình ảnh này'], 403);
+        }
+        
+        try {
+            $this->imageRepository->deleteImage($image);
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa thành công'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delete Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa',
+                'error' => config('app.debug') ? $e->getMessage() : 'Lỗi hệ thống'
+            ], 500);
+        }
+    }
 }

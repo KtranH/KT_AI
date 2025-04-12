@@ -26,7 +26,6 @@
                     <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <i class="fa-solid fa-pen-to-square"></i> Sửa bài viết
                     </button>
-                    <ConfirmUpdate ref="updateRef" />
                     <button @click="handleDelete" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <i class="fa-solid fa-trash"></i> Xóa bài viết
                     </button>
@@ -43,13 +42,22 @@
     </div>
 
     <!-- Post Title -->
-    <div class="px-4 py-2 border-b">
+    <div class="px-4 py-2 border-b" v-if="!isEditing">
         <div class="flex items-center">
             <h1 class="text-xl font-bold">{{dataImage && dataImage.title? dataImage.title : title}}</h1>
         </div>
         <div class="flex items-center">
             <h1 class="text-sm">{{ dataImage && dataImage.prompt ? dataImage.prompt : title }}</h1>
         </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div v-else class="px-4 py-2 border-b">
+        <EditImageForm
+            :imageData="dataImage"
+            @update:success="handleUpdateSuccess"
+            @cancel="isEditing = false"
+        />
     </div>
 </template>
 
@@ -62,19 +70,20 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
-import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
 import ConfirmReport from '@/components/common/ConfirmReport.vue'
 import ButtonBackVue from '../../common/ButtonBack.vue'
+import EditImageForm from './EditImageForm.vue'
+import { toast } from 'vue-sonner'
 
 export default {
     name: 'HeaderSection',
     components:
     {
-        ConfirmUpdate,
         ConfirmDelete,
         ConfirmReport,
-        ButtonBackVue
+        ButtonBackVue,
+        EditImageForm
     },
     props:
     {
@@ -96,12 +105,13 @@ export default {
     setup() {
         dayjs.extend(relativeTime);
         dayjs.locale('vi');
-        
+
         const isDropdownOpen = ref(false)
-        const { dataImage } = useImage()
+        const isEditing = ref(false)
+        const { dataImage, deleteImage } = useImage()
         const imageStore = useImageStore()
         const auth = useAuthStore()
-        
+
         // Đảm bảo trạng thái đăng nhập được khởi tạo
         onMounted(async () => {
             try {
@@ -116,30 +126,25 @@ export default {
             }
             document.addEventListener('click', handleClickOutside)
         })
-        
+
         const user = computed(() => auth.user)
-        const updateRef = ref(null)
         const deleteRef = ref(null)
         const reportRef = ref(null)
-        
+
         const currentUserImage = computed(() => imageStore.currentUser)
-                
+
         // Thêm console.log để debug
         watch(() => auth.user, (newUser) => {
             console.log('Auth user changed:', newUser)
         })
-        
+
         watch(() => imageStore.currentUser, (newUser) => {
             console.log('Current image user changed:', newUser)
         })
-        
+
         const formatTime = (time) => {
             if (!time) return 'vừa xong';
             return dayjs(time).fromNow()
-        }
-
-        const toggleSetting = () => {
-            isOpen.value = !isOpen.value
         }
 
         const toggleDropdown = () => {
@@ -148,8 +153,13 @@ export default {
 
         const handleEdit = () => {
             isDropdownOpen.value = false
-            updateRef.value.showAlert()
+            isEditing.value = true
             console.log('Edit post clicked')
+        }
+
+        const handleUpdateSuccess = () => {
+            isEditing.value = false
+            toast.success('Cập nhật bài viết thành công!')
         }
 
         const handleReport = () => {
@@ -158,40 +168,47 @@ export default {
             console.log('Report post clicked')
         }
 
-        const handleDelete = () => {
+        const handleDelete = async () => {
             isDropdownOpen.value = false
-            deleteRef.value.showAlert()
-            console.log('Delete post clicked')
+
+            // Hiển thị hộp thoại xác nhận
+            const result = await deleteRef.value.showAlert()
+
+            // Nếu người dùng xác nhận xóa
+            if (result.isConfirmed) {
+                console.log('Xóa bài viết có ID:', dataImage.value.id)
+                await deleteImage(dataImage.value.id)
+            }
         }
-        
+
         // Xử lý đóng dropdown khi click bên ngoài
         const handleClickOutside = (event) => {
             if (isDropdownOpen.value && !event.target.closest('.ml-auto')) {
                 isDropdownOpen.value = false
             }
         }
-        
+
         onMounted(() => {
             auth.initializeAuth()
             document.addEventListener('click', handleClickOutside)
         })
-        
+
         onUnmounted(() => {
             document.removeEventListener('click', handleClickOutside)
         })
-        
+
         return {
             dataImage,
             currentUserImage,
             formatTime,
-            toggleSetting,
             isDropdownOpen,
+            isEditing,
             toggleDropdown,
             handleEdit,
             handleDelete,
             handleReport,
+            handleUpdateSuccess,
             user,
-            updateRef,
             deleteRef,
             reportRef,
         }

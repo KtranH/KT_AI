@@ -59,6 +59,8 @@ Route::prefix('api')->group(function () {
         Route::post('/comments/{comment}/reply', [CommentController::class, 'storeReply']);
         // Image Routes
         Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
+        Route::delete('/images/{image}', [ImageController::class, 'destroy']);
+        Route::put('/images/{image}', [ImageController::class, 'update']);
     });
 });
 

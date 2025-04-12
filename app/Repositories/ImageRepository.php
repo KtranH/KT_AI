@@ -121,6 +121,49 @@ class ImageRepository implements ImageRepositoryInterface
             return false;
         }
     }
+
+    // Xóa hình ảnh
+    public function deleteImage(Image $image): bool
+    {
+        try
+        {
+            $image->delete();
+            // Giảm số lượng ảnh cho mục Feature
+            $this->featureRepository->decreaseSumImg($image->features_id);
+            // Giảm số lượng ảnh cho user
+            $this->userRepository->decreaseSumImg($image->user_id);
+            return true;
+        }
+        catch(\Exception $e)
+        {
+            Log::error('Delete Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+            return false;
+        }
+    }
+    
+    // Cập nhật thông tin hình ảnh
+    public function updateImage(Image $image, string $title, string $prompt): bool
+    {
+        try
+        {
+            $image->update([
+                'prompt' => $prompt,
+                'title' => $title
+            ]);
+            return true;
+        }
+        catch(\Exception $e)
+        {
+            Log::error('Update Image Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+            return false;
+        }
+    }
     // Tăng số lượng ảnh cho mục Feature
     public function increaseSumImg(int $featureId): void
     {
@@ -131,7 +174,7 @@ class ImageRepository implements ImageRepositoryInterface
     {
         $this->userRepository->increaseSumImg($userId);
     }
-    /*// Giảm số lượng ảnh cho mục Feature
+    //Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void
     {
         $this->featureService->decreaseSumImg($featureId);
@@ -140,5 +183,5 @@ class ImageRepository implements ImageRepositoryInterface
     public function decreaseSumImgUser(int $userId): void
     {
         $this->userService->decreaseSumImg($userId);
-    }*/
+    }
 } 
