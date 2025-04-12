@@ -171,6 +171,7 @@ class ImageController extends Controller
     public function update(Request $request, Image $image): JsonResponse
     {
         try {
+            dd("Check");
             $this->imageRepository->updateImage($image, $request->title, $request->prompt);
             return response()->json([
                 'success' => true,

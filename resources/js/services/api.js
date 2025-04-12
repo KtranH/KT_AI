@@ -22,8 +22,8 @@ export const imageAPI = {
   getLikes: (id) => apiClient.get(`/get_likes_information/${id}`),
   likePost: (id) => apiClient.post(`/like_post/${id}`),
   unlikePost: (id) => apiClient.post(`/unlike_post/${id}`),
-  deleteImage: (id) => apiClient.delete(`/images/${id}`),
-  updateImage: (id, data) => apiClient.put(`/images/${id}`, data)
+  delete: (id) => apiClient.delete(`/images/${id}`),
+  update: (id, data) => apiClient.put(`/images/${id}`, data)
 }
 
 // Gọi API tải lên hình ảnh

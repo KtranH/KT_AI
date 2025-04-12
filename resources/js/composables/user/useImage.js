@@ -139,7 +139,7 @@ export default function useImage() {
     const deleteImage = async (imageId) => {
         try {
             isLoading.value = true
-            const response = await imageAPI.deleteImage(imageId)
+            const response = await imageAPI.delete(imageId)
 
             if (response.data.success) {
                 toast.success('Xóa bài viết thành công!')
@@ -163,7 +163,7 @@ export default function useImage() {
     const updateImage = async (imageId, data) => {
         try {
             isLoading.value = true
-            const response = await imageAPI.updateImage(imageId, data)
+            const response = await imageAPI.update(imageId, data)
 
             if (response.data.success) {
                 toast.success('Cập nhật bài viết thành công!')
