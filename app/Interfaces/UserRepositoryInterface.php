@@ -36,6 +36,15 @@ interface UserRepositoryInterface
     // Cập nhật mật khẩu user
     public function updatePassword($request, $id);
 
+    // Cập nhật avatar
+    public function updateAvatar($path);
+
+    // Cập nhật cover image
+    public function updateCoverImage($path);
+
+    // Cập nhật trạng thái email của user
+    public function updateUserStatus($id);
+
     // Kiểm tra mật khẩu user
     public function checkPassword($request, $id);
 
@@ -44,7 +53,4 @@ interface UserRepositoryInterface
 
     // Kiểm tra trạng thái đăng nhập
     public function checkStatus();
-
-    // Cập nhật trạng thái email của user
-    public function updateUserStatus($id);
 }

@@ -5,6 +5,10 @@ export const authAPI = {
   login: (credentials) => apiClient.post('/login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
+}
+
+// Gọi API thông tin profile
+export const profileAPI = {
   updateAvatar: (formData) => apiClient.post('/update-avatar', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'

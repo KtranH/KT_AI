@@ -49,6 +49,6 @@ class R2StorageService
      */
     public function delete(string $path): bool
     {
-        return $this->disk->delete($path);
+        return $this->disk->delete(str_replace($this->urlR2, '', $path));
     }
 }

@@ -62,6 +62,9 @@ Route::prefix('api')->group(function () {
         // Image Routes
         Route::delete('/images/{image}', [ImageController::class, 'destroy']);
         Route::put('/images/{image}', [ImageController::class, 'update']);
+        // Profile Routes
+        Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
+        Route::post('/update-cover-image', [UserController::class, 'updateCoverImage']);
     });
 });
 

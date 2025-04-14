@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Request;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -108,11 +109,38 @@ class UserRepository implements UserRepositoryInterface
         return $user;
     }
 
+    // Cập nhật trạng thái email của user
+    public function updateUserStatus($id)
+    {
+        $user = User::find($id);
+        $user->is_verified = !$user->is_verified;
+        $user->save();
+        return $user;
+    }
+
     // Cập nhật mật khẩu
     public function updatePassword($request, $id)
     {
         $user = User::find($id);
         $user->password = Hash::make($request->password);
+        $user->save();
+        return $user;
+    }
+
+    // Cập nhật avatar
+    public function updateAvatar($path)
+    {
+        $user = Auth::user();
+        $user->avatar_url = $path;
+        $user->save();
+        return $user;
+    }
+
+    // Cập nhật cover image
+    public function updateCoverImage($path)
+    {
+        $user = Auth::user();
+        $user->cover_image_url = $path;
         $user->save();
         return $user;
     }
@@ -137,14 +165,5 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = User::find($id);
         return $user->sum_img;
-    }
-
-    // Cập nhật trạng thái email của user
-    public function updateUserStatus($id)
-    {
-        $user = User::find($id);
-        $user->is_verified = !$user->is_verified;
-        $user->save();
-        return $user;
     }
 }

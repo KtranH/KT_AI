@@ -25,10 +25,9 @@ class GoogleController extends Controller
                 [
                     'name' => $googleUser->name,
                     'password' => Hash::make(uniqid()),
-                    'avatar_url' => $googleUser->avatar ?? 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png',
                     'cover_image_url' => 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/cover_image.png',
                     'is_verified' => true
-                ]
+                ] + (User::where('email', $googleUser->email)->exists() ? [] : ['avatar_url' => $googleUser->avatar ?? 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png'])
             );
 
             Auth::login($user);

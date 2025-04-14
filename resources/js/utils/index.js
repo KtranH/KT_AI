@@ -30,9 +30,9 @@ export const generateRandomSeed = () => {
     return Math.floor(Math.random() * 1000000000);
 };
 
-// Kiểm tra có phải là file ảnh không
+// Kiểm tra có phải là file ảnh JPG, PNG không
 export function isFileImage(file) {
-  return file && file.type && file.type.startsWith('image/')
+  return file && file.type && (file.type.startsWith('image/jpeg') || file.type.startsWith('image/png'))
 }
 
 // Kiểm tra file ảnh có dưới 2MB không

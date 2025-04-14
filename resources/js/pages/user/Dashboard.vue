@@ -30,7 +30,7 @@
               <img
                 :src="avatar"
                 loading="lazy"
-                class="w-32 h-32 rounded-full border-4 border-white shadow-lg cursor-pointer transition-all duration-300 group-hover:shadow-xl"
+                class="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg cursor-pointer transition-all duration-300 group-hover:shadow-xl"
                 @click="openPreview(avatar, 'avatar')"
               >
               <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -123,6 +123,14 @@
               @close="closeUploadModal"
               @upload-success="handleImageUploadSuccess"
             />
+
+            <!-- Loading Overlay -->
+            <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+              <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
+                <p class="text-gray-700 font-medium">Đang xử lý ảnh...</p>
+              </div>
+            </div>
         </div>
       <div class="container mx-auto px-4" data-aos="zoom-in" data-aos-delay="300">
         <!-- Xin chào -->
@@ -171,7 +179,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { formatDate } from '@/utils/index'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
-import { authAPI } from '@/services/api'
+import { profileAPI } from '@/services/api'
 
 import AOS from 'aos'
 
@@ -193,21 +201,22 @@ export default {
     const logo_fun = ref("/img/humanoid.png")
 
     // Preview state
-    const previewVisible = ref(false);
-    const currentPreviewImage = ref("");
-    const previewType = ref("");
-    const activeTab = ref('created'); // Default active tab
+    const previewVisible = ref(false)
+    const currentPreviewImage = ref("")
+    const previewType = ref("")
+    const activeTab = ref('created') // Default active tab
 
     // Upload modal state
-    const isUploadModalVisible = ref(false);
-    const uploadImageType = ref('avatar');
+    const isUploadModalVisible = ref(false)
+    const uploadImageType = ref('avatar')
+    const isLoading = ref(false) // Trạng thái loading khi đang tải lên ảnh
 
     // Fetch data
     const tabs = [
       { id: 'created', name: 'Ảnh đã tạo' },
       { id: 'uploaded', name: 'Ảnh tải lên' },
       { id: 'liked', name: 'Ảnh đã thích' }
-    ];
+    ]
 
     // Methods
     const logout = async () => {
@@ -223,53 +232,69 @@ export default {
 
     // Open preview mode
     const openPreview = (imageUrl, type) => {
-      currentPreviewImage.value = imageUrl;
-      previewType.value = type;
-      previewVisible.value = true;
-    };
+      currentPreviewImage.value = imageUrl
+      previewType.value = type
+      previewVisible.value = true
+    }
 
     // Open upload modal
     const openUploadModal = (type) => {
       uploadImageType.value = type;
-      isUploadModalVisible.value = true;
-    };
+      isUploadModalVisible.value = true
+    }
 
     // Close upload modal
     const closeUploadModal = () => {
-      isUploadModalVisible.value = false;
-    };
+      isUploadModalVisible.value = false
+    }
 
     // Handle successful image upload
     const handleImageUploadSuccess = async (data) => {
       try {
+        // Bật trạng thái loading
+        isLoading.value = true
+
         // Create form data
-        const formData = new FormData();
-        formData.append('image', data.file);
+        const formData = new FormData()
+        formData.append('image', data.file)
 
         // Call appropriate API based on image type
         if (data.type === 'avatar') {
-          await authAPI.updateAvatar(formData);
+          // Hiển thị thông báo đang tải
+          toast.loading('Đang cập nhật ảnh đại diện...')
+
+          const response = await profileAPI.updateAvatar(formData)
           // Update local avatar
-          avatar.value = data.previewUrl;
+          avatar.value = response.data.data.avatar_url
           // Update auth store
           if (auth.user.value) {
-            auth.user.value.avatar_url = data.previewUrl;
+            auth.user.value.avatar_url = response.data.data.avatar_url
           }
         } else {
-          await authAPI.updateCoverImage(formData);
+
+          // Hiển thị thông báo đang tải
+          toast.loading('Đang cập nhật ảnh bìa...')
+
+          const response = await profileAPI.updateCoverImage(formData)
           // Update local cover image
-          coverImage.value = data.previewUrl;
+          coverImage.value = response.data.data.cover_image_url
           // Update auth store
           if (auth.user.value) {
-            auth.user.value.cover_image_url = data.previewUrl;
+            auth.user.value.cover_image_url = response.data.data.cover_image_url
           }
         }
 
+        toast.dismiss();
         // Show success message
-        toast.success(`Cập nhật ${data.type === 'avatar' ? 'ảnh đại diện' : 'ảnh bìa'} thành công!`);
+        toast.success(`Cập nhật ${data.type === 'avatar' ? 'ảnh đại diện' : 'ảnh bìa'} thành công!`)
       } catch (error) {
-        console.error('Error updating profile image:', error);
-        toast.error('Có lỗi xảy ra khi cập nhật ảnh. Vui lòng thử lại sau.');
+        // Tắt thông báo đang tải
+        toast.dismiss()
+        console.error('Error updating profile image:', error)
+        toast.error('Có lỗi xảy ra khi cập nhật ảnh. Vui lòng thử lại sau.')
+      } finally {
+        // Tắt trạng thái loading
+        isLoading.value = false
       }
     };
 
@@ -301,7 +326,8 @@ export default {
       uploadImageType,
       openUploadModal,
       closeUploadModal,
-      handleImageUploadSuccess
+      handleImageUploadSuccess,
+      isLoading
     }
   }
 }

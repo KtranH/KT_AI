@@ -44,7 +44,7 @@
                       Kéo và thả ảnh vào đây hoặc <span class="text-blue-500 font-medium">chọn ảnh</span>
                     </p>
                     <p class="mt-1 text-xs text-gray-500">
-                      PNG, JPG, GIF tối đa 5MB
+                      PNG, JPG, GIF tối đa 2MB
                     </p>
                   </div>
                   
@@ -53,7 +53,7 @@
                       :src="previewImage" 
                       :class="[
                         'mx-auto object-cover transition-all duration-300',
-                        type === 'avatar' ? 'h-40 w-40 rounded-full' : 'h-40 w-full rounded-lg'
+                        type === 'avatar' ? 'h-40 w-40 rounded-full' : 'h-full w-full rounded-lg'
                       ]"
                       alt="Preview"
                     >
@@ -81,7 +81,7 @@
         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
           <button 
             type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gradient-text from-purple-600 to-indigo-600 text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm"
             :disabled="!previewImage || isUploading"
             @click="uploadImage"
           >
@@ -111,6 +111,7 @@
 <script>
 import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { isFileImage, isImageSizeValid } from '@/utils'
 
 export default {
   name: 'UploadImageModal',
@@ -174,15 +175,14 @@ export default {
       if (!file) return
       
       // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      if (!validTypes.includes(file.type)) {
-        errorMessage.value = 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)'
+      if (!isFileImage(file)) {
+        errorMessage.value = 'Chỉ chấp nhận file ảnh (JPG, PNG)'
         return
       }
       
       // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        errorMessage.value = 'Kích thước file không được vượt quá 5MB'
+      if (!isImageSizeValid(file)) {
+        errorMessage.value = 'Kích thước file không được vượt quá 2MB'
         return
       }
       
@@ -222,25 +222,12 @@ export default {
       isUploading.value = true
       
       try {
-        // Simulate API call with timeout
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        // Here you would normally send the file to your API
-        // const formData = new FormData()
-        // formData.append('image', selectedFile.value)
-        // formData.append('type', props.type)
-        // const response = await userAPI.updateProfileImage(formData)
-        
-        // Show success message
-        toast.success(`Cập nhật ${props.type === 'avatar' ? 'ảnh đại diện' : 'ảnh bìa'} thành công!`)
-        
         // Emit success event with the file data
         emit('upload-success', {
           type: props.type,
           file: selectedFile.value,
           previewUrl: previewImage.value
         })
-        
         // Close modal
         emit('close')
       } catch (error) {
