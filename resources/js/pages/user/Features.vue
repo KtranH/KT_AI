@@ -99,11 +99,11 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import  FeatureCard  from '@/components/user/Features/FeatureCard.vue';
 import  FeatureImage  from '@/components/user/Features/FeatureImage.vue';
 import  FeatureInfo  from '@/components/user/Features/FeatureInfo.vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { encodedID } from '@/utils'
 

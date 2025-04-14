@@ -5,7 +5,16 @@ export const authAPI = {
   login: (credentials) => apiClient.post('/login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
-
+  updateAvatar: (formData) => apiClient.post('/update-avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
+  updateCoverImage: (formData) => apiClient.post('/update-cover-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 }
 
 // Các gọi API xác minh người dùng

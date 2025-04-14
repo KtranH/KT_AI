@@ -61,11 +61,11 @@
 </template>
 
 <script>
-import { computed, provide } from "vue";
+import ButtonBackVue from "@/components/common/ButtonBack.vue";
 import ImageUploader from "@/components/user/Upload/ImageUploader.vue";
 import ImageInfoForm from "@/components/user/Upload/ImageInfoForm.vue";
+import { computed, provide } from "vue";
 import { useImageUpload } from "@/composables/user/useImageUpload";
-import ButtonBackVue from "@/components/common/ButtonBack.vue";
 import { useRoute, useRouter } from "vue-router";
 export default {
   components: {

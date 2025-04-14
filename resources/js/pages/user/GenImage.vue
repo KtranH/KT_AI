@@ -71,17 +71,17 @@
 </div>
 </template>
 <script>
+import GuideSection  from '@/components/user/GenImage/GuideSection.vue'
+import ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
+import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
+import PromptInput  from '@/components/user/GenImage/PromptInput.vue'
+import ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
+import ButtonBackVue from '../../components/common/ButtonBack.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import  GuideSection  from '@/components/user/GenImage/GuideSection.vue'
-import  ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
-import  ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
-import  PromptInput  from '@/components/user/GenImage/PromptInput.vue'
-import  ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index';
 import { decodedID } from '@/utils'
-import ButtonBackVue from '../../components/common/ButtonBack.vue'
 
 export default {
     components: {

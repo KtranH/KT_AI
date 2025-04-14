@@ -1,41 +1,59 @@
 <template>
   <div class="min-h-screen bg-gray-100 pt-24">
+    <!-- Toast notifications -->
+    <VueSonner position="top-right" theme="light" />
     <!-- Ảnh background và avtar -->
     <!-- Container chính -->
     <div class="max-w-[90%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
         <div class="relative">
           <!-- Cover Image section -->
-          <div class="h-[300px] bg-purple-600 rounded-t-lg relative">
-            <img 
-              :src="coverImage" 
-              loading="lazy" 
-              class="w-full h-[300px] object-cover rounded-t-lg cursor-pointer" 
+          <div class="h-[300px] bg-purple-600 rounded-t-lg relative overflow-hidden group">
+            <img
+              :src="coverImage"
+              loading="lazy"
+              class="w-full h-[300px] object-cover rounded-t-lg cursor-pointer transition-transform duration-500 group-hover:scale-105"
               @click="openPreview(coverImage, 'cover')"
             >
+            <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <button
+                @click.stop="openUploadModal('cover')"
+                class="px-4 py-2 bg-white bg-opacity-90 rounded-full text-gray-800 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+              >
+                <i class="fa-solid fa-camera mr-2"></i>Cập nhật ảnh bìa
+              </button>
+            </div>
           </div>
-          
+
           <!-- Avatar section -->
           <div class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div class="relative">
-              <img 
-                :src="avatar" 
-                loading="lazy" 
-                class="w-32 h-32 rounded-full border-4 border-white shadow-lg cursor-pointer" 
+            <div class="relative group">
+              <img
+                :src="avatar"
+                loading="lazy"
+                class="w-32 h-32 rounded-full border-4 border-white shadow-lg cursor-pointer transition-all duration-300 group-hover:shadow-xl"
                 @click="openPreview(avatar, 'avatar')"
               >
+              <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <button
+                  @click.stop="openUploadModal('avatar')"
+                  class="w-8 h-8 rounded-full bg-white bg-opacity-90 flex items-center justify-center text-gray-800 shadow-lg"
+                >
+                  <i class="fa-solid fa-camera"></i>
+                </button>
+              </div>
               <!-- Badge online -->
               <!-- <div class="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div> -->
             </div>
           </div>
-          
+
           <!-- Full-screen preview modal -->
-          <div 
-            v-if="previewVisible" 
+          <div
+            v-if="previewVisible"
             class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
             @click="previewVisible = false"
           >
             <div class="relative max-w-6xl max-h-screen p-4">
-              <button 
+              <button
                 class="absolute top-4 right-4 text-white z-10"
                 @click.stop="previewVisible = false"
               >
@@ -43,10 +61,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              
+
               <div class="relative">
-                <img 
-                  :src="currentPreviewImage" 
+                <img
+                  :src="currentPreviewImage"
                   :class="[
                     'max-h-screen object-contain transition-all duration-300',
                     previewType === 'avatar' ? 'max-w-lg rounded-full' : 'max-w-6xl'
@@ -84,13 +102,27 @@
 
             <!-- Action buttons -->
             <div class="flex justify-center gap-4 mt-6">
-                <button class="px-6 py-2 bg-gradient-text text-white rounded-full">
-                    Cập nhật ảnh đại diện
+                <button
+                  @click="openUploadModal('avatar')"
+                  class="px-6 py-2 bg-gradient-text text-white rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105"
+                >
+                    <i class="fa-solid fa-user-pen mr-2"></i>Cập nhật ảnh đại diện
                 </button>
-                <button class="px-6 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition">
-                    Cập nhật ảnh bìa
+                <button
+                  @click="openUploadModal('cover')"
+                  class="px-6 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-all duration-300 transform hover:scale-105"
+                >
+                    <i class="fa-solid fa-image mr-2"></i>Cập nhật ảnh bìa
                 </button>
             </div>
+
+            <!-- Upload Image Modal -->
+            <UploadImageModal
+              :isVisible="isUploadModalVisible"
+              :type="uploadImageType"
+              @close="closeUploadModal"
+              @upload-success="handleImageUploadSuccess"
+            />
         </div>
       <div class="container mx-auto px-4" data-aos="zoom-in" data-aos-delay="300">
         <!-- Xin chào -->
@@ -109,14 +141,14 @@
       <hr class="mt-4 mb-4">
       <!-- Tabs navigation -->
       <div class="flex justify-center space-x-4 mb-6"  data-aos="zoom-out">
-        <button 
-          v-for="tab in tabs" 
+        <button
+          v-for="tab in tabs"
           :key="tab.id"
           @click="activeTab = tab.id"
           class="px-6 py-2 rounded-full transition-all duration-300"
           :class="[
-            activeTab === tab.id 
-              ? 'bg-gradient-text text-white shadow-lg' 
+            activeTab === tab.id
+              ? 'bg-gradient-text text-white shadow-lg'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           ]"
         >
@@ -132,18 +164,23 @@
 </template>
 
 <script>
-import { onMounted, ref, onActivated } from 'vue'
+import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
+import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
-import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import { formatDate } from '@/utils/index'
+import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { authAPI } from '@/services/api'
 
 import AOS from 'aos'
 
 export default {
   name: 'Dashboard',
   components: {
-    ImageListVue
+    ImageListVue,
+    UploadImageModal,
+    VueSonner
   },
   setup() {
     //State
@@ -151,15 +188,20 @@ export default {
     const auth = useAuthStore()
     const user = auth.user.value
     const active = ref([])
-    const avatar = user.avatar_url
-    const coverImage = user.cover_image_url
+    const avatar = ref(user.avatar_url)
+    const coverImage = ref(user.cover_image_url)
     const logo_fun = ref("/img/humanoid.png")
+
     // Preview state
     const previewVisible = ref(false);
     const currentPreviewImage = ref("");
     const previewType = ref("");
     const activeTab = ref('created'); // Default active tab
-    
+
+    // Upload modal state
+    const isUploadModalVisible = ref(false);
+    const uploadImageType = ref('avatar');
+
     // Fetch data
     const tabs = [
       { id: 'created', name: 'Ảnh đã tạo' },
@@ -186,6 +228,51 @@ export default {
       previewVisible.value = true;
     };
 
+    // Open upload modal
+    const openUploadModal = (type) => {
+      uploadImageType.value = type;
+      isUploadModalVisible.value = true;
+    };
+
+    // Close upload modal
+    const closeUploadModal = () => {
+      isUploadModalVisible.value = false;
+    };
+
+    // Handle successful image upload
+    const handleImageUploadSuccess = async (data) => {
+      try {
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', data.file);
+
+        // Call appropriate API based on image type
+        if (data.type === 'avatar') {
+          await authAPI.updateAvatar(formData);
+          // Update local avatar
+          avatar.value = data.previewUrl;
+          // Update auth store
+          if (auth.user.value) {
+            auth.user.value.avatar_url = data.previewUrl;
+          }
+        } else {
+          await authAPI.updateCoverImage(formData);
+          // Update local cover image
+          coverImage.value = data.previewUrl;
+          // Update auth store
+          if (auth.user.value) {
+            auth.user.value.cover_image_url = data.previewUrl;
+          }
+        }
+
+        // Show success message
+        toast.success(`Cập nhật ${data.type === 'avatar' ? 'ảnh đại diện' : 'ảnh bìa'} thành công!`);
+      } catch (error) {
+        console.error('Error updating profile image:', error);
+        toast.error('Có lỗi xảy ra khi cập nhật ảnh. Vui lòng thử lại sau.');
+      }
+    };
+
     // Mounted hook
     onMounted(() => {
       console.log(user.sum_like)
@@ -208,8 +295,14 @@ export default {
       currentPreviewImage,
       previewType,
       activeTab,
-      tabs
+      tabs,
+      // Upload modal
+      isUploadModalVisible,
+      uploadImageType,
+      openUploadModal,
+      closeUploadModal,
+      handleImageUploadSuccess
     }
   }
 }
-</script> 
+</script>
