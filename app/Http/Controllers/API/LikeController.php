@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Interfaces\LikeRepositoryInterface;
+use App\Http\Resources\LikeResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Interfaces\LikeRepositoryInterface;
-use App\Http\Resources\LikeResource;
 
 
 class LikeController extends Controller

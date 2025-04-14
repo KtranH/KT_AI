@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\SignUpRequest;
+use App\Services\MailService;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use App\Services\MailService;
-use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Http;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\SignUpRequest;
+
 
 class AuthController extends Controller
 {

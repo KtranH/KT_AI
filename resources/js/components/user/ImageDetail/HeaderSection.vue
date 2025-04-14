@@ -12,6 +12,7 @@
                 </div>
             </div>
             <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ dataImage && dataImage.created_at ? formatTime(dataImage.created_at) : 'vừa xong' }}</span>
+            <span v-if="dataImage && dataImage.updated_at !== dataImage.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
         </div>
          <!-- Setting post button with dropdown -->
         <div class="ml-auto relative">
