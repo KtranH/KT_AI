@@ -63,6 +63,22 @@ class UserController extends Controller
             ], 500);
         }
     }
+    // Cập nhật tên user
+    public function updateName(Request $request) {
+        try {
+            $user = $this->userRepository->updateName($request);
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi cập nhật thông tin người dùng',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     // Cập nhật avatar
     public function updateAvatar(Request $request) {
         try {

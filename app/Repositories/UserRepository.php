@@ -100,28 +100,27 @@ class UserRepository implements UserRepositoryInterface
     }
 
     // Cập nhật thông tin user
-    public function update($request, $id)
+    public function updateName($request)
     {
-        $user = User::find($id);
+        $user = Auth::user();
         $user->name = $request->name;
-        $user->email = $request->email;
         $user->save();
         return $user;
     }
 
     // Cập nhật trạng thái email của user
-    public function updateUserStatus($id)
+    public function updateStatus()
     {
-        $user = User::find($id);
+        $user = Auth::user();
         $user->is_verified = !$user->is_verified;
         $user->save();
         return $user;
     }
 
     // Cập nhật mật khẩu
-    public function updatePassword($request, $id)
+    public function updatePassword($request)
     {
-        $user = User::find($id);
+        $user = Auth::user();
         $user->password = Hash::make($request->password);
         $user->save();
         return $user;

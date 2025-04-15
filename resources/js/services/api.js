@@ -18,7 +18,9 @@ export const profileAPI = {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
-  })
+  }),
+  updateName: (formData) => apiClient.post('/update-name', formData),
+  updatePassword: (formData) => apiClient.post('/update-password', formData)
 }
 
 // Các gọi API xác minh người dùng

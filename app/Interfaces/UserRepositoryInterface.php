@@ -12,9 +12,6 @@ interface UserRepositoryInterface
     // Tạo user
     public function store($request);
 
-    // Cập nhật user
-    public function update($request, $id);
-
     // Xóa user
     public function delete($id);
 
@@ -32,10 +29,13 @@ interface UserRepositoryInterface
 
     // Lấy thông tin user theo Email
     public function getUserByEmail($email);
-
+    
+    // Cập nhật tên user
+    public function updateName($request);
+    
     // Cập nhật mật khẩu user
-    public function updatePassword($request, $id);
-
+    public function updatePassword($request);
+    
     // Cập nhật avatar
     public function updateAvatar($path);
 
@@ -43,7 +43,7 @@ interface UserRepositoryInterface
     public function updateCoverImage($path);
 
     // Cập nhật trạng thái email của user
-    public function updateUserStatus($id);
+    public function updateStatus();
 
     // Kiểm tra mật khẩu user
     public function checkPassword($request, $id);

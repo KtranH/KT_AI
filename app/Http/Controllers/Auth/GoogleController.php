@@ -23,16 +23,14 @@ class GoogleController extends Controller
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
                 [
-                    'name' => $googleUser->name,
                     'password' => Hash::make(uniqid()),
-                    'cover_image_url' => 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/cover_image.png',
                     'is_verified' => true
-                ] + (User::where('email', $googleUser->email)->exists() ? [] : ['avatar_url' => $googleUser->avatar ?? 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png'])
+                ] + (User::where('email', $googleUser->email)->exists() ? [] : ['avatar_url' => $googleUser->avatar ?? 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png', 'name' => $googleUser->name ?? 'User123', 'cover_image_url' => 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/cover_image.png',])
             );
-
+            
             Auth::login($user);
             $token = $user->createToken('auth_token')->plainTextToken;
-
+            
             return "
             <script>
                 window.opener.postMessage({

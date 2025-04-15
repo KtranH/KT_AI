@@ -65,6 +65,7 @@ Route::prefix('api')->group(function () {
         // Profile Routes
         Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
         Route::post('/update-cover-image', [UserController::class, 'updateCoverImage']);
+        Route::post('/update-name', [UserController::class, 'updateName']);
     });
 });
 
