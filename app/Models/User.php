@@ -27,7 +27,8 @@ class User extends Authenticatable
         'sum_like',
         'sum_img',
         'remaining_credits',
-        'status_user'
+        'status_user',
+        'activities'
     ];
 
     /**

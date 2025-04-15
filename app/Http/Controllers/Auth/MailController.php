@@ -9,12 +9,11 @@ use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redis;
-
-
+use Illuminate\Support\Facades\Auth;
 
 class MailController extends Controller
 {
-    public function __construct(private readonly MailService $mailService, private readonly UserRepository $userRepository) {}
+    public function __construct(private readonly MailService $mailService, private readonly UserRepositoryInterface $userRepository) {}
     public function verifyEmail(Request $request)
     {
         $request->validate([
@@ -107,5 +106,49 @@ class MailController extends Controller
         return response()->json([
             'message' => 'Đã gửi lại mã xác thực.',
         ]);
+    }
+    // Gửi mã xác thực đổi mật khẩu
+    public function sendPasswordChangeVerification() {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+
+            // Kiểm tra xem đã gửi mã xác thực gần đây chưa
+            $lastSentTime = Redis::get("password_change_last_sent:{$user->email}");
+            if ($lastSentTime && (time() - $lastSentTime) < 60) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đợi 60 giây trước khi gửi lại mã xác thực'
+                ], 429);
+            }
+
+            // Gửi mã xác thực qua email
+            if (!$this->mailService->sendPasswordChangeVerification($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi khi gửi mã xác thực'
+                ], 500);
+            }
+
+            // Lưu thời gian gửi mã xác thực
+            Redis::setex("password_change_last_sent:{$user->email}", 600, time());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã gửi mã xác thực đến email của bạn'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi gửi mã xác thực',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

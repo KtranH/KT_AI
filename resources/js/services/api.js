@@ -20,7 +20,10 @@ export const profileAPI = {
     }
   }),
   updateName: (formData) => apiClient.post('/update-name', formData),
-  updatePassword: (formData) => apiClient.post('/update-password', formData)
+  updatePassword: (formData) => apiClient.post('/update-password', formData),
+  checkPassword: (formData) => apiClient.post('/check-password', formData),
+  // Gửi mail xác thực đổi mật khẩu
+  sendPasswordChangeVerification: () => apiClient.post('/send-password-change-verification')
 }
 
 // Các gọi API xác minh người dùng

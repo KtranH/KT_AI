@@ -7,10 +7,6 @@
  * @param {Date|string} date - Đối tượng Date hoặc chuỗi ngày tháng
  * @returns {string} Chuỗi ngày đã định dạng
  */
-export const formatDate = (date) => {
-  const d = new Date(date);
-  return d.toLocaleDateString('vi-VN');
-};
 
 /**
  * Rút gọn văn bản dài thành văn bản ngắn hơn với dấu "..." ở cuối
@@ -79,7 +75,13 @@ export function isActionTooQuick(lastActionTime, minInterval = 500) {
   return lastActionTime && (now - lastActionTime < minInterval)
 }
 
-// Hàm định dạng ngày tháng
+// Hàm định dạng ngày
+export const formatDate = (date) => {
+  const d = new Date(date);
+  return d.toLocaleDateString('vi-VN');
+};
+
+// Hàm định dạng ngày tháng có giờ
 export const formatTime = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);

@@ -3,16 +3,10 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use App\Policies\UserPolicy;
 use Illuminate\Validation\Rules\Password;
 
-class SignUpRequest extends FormRequest
+class ChangePassRequest extends FormRequest
 {
-    public function __construct(private readonly UserPolicy $policy)
-    {
-    }
     public function authorize(): bool
     {
         return true;
@@ -21,19 +15,19 @@ class SignUpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:30',
-            'email' => 'required|email:dns|unique:users',
+            'current_password' => 'required|string',
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(8)
+                'string',
+                /*Password::min(8)
                     ->letters()
                     ->numbers()
                     ->symbols()
                     ->mixedCase()
-                    ->uncompromised()
+                    ->uncompromised()*/
             ],
-            'cf-turnstile-response' => ['required', 'string']
+            'verification_code' => 'required|string|size:6',
         ];
     }
 }

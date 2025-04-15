@@ -65,9 +65,6 @@
 <script>
 
 import useImage from '@/composables/user/useImage'
-import { useAuthStore } from '@/stores/auth/authStore'
-import { useImageStore } from '@/stores/user/imagesStore'
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
@@ -76,6 +73,9 @@ import ConfirmReport from '@/components/common/ConfirmReport.vue'
 import ButtonBackVue from '../../common/ButtonBack.vue'
 import EditImageForm from './EditImageForm.vue'
 import { toast } from 'vue-sonner'
+import { useAuthStore } from '@/stores/auth/authStore'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
 export default {
     name: 'HeaderSection',

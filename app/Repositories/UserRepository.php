@@ -104,6 +104,12 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = Auth::user();
         $user->name = $request->name;
+        $activities = json_decode($user->activities, true) ?? [];
+        $activities[] = [
+            'action' => 'Cập nhật tên tài khoản thành ' . $user->name,
+            'timestamp' => now()
+        ];
+        $user->activities = json_encode($activities);
         $user->save();
         return $user;
     }
@@ -122,10 +128,15 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = Auth::user();
         $user->password = Hash::make($request->password);
-        $user->save();
-        return $user;
-    }
-
+        $activities = json_decode($user->activities, true) ?? [];
+        $activities[] = [
+            'action' => 'Cập nhật mật khẩu',
+            'timestamp' => now()
+        ];
+        $user->activities = json_encode($activities);
+    $user->save();
+    return $user;
+}
     // Cập nhật avatar
     public function updateAvatar($path)
     {
@@ -153,10 +164,10 @@ class UserRepository implements UserRepositoryInterface
     }
 
     // Kiểm tra mật khẩu
-    public function checkPassword($request, $id)
+    public function checkPassword($current_password)
     {
-        $user = User::find($id);
-        return Hash::check($request->password, $user->password);
+        $user = Auth::user();
+        return Hash::check($current_password, $user->password);
     }
 
     // Kiểm tra số lượng ảnh

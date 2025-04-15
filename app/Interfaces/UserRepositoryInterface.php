@@ -46,7 +46,7 @@ interface UserRepositoryInterface
     public function updateStatus();
 
     // Kiểm tra mật khẩu user
-    public function checkPassword($request, $id);
+    public function checkPassword($current_password);
 
     // Kiểm tra số lượng ảnh user
     public function checkSumImg($id);
