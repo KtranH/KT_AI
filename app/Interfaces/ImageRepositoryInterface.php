@@ -19,6 +19,12 @@ interface ImageRepositoryInterface
     // Lấy danh sách hình ảnh của người dùng
     public function getImagesCreatedByUser(): Collection;
     
+    // Lấy danh sách hình ảnh đã thích
+    public function getImagesLiked(): Collection;
+
+    //Lấy danh sách hình ảnh đã tải lên
+    public function getImagesUploaded(): Collection;
+
     // Lưu trữ hình ảnh tải lên
     public function storeImage($uploadedPaths, $user, $data): bool;
     

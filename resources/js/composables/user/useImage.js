@@ -23,6 +23,7 @@ export default function useImage() {
     const dataImage = computed(() => store.data)
     const userImage = computed(() => store.currentUser)
     const imagesCreatedByUser = computed(() => store.imagesCreatedByUser)
+    const imagesLikedByUser = computed(() => store.imagesLikedByUser)
     const errorMessage = computed(() => store.error_message)
     const isLoadingStore = computed(() => store.isLoading)
 
@@ -78,6 +79,32 @@ export default function useImage() {
         hasError.value = false
         try {
             await store.fetchImagesCreatedByUser()
+        } catch (error) {
+            hasError.value = true
+            console.error('API Error:', error)
+        } finally {
+            isLoading.value = false
+        }
+    }
+    
+    const fetchImagesUploaded = async () => {
+        isLoading.value = true
+        hasError.value = false
+        try {
+            await store.fetchImagesCreatedByUser()
+        } catch (error) {
+            hasError.value = true
+            console.error('API Error:', error)
+        } finally {
+            isLoading.value = false
+        }
+    }
+    
+    const fetchImagesLiked = async () => {
+        isLoading.value = true
+        hasError.value = false
+        try {
+            await store.fetchImagesLiked()
         } catch (error) {
             hasError.value = true
             console.error('API Error:', error)
@@ -201,12 +228,15 @@ export default function useImage() {
         dataImage,
         userImage,
         imagesCreatedByUser,
+        imagesLikedByUser,
         errorMessage,
         imageDetail,
 
         // Methods
         fetchImages,
         fetchImagesCreatedByUser,
+        fetchImagesLiked,
+        fetchImagesUploaded,
         fetchImagesByFeature,
         loadMoreImages,
         goToImageDetail,

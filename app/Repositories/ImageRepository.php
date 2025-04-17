@@ -87,6 +87,67 @@ class ImageRepository implements ImageRepositoryInterface
         return $result;
     }
     
+    /**
+     * Lấy danh sách hình ảnh đã tải lên
+     */
+    public function getImagesUploaded(): Collection
+    {
+        $images = Image::with('user')
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $result = collect();
+        
+        foreach ($images as $image) {
+            $result->push([
+                'id' => $image->id,
+                'image_url' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
+                'prompt' => $image->prompt,
+                'features_id' => $image->features_id,
+                'sum_like' => $image->sum_like,
+                'sum_comment' => $image->sum_comment,
+                'created_at' => $image->created_at,
+                'updated_at' => $image->updated_at,
+                'user' => $image->user
+            ]);
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Lấy danh sách hình ảnh đã tải lên
+     */
+    public function getImagesLiked(): Collection
+    {
+        $list_images_liked = Interaction::where('user_id', Auth::id())
+            ->where('type_interaction', 'like')
+            ->pluck('image_id');
+        $images = Image::with('user')
+            ->whereIn('id', $list_images_liked)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $result = collect();
+        
+        foreach ($images as $image) {
+            $result->push([
+                'id' => $image->id,
+                'image_url' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
+                'prompt' => $image->prompt,
+                'features_id' => $image->features_id,
+                'sum_like' => $image->sum_like,
+                'sum_comment' => $image->sum_comment,
+                'created_at' => $image->created_at,
+                'updated_at' => $image->updated_at,
+                'user' => $image->user
+            ]);
+        }
+        
+        return $result;
+    }
+
     // Lưu trữ hình ảnh tải lên
     public function storeImage($uploadedPaths, $user, $data): bool
     {

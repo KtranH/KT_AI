@@ -70,15 +70,18 @@ class ImageController extends Controller
         }
     }
     
-    public function getImagesCreatedByUser(Request $request): JsonResponse
+    /**
+     * Xử lý phân trang và trả về kết quả JSON
+     * 
+     * @param Collection $images Danh sách hình ảnh
+     * @param int $page Trang hiện tại
+     * @param int $perPage Số lượng mục trên mỗi trang
+     * @param string $errorType Loại lỗi để ghi log
+     * @return JsonResponse
+     */
+    private function paginateAndRespond($images, int $page, int $perPage, string $errorType): JsonResponse
     {
         try {
-            $perPage = (int)$request->input('per_page', 5);
-            $page = (int)$request->input('page', 1);
-            
-            // Lấy tất cả hình ảnh của người dùng
-            $images = $this->imageRepository->getImagesCreatedByUser();
-            
             // Nếu không có ảnh nào
             if ($images->isEmpty()) {
                 return response()->json([
@@ -109,7 +112,7 @@ class ImageController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Images Created By User Error: ' . $e->getMessage(), [
+            Log::error($errorType . ': ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -122,6 +125,36 @@ class ImageController extends Controller
         }
     }
     
+    // Lấy danh sách ảnh người dùng tạo
+    public function getImagesCreatedByUser(Request $request): JsonResponse
+    {
+        $perPage = (int)$request->input('per_page', 5);
+        $page = (int)$request->input('page', 1);
+        $images = $this->imageRepository->getImagesCreatedByUser();
+        
+        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Created By User Error');
+    }
+    
+    // Lấy danh sách ảnh đã thích
+    public function getImagesLiked(Request $request): JsonResponse
+    {
+        $perPage = (int)$request->input('per_page', 5);
+        $page = (int)$request->input('page', 1);
+        $images = $this->imageRepository->getImagesLiked();
+        
+        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Liked Error');
+    }
+
+    // Lấy danh sách ảnh đã tải lên
+    public function getImagesUploaded(Request $request): JsonResponse
+    {
+        $perPage = (int)$request->input('per_page', 5);
+        $page = (int)$request->input('page', 1);
+        $images = $this->imageRepository->getImagesUploaded();
+        
+        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Uploaded Error');
+    }
+
     // Lưu trữ hình ảnh tải lên
     public function store(Request $request, $featureId)
     {

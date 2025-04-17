@@ -34,7 +34,6 @@ Route::prefix('api')->group(function () {
     Route::get('/load_features/{id}', [FeatureController::class, 'getFeatureById']);
     Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']);
     Route::get('/get_images_information/{id}', [ImageController::class, 'getImages']);
-    Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
     Route::get('/get_images_by_feature/{id}', [ImageController::class, 'getImagesByFeature']);
     // Public API Get Like
     Route::get('/get_likes_information/{id}', [LikeController::class, 'getLikes']);
@@ -60,6 +59,9 @@ Route::prefix('api')->group(function () {
         // Image upload Routes
         Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
         // Image Routes
+        Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
+        Route::get('/get_images_uploaded', [ImageController::class, 'getImagesUploaded']);
+        Route::get('/get_images_liked', [ImageController::class, 'getImagesLiked']);
         Route::delete('/images/{image}', [ImageController::class, 'destroy']);
         Route::put('/images/{image}', [ImageController::class, 'update']);
         // Profile Routes

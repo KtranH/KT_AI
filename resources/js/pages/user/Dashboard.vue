@@ -204,7 +204,7 @@ export default {
     const previewVisible = ref(false)
     const currentPreviewImage = ref("")
     const previewType = ref("")
-    const activeTab = ref('created') // Default active tab
+    const activeTab = ref('uploaded') // Default active tab
 
     // Upload modal state
     const isUploadModalVisible = ref(false)
@@ -213,8 +213,8 @@ export default {
 
     // Fetch data
     const tabs = [
-      { id: 'created', name: 'Ảnh đã tạo' },
       { id: 'uploaded', name: 'Ảnh tải lên' },
+      { id: 'created', name: 'Ảnh đã tạo' },
       { id: 'liked', name: 'Ảnh đã thích' }
     ]
 

@@ -35,6 +35,8 @@ export const verificationAPI = {
 export const imageAPI = {
   getImages: (id) => apiClient.get(`/get_images_information/${id}`),
   getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user'),
+  getImagesUploaded: () => apiClient.get('/get_images_uploaded'),
+  getImagesLiked: () => apiClient.get('/get_images_liked'),
   getImagesCreatedByUserPage: (url) => apiClient.get(url),
   getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
   getLikes: (id) => apiClient.get(`/get_likes_information/${id}`),
