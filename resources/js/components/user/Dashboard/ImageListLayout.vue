@@ -7,7 +7,7 @@
         <button 
           v-if="showRefreshButton"
           @click="refreshData" 
-          class="flex items-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+          class="flex items-center px-3 py-1 bg-gradient-text rounded-2xl hover:bg-blue-600 text-white transition"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
@@ -289,9 +289,15 @@ export default {
         case 'uploaded':
           return await loadMoreUserImages(page)
         case 'created':
-          return await loadMoreCreatedImages(page)
+          return await loadMoreUserImages(page)
         case 'liked':
-          return await loadMoreLikedImages(page)
+          // Kiểm tra xem loadMoreLikedImages có tồn tại không
+          if (typeof loadMoreLikedImages === 'function') {
+            return await loadMoreLikedImages(page)
+          } else {
+            console.error('loadMoreLikedImages không khả dụng')
+            return false
+          }
         default:
           return false
       }
@@ -329,20 +335,37 @@ export default {
           // Xử lý và nhóm hình ảnh
           imageGroups.value = processAndGroupImages(images)
         } else {
-          // Khi tải thêm, lấy các ID đã có
-          const existingIds = new Set(imageGroups.value.map(group => group.id))
+          // Khi tải thêm, KHÔNG fetch lại tất cả dữ liệu
+          // Mà sử dụng kết quả mới từ API trực tiếp
           
-          // Lấy dữ liệu hiện tại theo filter
-          const currentImages = await fetchImagesByFilter(props.filter)
+          // Kiểm tra xem có biến nào phù hợp với filter để lấy dữ liệu mới tải
+          let newImagesData = []
           
-          // Tìm các hình ảnh mới chưa có trong danh sách hiện tại
-          const newImages = currentImages.filter(item => !existingIds.has(item.id))
+          switch(props.filter) {
+            case 'created':
+            case 'uploaded':
+              if (imagesCreatedByUser && imagesCreatedByUser.value) {
+                // Lấy ảnh mới từ mảng dữ liệu từ store
+                const currentIds = new Set(imageGroups.value.map(group => group.id))
+                newImagesData = imagesCreatedByUser.value.filter(img => !currentIds.has(img.id))
+              }
+              break
+            case 'liked':
+              if (imagesLikedByUser && imagesLikedByUser.value) {
+                // Lấy ảnh mới từ mảng dữ liệu từ store
+                const currentIds = new Set(imageGroups.value.map(group => group.id))
+                newImagesData = imagesLikedByUser.value.filter(img => !currentIds.has(img.id))
+              }
+              break
+          }
           
           // Xử lý và nhóm các hình ảnh mới
-          const newGroups = processAndGroupImages(newImages)
+          const newGroups = processAndGroupImages(newImagesData)
           
           // Thêm vào danh sách hiện có
           imageGroups.value = [...imageGroups.value, ...newGroups]
+          
+          console.log(`Đã thêm ${newGroups.length} nhóm ảnh mới`)
         }
         
         // Cập nhật trạng thái còn hình ảnh để tải không
@@ -369,6 +392,8 @@ export default {
       try {
         // Tăng số trang
         currentPage.value++
+        
+        console.log(`Đang tải thêm ảnh trang ${currentPage.value} cho filter ${props.filter}...`)
         
         // Gọi API tải thêm theo filter
         const success = await loadMoreImagesByFilter(props.filter, currentPage.value)

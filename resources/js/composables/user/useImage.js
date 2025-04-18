@@ -36,6 +36,17 @@ export default function useImage() {
         return currentPage.value < lastPage.value;
     });
 
+    const hasMoreLikedImages = computed(() => {
+        return currentPage.value < lastPage.value;
+    });
+
+    const hasMoreCreatedImages = computed(() => {
+        return currentPage.value < lastPage.value;
+    });
+
+    // Biến kiểm soát nút làm mới
+    const showRefreshButton = ref(true);
+
     // Phương thức fetch dữ liệu
     const fetchImages = async (id) => {
         if (!id) {
@@ -162,6 +173,34 @@ export default function useImage() {
         }
     }
 
+    // Phương thức tải thêm ảnh người dùng đã thích
+    const loadMoreLikedImages = async (page) => {
+        if (page) {
+            console.log(`Đang tải thêm ảnh đã thích trang ${page}...`);
+            isLoading.value = true;
+            hasError.value = false;
+
+            try {
+                // Tạo URL API với tham số phân trang
+                const apiUrl = `/get_images_liked?page=${page}`;
+                // Dùng store để tải dữ liệu theo trang
+                await store.fetchImagesLikedPage(apiUrl, page);
+                return true;
+            } catch (error) {
+                console.error("Lỗi khi tải thêm ảnh đã thích:", error);
+                hasError.value = true;
+                return false;
+            } finally {
+                isLoading.value = false;
+            }
+        }
+    }
+
+    // Phương thức tải thêm ảnh người dùng đã tạo
+    const loadMoreCreatedImages = async (page) => {
+        return await loadMoreUserImages(page); // Sử dụng cùng hàm với loadMoreUserImages
+    }
+
     // Phương thức xóa bài viết
     const deleteImage = async (imageId) => {
         try {
@@ -222,6 +261,9 @@ export default function useImage() {
         lastPage,
         totalImages,
         hasMoreUserImages,
+        hasMoreLikedImages,
+        hasMoreCreatedImages,
+        showRefreshButton,
 
         // Computed properties
         imageUrls,
@@ -241,6 +283,8 @@ export default function useImage() {
         loadMoreImages,
         goToImageDetail,
         loadMoreUserImages,
+        loadMoreLikedImages,
+        loadMoreCreatedImages,
         deleteImage,
         updateImage
     }
