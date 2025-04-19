@@ -144,9 +144,7 @@ export default {
     return {
       formData,
       isSubmitting,
-      handleSubmit,
-      isTitleValid,
-      isPromptValid
+      handleSubmit
     }
   }
 }

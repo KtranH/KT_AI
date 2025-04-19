@@ -8,6 +8,7 @@ use App\Models\Image;
 use App\Services\R2StorageService;
 use App\Repositories\ImageRepository;
 use App\Policies\ImagePolicy;
+use App\Http\Requests\Image\StoreImageRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -158,6 +159,9 @@ class ImageController extends Controller
     // Lưu trữ hình ảnh tải lên
     public function store(Request $request, $featureId)
     {
+        #$request->validate(StoreImageRequest::rules());
+        $storeImageRequest = new StoreImageRequest();
+        $request->validate($storeImageRequest->rules());
         try {
             // Kiểm tra xem có file được gửi lên không
             if (!$request->hasFile('images')) {

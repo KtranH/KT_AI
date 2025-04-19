@@ -29,6 +29,11 @@ Route::prefix('api')->group(function () {
     Route::post('/verify-email', [MailController::class, 'verifyEmail']);
     Route::post('/resend-verification', [MailController::class, 'resendVerification']);
 
+    // Forgot Password Routes
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+    Route::post('/verify-reset-code', [ForgotPasswordController::class, 'verifyCode']);
+    Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
+
     // Public API Routes
     Route::get('/load_features', [FeatureController::class, 'getFeatures']);
     Route::get('/load_features/{id}', [FeatureController::class, 'getFeatureById']);

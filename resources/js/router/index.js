@@ -9,6 +9,7 @@ import Home from '../pages/user/Home.vue'
 import Login from '../pages/auth/Login.vue'
 import Register from '../pages/auth/Register.vue'
 import VerifyEmail from '../pages/auth/VerifyEmail.vue'
+import ForgotPassword from '../pages/auth/ForgotPassword.vue'
 // Dashboard Pages
 import Dashboard from '../pages/user/Dashboard.vue'
 // Features Pages
@@ -46,6 +47,12 @@ const routes = [
     name: 'verify-email',
     component: VerifyEmail,
     meta: { guest: true, title: 'KT_AI - Xác thực email' }
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: ForgotPassword,
+    meta: { guest: true, title: 'KT_AI - Quên mật khẩu' }
   },
   {
     path: '/dashboard',

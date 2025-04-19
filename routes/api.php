@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\TurnstileController;
 use App\Http\Controllers\CommentController;
 
@@ -27,6 +28,11 @@ Route::get('/google/callback', [GoogleController::class, 'handleCallback']);
 
 // Turnstile Config Route - Không yêu cầu xác thực vì cần trước khi đăng nhập
 Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']);
+
+// Forgot Password Routes
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/verify-reset-code', [ForgotPasswordController::class, 'verifyCode']);
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
 
 // Routes cho bình luận
 Route::middleware('auth:sanctum')->group(function () {

@@ -10,11 +10,21 @@
     <form @submit.prevent="handleUpload(featureId)" class="space-y-6">
       <div>
         <label for="title" class="block text-sm font-semibold text-gray-800">Tiêu đề:</label>
+        <span
+            :class="{
+              'text-gray-500': title.length <= 20,
+              'text-yellow-500': title.length > 20 && title.length <= 30,
+              'text-red-500': title.length > 30
+            }"
+            class="text-xs">
+            {{ title.length }}/30
+        </span>
         <input 
           type="text" 
           id="title" 
           v-model="title" 
           required 
+          maxlength="30"
           placeholder="Nhập tiêu đề cho hình ảnh của bạn"
           class="mt-2 block w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
         />
@@ -22,9 +32,19 @@
       
       <div>
         <label for="description" class="block text-sm font-semibold text-gray-800">Mô tả:</label>
+        <span
+            :class="{
+              'text-gray-500': description.length <= 200,
+              'text-yellow-500': description.length > 200 && description.length <= 255,
+              'text-red-500': description.length > 255
+            }"
+            class="text-xs">
+            {{ description.length }}/255
+        </span>
         <textarea 
           id="description" 
           v-model="description" 
+          maxlength="255"
           placeholder="Mô tả thêm về hình ảnh của bạn"
           class="mt-2 block w-full border border-gray-200 rounded-lg p-3 h-32 resize-y focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
         ></textarea>
@@ -82,12 +102,13 @@
 </template>
 
 <script>
-import { ref, inject } from 'vue'
+import ConfirmUpload from '@/components/common/ConfirmUpload.vue'
+import { ref, inject, computed } from 'vue'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 import { encodedID } from '@/utils'
-import ConfirmUpload from '@/components/common/ConfirmUpload.vue'
 import { useImageStore } from '@/stores/user/imagesStore'
 import { useRouter } from 'vue-router'
+import { isTextLengthValid } from '@/utils'
 
 export default {
   components: {
@@ -121,6 +142,10 @@ export default {
     const storeImg = useImageStore()
     const router = useRouter()
 
+    // Kiểm tra độ dài của title và prompt
+    const isTitleValid = computed(() => isTextLengthValid(title.value, 30))
+    const isPromptValid = computed(() => isTextLengthValid(description.value, 255))
+
     const calculateTotalSize = () => {
       const totalBytes = files.value.reduce((total, fileObj) => total + fileObj.file.size, 0)
       
@@ -150,6 +175,15 @@ export default {
     }
 
     const handleUpload = async (featureId) => {      
+      if (!isTitleValid.value) {
+        toast.error('Tiêu đề không được vượt quá 30 ký tự')
+        return
+      }
+
+      if (!isPromptValid.value) {
+        toast.error('Mô tả không được vượt quá 255 ký tự')
+        return
+      }
       const result = await uploadRef.value.showAlert()
       if (result.isConfirmed) {
         isSubmitting.value = true

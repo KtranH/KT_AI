@@ -168,7 +168,7 @@ export default {
   components: {
     AuthFormHeader,
     AlertMessage,
-    SocialLoginButton
+    SocialLoginButton,
   },
   
   setup() {

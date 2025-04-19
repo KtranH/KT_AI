@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -52,6 +53,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Gửi thông báo đặt lại mật khẩu
+     *
+     * @param string $code
+     * @return void
+     */
+    public function sendPasswordResetNotification($code): void
+    {
+        $this->notify(new ResetPasswordNotification($code));
     }
 
     // Relationship với UserSession (1-nhiều)

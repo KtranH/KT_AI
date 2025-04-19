@@ -4,8 +4,12 @@ namespace App\Http\Requests\Image;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateImageRequest extends FormRequest
+class StoreImageRequest extends FormRequest
 {
+    public function authorize()
+    {
+        return true;
+    }
     public function rules()
     {
         return [
