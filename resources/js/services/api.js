@@ -22,10 +22,17 @@ export const profileAPI = {
   updateName: (formData) => apiClient.post('/update-name', formData),
   updatePassword: (formData) => apiClient.post('/update-password', formData),
   checkPassword: (formData) => apiClient.post('/check-password', formData),
-  // Gửi mail xác thực đổi mật khẩu
-  sendPasswordChangeVerification: () => apiClient.post('/send-password-change-verification')
+  // API quên mật khẩu
+  forgotPassword: (formData) => apiClient.post('/forgot-password', formData),
+  
+  // API xác nhận mã xác thực
+  verifyResetCode: (formData) => apiClient.post('/verify-reset-code', formData),
+  
+  // API đặt lại mật khẩu
+  resetPassword: (formData) => apiClient.post('/reset-password', formData),
+  
 }
-
+  
 // Các gọi API xác minh người dùng
 export const verificationAPI = {
   resendCode: (email) => apiClient.post('/resend-verification', { email })

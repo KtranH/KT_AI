@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <VueSonner position="top-right" theme="light" />
     <div class="max-w-md w-full space-y-8">
       <AuthFormHeader
         :title="pageTitle"
@@ -32,6 +33,13 @@
         </div>
 
         <div>
+          <div class="flex justify-center">
+            <div 
+              ref="turnstileWidget"
+              class="cf-turnstile">
+            </div>
+          </div>
+          <AlertMessage :message="turnstileError" type="error" />
           <button 
             type="submit" 
             :disabled="loading"
@@ -236,12 +244,13 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
 import AlertMessage from '@/components/auth/AlertMessage.vue'
 import VerificationCodeInput from '@/components/auth/VerificationCodeInput.vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useForgotPassword } from '@/composables/auth/useForgotPassword'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
+import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export default {
   name: 'ForgotPassword',
@@ -249,7 +258,8 @@ export default {
   components: {
     AuthFormHeader,
     AlertMessage,
-    VerificationCodeInput
+    VerificationCodeInput,
+    VueSonner
   },
   
   setup() {
@@ -278,6 +288,7 @@ export default {
     // Đếm ngược gửi lại
     const resendLoading = ref(false)
     const resendCountdown = ref(0)
+    const countdownInterval = ref(null) // Thêm ref để lưu trữ interval
     
     // Tính toán tiêu đề trang
     const pageTitle = computed(() => {
@@ -292,10 +303,10 @@ export default {
     // Xử lý khi hoàn thành nhập email
     const handleEmailSubmit = async () => {
       if (!turnstileToken.value) {
+        toast.error("Vui lòng xác nhận bạn không phải robot")
         turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
         return
       }
-      
       const result = await sendPasswordResetRequest(turnstileToken.value)
       
       if (result.success) {
@@ -321,11 +332,22 @@ export default {
     
     // Khởi động đếm ngược cho nút gửi lại mã
     const startResendCountdown = () => {
+      // Dừng interval hiện tại nếu có
+      if (countdownInterval.value) {
+        clearInterval(countdownInterval.value)
+        countdownInterval.value = null
+      }
+      
+      // Khởi tạo lại giá trị đếm ngược
       resendCountdown.value = 60
-      const interval = setInterval(() => {
-        resendCountdown.value--
+      
+      // Tạo interval mới
+      countdownInterval.value = setInterval(() => {
         if (resendCountdown.value <= 0) {
-          clearInterval(interval)
+          clearInterval(countdownInterval.value)
+          countdownInterval.value = null
+        } else {
+          resendCountdown.value--
         }
       }, 1000)
     }
@@ -353,11 +375,19 @@ export default {
         if (originalCallback) {
           originalCallback(token)
         }
+        
+        // Update our form
+        form.turnstileToken = token
       }
     })
     
     // Dọn dẹp khi component unmount
     onBeforeUnmount(() => {
+      // Dọn dẹp interval khi component bị unmount
+      if (countdownInterval.value) {
+        clearInterval(countdownInterval.value)
+        countdownInterval.value = null
+      }
       resetTurnstile()
     })
     

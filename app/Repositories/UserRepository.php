@@ -124,9 +124,11 @@ class UserRepository implements UserRepositoryInterface
     }
 
     // Cập nhật mật khẩu
-    public function updatePassword($request)
+    public function updatePassword($request, $user = null)
     {
-        $user = Auth::user();
+        if (!$user) {
+            $user = Auth::user();
+        }
         $user->password = Hash::make($request->password);
         $activities = json_decode($user->activities, true) ?? [];
         $activities[] = [
@@ -134,9 +136,10 @@ class UserRepository implements UserRepositoryInterface
             'timestamp' => now()
         ];
         $user->activities = json_encode($activities);
-    $user->save();
-    return $user;
-}
+        $user->save();
+        return $user;
+    }
+    
     // Cập nhật avatar
     public function updateAvatar($path)
     {

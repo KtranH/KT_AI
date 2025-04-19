@@ -1,6 +1,6 @@
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { profileAPI } from '@/services/api'
 
 export function useForgotPassword() {
   const router = useRouter()
@@ -24,13 +24,16 @@ export function useForgotPassword() {
       error.value = null
       success.value = null
       
-      const response = await axios.post('/api/forgot-password', {
+      const response = await profileAPI.forgotPassword({
         email: form.email,
         'cf-turnstile-response': turnstileToken
       })
       
       success.value = response.data.message || 'Chúng tôi đã gửi mã xác nhận đến email của bạn.'
-      currentStep.value = 'verification'
+      // Sử dụng nextTick để tránh cập nhật reactive đồng thời
+      await nextTick(() => {
+        currentStep.value = 'verification'
+      })
       
       return { success: true }
     } catch (err) {
@@ -49,14 +52,21 @@ export function useForgotPassword() {
       error.value = null
       success.value = null
       
-      const response = await axios.post('/api/verify-reset-code', {
+      const response = await profileAPI.verifyResetCode({
         email: form.email,
         code
       })
       
-      form.token = response.data.token
-      success.value = response.data.message || 'Mã xác thực hợp lệ'
-      currentStep.value = 'reset'
+      // Lưu token từ response
+      const token = response.data.token
+      const message = response.data.message || 'Mã xác thực hợp lệ'
+      
+      // Sử dụng setTimeout để tránh cập nhật liên tục các giá trị reactive
+      setTimeout(() => {
+        form.token = token
+        success.value = message
+        currentStep.value = 'reset'
+      }, 0)
       
       return { success: true }
     } catch (err) {
@@ -80,7 +90,7 @@ export function useForgotPassword() {
       error.value = null
       success.value = null
       
-      const response = await axios.post('/api/reset-password', {
+      const response = await profileAPI.resetPassword({
         email: form.email,
         password: form.password,
         password_confirmation: form.password_confirmation,
@@ -111,7 +121,7 @@ export function useForgotPassword() {
       error.value = null
       success.value = null
       
-      const response = await axios.post('/api/forgot-password', {
+      const response = await profileAPI.forgotPassword({
         email: form.email
       })
       

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class MailController extends Controller
 {
@@ -62,15 +63,22 @@ class MailController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        // Lưu biến đếm số lần gửi lại mã
         $resendCount = Redis::get("verify_resend_count:{$request->email}") ?: 0;
+        if($resendCount === 1) {
+            Redis::expire("verify_resend_count:{$request->email}", 300); // 5 phút
+        }
         
-        if ($resendCount >= 2) {
+        // Kiểm tra có vượt số lần gửi chưa
+        if ($resendCount > 3) {
+            $ttl = Redis::ttl("verify_resend_count:{$request->email}");
             throw ValidationException::withMessages([
-                'email' => ['Bạn đã vượt quá số lần gửi lại mã cho phép.'],
+                'email' => ["Bạn đã vượt quá số lần gửi lại mã cho phép. Vui lòng thử lại sau {$ttl} giây."]
             ]);
         }
 
         $lastResendTime = Redis::get("verify_last_resend:{$request->email}");
+
         if ($lastResendTime && (time() - $lastResendTime) < 60) {
             throw ValidationException::withMessages([
                 'email' => ['Vui lòng đợi 60 giây trước khi gửi lại mã.'],

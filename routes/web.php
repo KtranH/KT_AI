@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\MailController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\FeatureController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\TurnstileController;

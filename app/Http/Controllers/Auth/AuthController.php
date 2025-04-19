@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SignUpRequest;
 use App\Services\MailService;
+use App\Services\TurnStileService;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,8 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly MailService $mailService, 
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly TurnStileService $turnStileService
     ) {}
     
     public function checkStatus()
@@ -38,7 +40,7 @@ class AuthController extends Controller
         $request->validate($signUpRequest->rules());
 
         // Xác thực Turnstile
-        $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
         
         if (!$turnstileResponse['success']) {
             return response()->json([
@@ -67,7 +69,7 @@ class AuthController extends Controller
         $request->validate($loginRequest->rules());
 
         // Xác thực Turnstile
-        $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
 
         if (!$turnstileResponse['success']) {
             throw ValidationException::withMessages([
@@ -156,17 +158,5 @@ class AuthController extends Controller
     {
         return response()->json(Auth::user());
     }*/
-
-    // Thêm phương thức mới để xác thực Turnstile
-    private function verifyTurnstile($token, $remoteip)
-    {
-        $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
-            'secret' => env('TURNSTILE_SECRET_KEY'),
-            'response' => $token,
-            'remoteip' => $remoteip,
-        ]);
-
-        return $response->json();
-    }
 } 
 

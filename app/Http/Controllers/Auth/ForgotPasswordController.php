@@ -6,6 +6,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Http\Controllers\API\TurnstileController;
+use App\Services\TurnStileService;
+use App\Repositories\UserRepository;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +22,10 @@ use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordController extends Controller
 {
+    public function __construct(
+        private readonly TurnStileService $turnStileService,
+        private readonly UserRepository $userRepository
+    ) {}
     /**
      * Gửi email chứa link khôi phục mật khẩu
      *
@@ -32,25 +40,38 @@ class ForgotPasswordController extends Controller
         ]);
 
         // Xác thực Turnstile
-        if (!$this->validateTurnstile($request->input('cf-turnstile-response'))) {
-            return response()->json([
-                'message' => 'Lỗi xác thực captcha, vui lòng thử lại.'
-            ], 422);
+        $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+
+        
+        if (!$turnstileResponse['success']) {
+            throw ValidationException::withMessages([
+                'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
+            ]);
+        }
+
+        // Lưu biến đếm số lần gửi mã
+        $emailKey = "password_reset_code_send_count:{$request->email}";
+        $attempts = Redis::incr($emailKey);
+        if ($attempts === 1) {
+            Redis::expire($emailKey, 300); // 5 phút
+        }
+
+        // Kiểm tra biến đếm có vượt quá số lần chưa
+        if ($attempts > 3) {
+            $ttl = Redis::ttl($emailKey);
+    
+            throw ValidationException::withMessages([
+                'email' => ["Bạn đã yêu cầu quá số lần cho phép. Vui lòng thử lại sau {$ttl} giây."]
+            ]);
         }
 
         // Tạo mã xác thực 6 số
         $verificationCode = rand(100000, 999999);
         
-        // Lưu mã vào database
-        DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->delete();
-            
-        DB::table('password_reset_tokens')->insert([
-            'email' => $request->email,
-            'token' => Hash::make($verificationCode),
-            'created_at' => now()
-        ]);
+        // Lưu mã vào Redis
+        Redis::setex("password_reset_code:{$request->email}", 600, Hash::make($verificationCode));
+        // Lưu trữ thời gian tạo mã
+        Redis::setex("password_reset_code_created_at:{$request->email}", 600, time());
 
         // Gửi email chứa mã xác thực
         $user = User::where('email', $request->email)->first();
@@ -81,9 +102,10 @@ class ForgotPasswordController extends Controller
             'code' => 'required|string|size:6',
         ]);
 
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->first();
+        $record = Redis::get("password_reset_code:{$request->email}");
+        
+        // Lấy thời gian tạo mã lần cuối
+        $createdAtTimeStamp = Redis::get("password_reset_code_created_at:{$request->email}");
 
         if (!$record) {
             throw ValidationException::withMessages([
@@ -92,18 +114,16 @@ class ForgotPasswordController extends Controller
         }
 
         // Kiểm tra thời gian tạo mã (mã chỉ có hiệu lực trong 60 phút)
-        if (now()->diffInMinutes($record->created_at) > 60) {
-            DB::table('password_reset_tokens')
-                ->where('email', $request->email)
-                ->delete();
-                
+        if ($createdAtTimeStamp && (time() - $createdAtTimeStamp) > 60) {
+            Redis::del("password_reset_code:{$request->email}");
+            
             throw ValidationException::withMessages([
                 'code' => ['Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.']
             ]);
         }
 
         // Kiểm tra mã xác thực
-        if (!Hash::check($request->code, $record->token)) {
+        if (!Hash::check($request->code, $record)) {
             throw ValidationException::withMessages([
                 'code' => ['Mã xác thực không chính xác.']
             ]);
@@ -112,12 +132,7 @@ class ForgotPasswordController extends Controller
         // Tạo token mới để sử dụng cho bước reset mật khẩu
         $token = Str::random(64);
         
-        DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->update([
-                'token' => $token,
-                'updated_at' => now()
-            ]);
+        Redis::setex("password_reset_token:{$request->email}", 600, $token);
 
         return response()->json([
             'message' => 'Mã xác thực hợp lệ',
@@ -139,10 +154,7 @@ class ForgotPasswordController extends Controller
             'password' => ['required', 'confirmed', PasswordRules::defaults()],
         ]);
 
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->where('token', $request->token)
-            ->first();
+        $record = Redis::get("password_reset_token:{$request->email}");
 
         if (!$record) {
             throw ValidationException::withMessages([
@@ -150,7 +162,7 @@ class ForgotPasswordController extends Controller
             ]);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = $this->userRepository->getUserByEmail($request->email);
         
         if (!$user) {
             throw ValidationException::withMessages([
@@ -159,15 +171,12 @@ class ForgotPasswordController extends Controller
         }
 
         // Cập nhật mật khẩu
-        $user->forceFill([
-            'password' => Hash::make($request->password),
-            'remember_token' => Str::random(60),
-        ])->save();
+        
 
         // Xóa token
-        DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->delete();
+        Redis::del("password_reset_token:{$request->email}");
+        // Xóa thời gian tạo lần cuối
+        Redis::del("password_reset_code_created_at:{$request->email}");
 
         // Kích hoạt sự kiện password reset
         event(new PasswordReset($user));
@@ -175,37 +184,5 @@ class ForgotPasswordController extends Controller
         return response()->json([
             'message' => 'Mật khẩu đã được đặt lại thành công'
         ]);
-    }
-
-    /**
-     * Xác thực Turnstile (Cloudflare)
-     *
-     * @param string $token
-     * @return bool
-     */
-    private function validateTurnstile(string $token): bool
-    {
-        $secretKey = config('services.turnstile.secret_key');
-        $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-        
-        $data = [
-            'secret' => $secretKey,
-            'response' => $token,
-            'remoteip' => request()->ip(),
-        ];
-
-        $options = [
-            'http' => [
-                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method' => 'POST',
-                'content' => http_build_query($data)
-            ]
-        ];
-
-        $context = stream_context_create($options);
-        $response = file_get_contents($url, false, $context);
-        $result = json_decode($response);
-
-        return $result->success ?? false;
     }
 } 

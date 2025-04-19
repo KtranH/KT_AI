@@ -1,17 +1,17 @@
-import './bootstrap';
-import { createApp } from 'vue'
 import App from './App.vue'
 import VueFullPage from 'vue-fullpage.js'
-import 'fullpage.js/dist/fullpage.css'
 import router from './router'
 import AOS from 'aos'
-import 'aos/dist/aos.css'
-import { createPinia } from 'pinia';
-import piniaPersist from 'pinia-plugin-persistedstate';
-import { registerGlobalComponents } from './components/common';
+import piniaPersist from 'pinia-plugin-persistedstate'
 import VueSweetalert2 from 'vue-sweetalert2'
+import './bootstrap'
+import 'fullpage.js/dist/fullpage.css'
+import 'aos/dist/aos.css'
 import 'sweetalert2/dist/sweetalert2.min.css'
-import { clickOutside } from './directives/clickOutside';
+import { createPinia } from 'pinia'
+import { registerGlobalComponents } from './components/common'
+import { clickOutside } from './directives/clickOutside'
+import { createApp } from 'vue'
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
