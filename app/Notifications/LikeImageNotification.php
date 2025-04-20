@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class LikeImageNotification extends Notification implements ShouldBroadcast, ShouldQueue
+class LikeImageNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -61,18 +61,34 @@ class LikeImageNotification extends Notification implements ShouldBroadcast, Sho
      */
     public function toArray(object $notifiable): array
     {
+        // Đảm bảo lấy avatar URL từ đối tượng liker đã được truyền vào
+        // và gán giá trị mặc định nếu nó null hoặc rỗng.
+        $likerAvatar = $this->liker->avatar_url ?? "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        if (empty($likerAvatar)) { // Kiểm tra thêm trường hợp rỗng sau khi dùng null coalescing
+            $likerAvatar = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        }
+
+        // Lấy URL ảnh đầu tiên từ JSON hoặc mảng
+        $imageUrl = null;
+        if (!empty($this->image->image_url)) {
+            if (is_string($this->image->image_url)) {
+                $decodedUrl = json_decode($this->image->image_url, true);
+                $imageUrl = $decodedUrl[0] ?? null;
+            } elseif (is_array($this->image->image_url)) {
+                $imageUrl = $this->image->image_url[0] ?? null;
+            }
+        }
+
         return [
             'interaction_id' => $this->interaction->id,
             'liker_id' => $this->liker->id,
             'liker_name' => $this->liker->name,
-            'liker_avatar' => $this->liker->avatar_url ?? null,
+            'liker_avatar' => $likerAvatar, // Sử dụng biến đã được xử lý
             'image_id' => $this->image->id,
-            'image_title' => $this->image->title,
-            'image_url' => is_string($this->image->image_url) 
-                ? json_decode($this->image->image_url, true)[0] ?? null 
-                : $this->image->image_url[0] ?? null,
+            'image_title' => $this->image->title ?? 'Không có tiêu đề',
+            'image_url' => $imageUrl,
             'type' => 'like_image',
-            'message' => $this->liker->name . ' đã thích ảnh ' . $this->image->title . ' của bạn.'
+            'message' => $this->liker->name . ' đã thích ảnh ' . ($this->image->title ?? 'của bạn') . '.'
         ];
     }
 
@@ -84,20 +100,37 @@ class LikeImageNotification extends Notification implements ShouldBroadcast, Sho
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
+        // Đảm bảo lấy avatar URL từ đối tượng liker đã được truyền vào
+        // và gán giá trị mặc định nếu nó null hoặc rỗng.
+        $likerAvatar = $this->liker->avatar_url ?? "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        if (empty($likerAvatar)) { // Kiểm tra thêm trường hợp rỗng sau khi dùng null coalescing
+            $likerAvatar = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        }
+
+        // Lấy URL ảnh đầu tiên từ JSON hoặc mảng
+        $imageUrl = null;
+        if (!empty($this->image->image_url)) {
+            if (is_string($this->image->image_url)) {
+                $decodedUrl = json_decode($this->image->image_url, true);
+                $imageUrl = $decodedUrl[0] ?? null;
+            } elseif (is_array($this->image->image_url)) {
+                $imageUrl = $this->image->image_url[0] ?? null;
+            }
+        }
+
         return new BroadcastMessage([
             'notification_id' => $this->id,
             'interaction_id' => $this->interaction->id,
             'liker_id' => $this->liker->id,
             'liker_name' => $this->liker->name,
-            'liker_avatar' => $this->liker->avatar_url ?? null,
+            'liker_avatar' => $likerAvatar, // Sử dụng biến đã được xử lý
             'image_id' => $this->image->id,
-            'image_title' => $this->image->title,
-            'image_url' => is_string($this->image->image_url) 
-                ? json_decode($this->image->image_url, true)[0] ?? null 
-                : $this->image->image_url[0] ?? null,
+            'image_title' => $this->image->title ?? 'Không có tiêu đề',
+            'image_url' => $imageUrl,
             'type' => 'like_image',
-            'message' => $this->liker->name . ' đã thích ảnh ' . $this->image->title . ' của bạn.',
-            'created_at' => now()->toIso8601String()
+            'message' => $this->liker->name . ' đã thích ảnh ' . ($this->image->title ?? 'của bạn') . '.',
+            'created_at' => now()->toIso8601String(), // Thêm timestamp
+            'read_at' => null // Thông báo mới chưa đọc
         ]);
     }
 
@@ -110,4 +143,4 @@ class LikeImageNotification extends Notification implements ShouldBroadcast, Sho
     {
         return 'like.image';
     }
-} 
+}

@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-100 pt-24">
-    <!-- Toast notifications -->
-    <VueSonner position="top-right" theme="light" />
+    <!-- Toast notifications are handled globally in App.vue -->
     <!-- Ảnh background và avtar -->
     <!-- Container chính -->
     <div class="max-w-[90%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
@@ -178,7 +177,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { formatDate } from '@/utils/index'
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
 
 import AOS from 'aos'
@@ -187,8 +186,7 @@ export default {
   name: 'Dashboard',
   components: {
     ImageListVue,
-    UploadImageModal,
-    VueSonner
+    UploadImageModal
   },
   setup() {
     //State

@@ -1,7 +1,7 @@
 import { ref, onMounted, onUnmounted, reactive, toRefs } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth/authStore'
-import { toast } from 'vue-sonner'
+import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export function useNotifications(withPagination = false) {
     const notifications = ref([])
@@ -202,10 +202,7 @@ export function useNotifications(withPagination = false) {
     // Phương án thay thế khi không dùng được browser notification
     const showFallbackNotification = (notification) => {
         // Hiển thị thông báo dùng toast từ vue-sonner
-        toast.success(notification.message || 'Bạn có thông báo mới', {
-            duration: 5000,
-            position: 'top-right',
-            icon: '🔔',
+        toast.success('Bạn có thông báo mới', {
             description: 'Nhấp vào đây để xem chi tiết',
             onDismiss: () => {
                 // Tùy chọn - xử lý khi người dùng đóng toast

@@ -74,20 +74,28 @@ class LikeRepository implements LikeRepositoryInterface
             // Cập nhật số lượt thích cho ảnh
             $image->increment('sum_like');
             
-            // Cập nhật số lượt thích cho người dùng
+            // Lấy thông tin đầy đủ của người thích
             $liker = User::find(Auth::id());
             if ($liker) {
                 $liker->increment('sum_like');
-            }
             
-            // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
-            if ($image->user_id !== Auth::id() && $liker) {
-                // Lấy thông tin người sở hữu ảnh
-                $imageOwner = User::find($image->user_id);
-                
-                if ($imageOwner) {
-                    // Gửi thông báo tới chủ sở hữu ảnh
-                    $imageOwner->notify(new LikeImageNotification($interaction, $liker, $image));
+                // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
+                if ($image->user_id !== Auth::id()) {
+                    // Lấy thông tin người sở hữu ảnh
+                    $imageOwner = User::find($image->user_id);
+                    
+                    if ($imageOwner) {
+                        // Đảm bảo tải đầy đủ thông tin người dùng
+                        $fullLikerInfo = User::select('id', 'name', 'avatar_url')->find(Auth::id());
+                        
+                        // Nếu avatar_url là null, gán giá trị mặc định
+                        if ($fullLikerInfo && $fullLikerInfo->avatar_url === null) {
+                            $fullLikerInfo->avatar_url = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+                        }
+                        
+                        // Gửi thông báo tới chủ sở hữu ảnh
+                        $imageOwner->notify(new LikeImageNotification($interaction, $fullLikerInfo, $image));
+                    }
                 }
             }
             

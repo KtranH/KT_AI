@@ -102,7 +102,7 @@ import NotificationBell from '@/components/user/Notification/NotificationBell.vu
 export default {
   name: 'Header',
   components: {
-    NotificationBell
+    NotificationBell,
   },
   
   setup() {

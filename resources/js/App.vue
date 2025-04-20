@@ -9,7 +9,7 @@
         <component :is="Component" />
       </transition>
     </router-view>
-    <Toaster />
+    <VueSonner position="top-right" theme="light" />
   </div>
 </template>
 
@@ -17,14 +17,15 @@
 import { ref, onMounted } from 'vue';
 import Header from './components/layouts/HeaderLayout.vue';
 import Loading from './components/layouts/LoadingLayout.vue';
-import { Toaster } from 'vue-sonner';
+import { toast, Toaster as VueSonner } from 'vue-sonner'
+
 
 export default {
   name: 'App',
   components: {
     Header,
     Loading,
-    Toaster
+    VueSonner
   },
   setup() {
     const isLoading = ref(true);
