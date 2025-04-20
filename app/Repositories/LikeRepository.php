@@ -6,10 +6,12 @@ use App\Interfaces\LikeRepositoryInterface;
 use App\Models\Image;
 use App\Models\Interaction;
 use App\Models\User;
+use App\Notifications\LikeImageNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class LikeRepository implements LikeRepositoryInterface
 {
@@ -73,9 +75,20 @@ class LikeRepository implements LikeRepositoryInterface
             $image->increment('sum_like');
             
             // Cập nhật số lượt thích cho người dùng
-            $user = User::find(Auth::id());
-            if ($user) {
-                $user->increment('sum_like');
+            $liker = User::find(Auth::id());
+            if ($liker) {
+                $liker->increment('sum_like');
+            }
+            
+            // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
+            if ($image->user_id !== Auth::id() && $liker) {
+                // Lấy thông tin người sở hữu ảnh
+                $imageOwner = User::find($image->user_id);
+                
+                if ($imageOwner) {
+                    // Gửi thông báo tới chủ sở hữu ảnh
+                    $imageOwner->notify(new LikeImageNotification($interaction, $liker, $image));
+                }
             }
             
             DB::commit();

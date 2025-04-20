@@ -6,10 +6,25 @@ import { useLikeStore } from '@/stores/user/likeStore'
 import { refreshCsrfToken } from '../../config/apiConfig'
 
 // Reactive state
-const user = ref(JSON.parse(localStorage.getItem('user')) || null)
-const token = ref(localStorage.getItem('token') || null)
-const isRemembered = ref(localStorage.getItem('remember') === 'true')
-const isAuthenticated = computed(() => !!user.value)
+const parseUserData = () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem('user') || 'null');
+    if (userData && !userData.id) {
+      console.warn('User data không có ID', userData);
+      return null;
+    }
+    return userData;
+  } catch (e) {
+    console.error('Lỗi khi parse user data:', e);
+    localStorage.removeItem('user');
+    return null;
+  }
+};
+
+const user = ref(parseUserData());
+const token = ref(localStorage.getItem('token') || null);
+const isRemembered = ref(localStorage.getItem('remember') === 'true');
+const isAuthenticated = computed(() => !!user.value && !!user.value.id);
 
 export const useAuthStore = () => {
   const storeImage = useImageStore()

@@ -84,12 +84,6 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-    // Relationship với Notification (1-nhiều)
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
-    }
-
     // Relationship với Interaction (1-nhiều)
     public function interactions()
     {

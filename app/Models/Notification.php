@@ -7,20 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     protected $fillable = [
-        'user_id',
-        'type',
-        'data',
-        'read_at'
+        "type",
+        "notifiable_type",
+        "notifiable_id",
+        "data",
+        "read_at",
+        "created_at",
+        "updated_at"
     ];
 
     protected $casts = [
-        'data' => 'json',
-        'read_at' => 'datetime'
+        "read_at" => "datetime",
+        "notifiable_type" => "string",
+        "notifiable_id" => "integer",
+        "data" => "array", 
+        "created_at" => "datetime",
+        "updated_at" => "datetime"
     ];
-
-    // Relationship với User (nhiều-1)
-    public function user()
+    public function notifiable()
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo();
     }
 } 

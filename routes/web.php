@@ -10,15 +10,20 @@ use App\Http\Controllers\API\TurnstileController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
+use App\Http\Controllers\API\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+// Thêm route cho xác thực kênh broadcast
+Broadcast::routes(['middleware' => ['web', 'auth:sanctum']]);
 
 // API Routes
 Route::prefix('api')->group(function () {
@@ -77,6 +82,11 @@ Route::prefix('api')->group(function () {
         Route::post('/send-password-change-verification', [MailController::class, 'sendPasswordChangeVerification']);
         Route::post('/update-password', [UserController::class, 'updatePassword']);
         Route::post('/check-password', [UserController::class, 'checkPassword']);
+        // Routes Notification
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
     });
 });
 

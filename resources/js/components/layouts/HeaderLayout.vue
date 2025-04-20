@@ -43,17 +43,21 @@
           </template>
           <template v-else>
             <div class="relative" v-click-outside="closeUserMenu">
-              <button 
-                @click="toggleUserMenu"
-                class="flex items-center space-x-2 focus:outline-none"
-              >
-                <img 
-                  :src="user.avatar_url || '/img/default-avatar.png'" 
-                  alt="User avatar"
-                  class="h-8 w-8 rounded-full object-cover"
+              <div class="flex items-center space-x-2">
+                  <button 
+                  @click="toggleUserMenu"
+                  class="flex items-center space-x-2 focus:outline-none"
                 >
-                <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
-              </button>
+                  <img 
+                    :src="user.avatar_url || '/img/default-avatar.png'" 
+                    alt="User avatar"
+                    class="h-8 w-8 rounded-full object-cover"
+                  >
+                  <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
+                </button>
+                <!-- Notification Bell -->
+                <NotificationBell />
+              </div>
 
               <!-- Dropdown Menu -->
               <div 
@@ -93,9 +97,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
+import NotificationBell from '@/components/user/Notification/NotificationBell.vue'
 
 export default {
   name: 'Header',
+  components: {
+    NotificationBell
+  },
   
   setup() {
     //State

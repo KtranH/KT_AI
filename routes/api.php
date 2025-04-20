@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\TurnstileController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\API\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,4 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Thích hoặc bỏ thích bình luận
     Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
+    
+    // Routes cho thông báo
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 }); 

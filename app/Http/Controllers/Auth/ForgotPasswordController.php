@@ -171,7 +171,7 @@ class ForgotPasswordController extends Controller
         }
 
         // Cập nhật mật khẩu
-        
+        $this->userRepository->updatePassword($request, $user);
 
         // Xóa token
         Redis::del("password_reset_token:{$request->email}");

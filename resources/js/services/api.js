@@ -33,6 +33,11 @@ export const profileAPI = {
   
 }
   
+// Gọi API Notifications
+export const notificationAPI = {
+  
+}
+
 // Các gọi API xác minh người dùng
 export const verificationAPI = {
   resendCode: (email) => apiClient.post('/resend-verification', { email })

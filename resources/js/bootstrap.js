@@ -44,3 +44,56 @@ observer.observe(document.head, {
   childList: true,
   subtree: true
 })
+
+// Cấu hình Laravel Echo và Pusher
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+// Enable debug khi developing
+Pusher.logToConsole = import.meta.env.DEV;
+
+window.Pusher = Pusher;
+
+// Lấy CSRF token từ thẻ meta
+const getCsrfToken = () => {
+    const tokenElement = document.querySelector('meta[name="csrf-token"]');
+    return tokenElement ? tokenElement.getAttribute('content') : '';
+};
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true,
+    authEndpoint: '/broadcasting/auth',
+    auth: {
+        headers: {
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    },
+    // Xử lý lỗi kết nối
+    authorizer: (channel, options) => {
+        return {
+            authorize: (socketId, callback) => {
+                // Lấy CSRF token mới nhất mỗi khi xác thực
+                options.auth.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                
+                axios.post('/broadcasting/auth', {
+                    socket_id: socketId,
+                    channel_name: channel.name
+                }, {
+                    headers: options.auth.headers
+                })
+                .then(response => {
+                    callback(false, response.data);
+                })
+                .catch(error => {
+                    console.error('Laravel Echo xác thực kênh thất bại:', error);
+                    callback(true, error);
+                });
+            }
+        };
+    }
+});
