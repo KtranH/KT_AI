@@ -84,9 +84,9 @@ Route::prefix('api')->group(function () {
         Route::post('/check-password', [UserController::class, 'checkPassword']);
         // Routes Notification
         Route::get('/notifications', [NotificationController::class, 'index']);
-        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-        Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
     });
 });
 

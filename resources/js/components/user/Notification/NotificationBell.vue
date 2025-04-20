@@ -80,10 +80,13 @@
       <div v-if="notifications.length > 0" class="py-2 px-3 bg-gray-100 text-center">
         <router-link 
           to="/notifications" 
-          class="text-sm text-blue-500 hover:text-blue-700"
+          class="text-sm text-blue-500 hover:text-blue-700 flex items-center justify-center"
           @click="isOpen = false"
         >
           Xem tất cả thông báo
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
         </router-link>
       </div>
     </div>

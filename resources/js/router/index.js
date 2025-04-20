@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import axios from 'axios'
 import { useAuthStore } from '@/stores/auth/authStore'
-
-// Components
 // Home Pages
 import Home from '../pages/user/Home.vue'
 // Auth Forms
@@ -23,6 +20,9 @@ import Error404 from '../pages/errors/error404.vue'
 import Settings from '../pages/user/Settings.vue'
 // Upload Pages
 import Upload from '../pages/user/Upload.vue'
+// User routes
+//import Profile from '../pages/user/ProfilePage.vue'
+import Notifications from '../pages/user/Notification.vue'
 
 const routes = [
   {
@@ -95,6 +95,18 @@ const routes = [
     name: 'upload',
     component: Upload,
     meta: { requiresAuth: true, title: 'KT_AI - Tải lên' }
+  },
+  /*{
+    path: '/profile',
+    name: 'profile',
+    component: Profile,
+    meta: { requiresAuth: true }
+  },*/
+  {
+    path: '/notifications',
+    name: 'notifications',
+    component: Notifications,
+    meta: { requiresAuth: true, title: 'KT_AI - Thông báo' }
   }
 ]
 

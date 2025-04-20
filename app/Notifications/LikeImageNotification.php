@@ -65,7 +65,7 @@ class LikeImageNotification extends Notification implements ShouldBroadcast, Sho
             'interaction_id' => $this->interaction->id,
             'liker_id' => $this->liker->id,
             'liker_name' => $this->liker->name,
-            'liker_avatar' => $this->liker->avatar ?? null,
+            'liker_avatar' => $this->liker->avatar_url ?? null,
             'image_id' => $this->image->id,
             'image_title' => $this->image->title,
             'image_url' => is_string($this->image->image_url) 
@@ -89,7 +89,7 @@ class LikeImageNotification extends Notification implements ShouldBroadcast, Sho
             'interaction_id' => $this->interaction->id,
             'liker_id' => $this->liker->id,
             'liker_name' => $this->liker->name,
-            'liker_avatar' => $this->liker->avatar ?? null,
+            'liker_avatar' => $this->liker->avatar_url ?? null,
             'image_id' => $this->image->id,
             'image_title' => $this->image->title,
             'image_url' => is_string($this->image->image_url) 

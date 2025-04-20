@@ -52,9 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Thích hoặc bỏ thích bình luận
     Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
     
-    // Routes cho thông báo
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+    // Routes cho thông báo - sử dụng controller mới
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 }); 

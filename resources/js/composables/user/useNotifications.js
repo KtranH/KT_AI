@@ -1,63 +1,152 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, toRefs } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { toast } from 'vue-sonner'
 
-export function useNotifications() {
+export function useNotifications(withPagination = false) {
     const notifications = ref([])
     const unreadCount = ref(0)
     const loading = ref(false)
+    const pagination = reactive({
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0
+    })
     const authStore = useAuthStore()
     let echo = null
 
-    // Lấy danh sách thông báo từ API
-    const fetchNotifications = async () => {
+    // Lấy danh sách thông báo
+    const fetchNotifications = async (page = 1) => {
         if (!authStore.isAuthenticated) return
 
         loading.value = true
         try {
-            const response = await axios.get('/api/notifications')
-            notifications.value = response.data.notifications
-            unreadCount.value = response.data.unread_count
+            const response = await axios.get('/api/notifications', {
+                params: {
+                    page: page,
+                    per_page: withPagination ? 10 : 5, // Số lượng item trên mỗi trang
+                    paginate: withPagination // Có phân trang hay không
+                }
+            })
+            // Kiểm tra cấu trúc dữ liệu và xử lý tương ứng
+            if (response.data) {
+                if (withPagination) {
+                    // Ưu tiên cấu trúc Laravel Pagination (có 'data' key)
+                    if (response.data.data !== undefined) {
+                        notifications.value = Array.isArray(response.data.data) ? response.data.data : []
+                        pagination.current_page = response.data.current_page || 1
+                        pagination.last_page = response.data.last_page || 1
+                        pagination.per_page = response.data.per_page || 10
+                        pagination.total = response.data.total || 0
+                        // Cập nhật unreadCount nếu có trong response chính
+                        if (response.data.unread_count !== undefined) {
+                            unreadCount.value = response.data.unread_count
+                        }
+                    } 
+                    // Xử lý cấu trúc cũ { notifications, pagination, unread_count }
+                    else if (response.data.notifications !== undefined) {
+                        notifications.value = Array.isArray(response.data.notifications) ? response.data.notifications : []
+                        if (response.data.pagination) {
+                            pagination.current_page = response.data.pagination.current_page || 1
+                            pagination.last_page = response.data.pagination.last_page || 1
+                            pagination.per_page = response.data.pagination.per_page || 10
+                            pagination.total = response.data.pagination.total || 0
+                        }
+                        if (response.data.unread_count !== undefined) {
+                            unreadCount.value = response.data.unread_count
+                        }
+                    } else {
+                        // Trường hợp không khớp cấu trúc nào
+                        console.warn('Cấu trúc dữ liệu thông báo không nhận dạng được:', response.data)
+                        notifications.value = []
+                    }
+                } else {
+                    // Không phân trang, xử lý như mảng đơn giản (thường là response.data.notifications)
+                    notifications.value = Array.isArray(response.data.notifications) ? response.data.notifications : (Array.isArray(response.data) ? response.data : [])
+                    // Cập nhật unreadCount nếu có
+                     if (response.data.unread_count !== undefined) {
+                         unreadCount.value = response.data.unread_count
+                     }
+                }
+            } else {
+                // Nếu không có dữ liệu
+                notifications.value = []
+                pagination.current_page = 1
+                pagination.last_page = 1
+                pagination.total = 0
+            }
+            
+            // Đếm số thông báo chưa đọc
+            updateUnreadCount()
         } catch (error) {
-            console.error('Lỗi khi tải thông báo:', error)
+            console.error('Lỗi khi lấy thông báo:', error)
         } finally {
             loading.value = false
         }
     }
 
-    // Đánh dấu thông báo đã đọc
+    // Đánh dấu một thông báo là đã đọc
     const markAsRead = async (notificationId) => {
         if (!authStore.isAuthenticated) return
 
         try {
-            await axios.put(`/api/notifications/${notificationId}/read`)
-            // Cập nhật trạng thái thông báo trong danh sách
-            const notification = notifications.value.find(n => n.id === notificationId)
-            if (notification && !notification.read_at) {
-                notification.read_at = new Date().toISOString()
-                unreadCount.value -= 1
+            await axios.post(`/api/notifications/${notificationId}/read`)
+            
+            // Cập nhật trạng thái thông báo trong danh sách hiện tại
+            const index = notifications.value.findIndex(n => n.id === notificationId)
+            if (index !== -1) {
+                notifications.value[index].read_at = new Date().toISOString()
             }
+            
+            // Cập nhật số lượng thông báo chưa đọc
+            updateUnreadCount()
         } catch (error) {
-            console.error('Lỗi khi đánh dấu đã đọc:', error)
+            console.error('Lỗi khi đánh dấu thông báo đã đọc:', error)
         }
     }
 
-    // Đánh dấu tất cả thông báo đã đọc
+    // Đánh dấu tất cả thông báo là đã đọc
     const markAllAsRead = async () => {
         if (!authStore.isAuthenticated) return
 
         try {
-            await axios.put('/api/notifications/mark-all-read')
-            // Cập nhật tất cả thông báo trong danh sách
+            await axios.post('/api/notifications/mark-all-read')
+            
+            // Cập nhật trạng thái tất cả thông báo trong danh sách hiện tại
             notifications.value.forEach(notification => {
                 if (!notification.read_at) {
                     notification.read_at = new Date().toISOString()
                 }
             })
+            
+            // Cập nhật số lượng thông báo chưa đọc
             unreadCount.value = 0
         } catch (error) {
-            console.error('Lỗi khi đánh dấu tất cả đã đọc:', error)
+            console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error)
+        }
+    }
+
+    // Lấy số lượng thông báo chưa đọc
+    const fetchUnreadCount = async () => {
+        if (!authStore.isAuthenticated) return
+
+        try {
+            const response = await axios.get('/api/notifications/unread-count')
+            unreadCount.value = response.data.count
+        } catch (error) {
+            console.error('Lỗi khi lấy số lượng thông báo chưa đọc:', error)
+        }
+    }
+
+    // Cập nhật số lượng thông báo chưa đọc từ danh sách hiện tại
+    const updateUnreadCount = () => {
+        // Kiểm tra notifications.value có phải là mảng không
+        if (Array.isArray(notifications.value)) {
+            unreadCount.value = notifications.value.filter(n => !n.read_at).length
+        } else {
+            console.warn('notifications.value không phải là mảng:', notifications.value)
+            unreadCount.value = 0
         }
     }
 
@@ -177,8 +266,10 @@ export function useNotifications() {
         notifications,
         unreadCount,
         loading,
+        pagination: toRefs(pagination),
         fetchNotifications,
         markAsRead,
-        markAllAsRead
+        markAllAsRead,
+        fetchUnreadCount
     }
-} 
+}
