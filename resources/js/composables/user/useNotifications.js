@@ -3,86 +3,103 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
-export function useNotifications(withPagination = false) {
+export function useNotifications(loadMore = false) { // Đổi tên tham số để rõ ràng hơn
     const notifications = ref([])
     const unreadCount = ref(0)
     const loading = ref(false)
-    const pagination = reactive({
-        current_page: 1,
-        last_page: 1,
-        per_page: 10,
-        total: 0
-    })
+    const currentPage = ref(1)
+    const hasMorePages = ref(true)
+    const perPage = 10 // Số lượng thông báo mỗi lần tải
     const authStore = useAuthStore()
     let echo = null
 
     // Lấy danh sách thông báo
-    const fetchNotifications = async (page = 1) => {
+    const fetchNotifications = async (page = 1, filter = 'all', append = false) => {
         if (!authStore.isAuthenticated) return
 
-        loading.value = true
         try {
+            // Chỉ hiển thị loading khi tải lần đầu hoặc khi đổi filter (không phải khi load more)
+            if (!append) {
+                loading.value = true 
+            }
+            
             const response = await axios.get('/api/notifications', {
                 params: {
                     page: page,
-                    per_page: withPagination ? 10 : 5, // Số lượng item trên mỗi trang
-                    paginate: withPagination // Có phân trang hay không
+                    per_page: perPage,
+                    paginate: true, // Luôn yêu cầu backend phân trang
+                    filter: filter
                 }
             })
-            // Kiểm tra cấu trúc dữ liệu và xử lý tương ứng
+            
             if (response.data) {
-                if (withPagination) {
-                    // Ưu tiên cấu trúc Laravel Pagination (có 'data' key)
-                    if (response.data.data !== undefined) {
-                        notifications.value = Array.isArray(response.data.data) ? response.data.data : []
-                        pagination.current_page = response.data.current_page || 1
-                        pagination.last_page = response.data.last_page || 1
-                        pagination.per_page = response.data.per_page || 10
-                        pagination.total = response.data.total || 0
-                        // Cập nhật unreadCount nếu có trong response chính
-                        if (response.data.unread_count !== undefined) {
-                            unreadCount.value = response.data.unread_count
-                        }
-                    } 
-                    // Xử lý cấu trúc cũ { notifications, pagination, unread_count }
-                    else if (response.data.notifications !== undefined) {
-                        notifications.value = Array.isArray(response.data.notifications) ? response.data.notifications : []
-                        if (response.data.pagination) {
-                            pagination.current_page = response.data.pagination.current_page || 1
-                            pagination.last_page = response.data.pagination.last_page || 1
-                            pagination.per_page = response.data.pagination.per_page || 10
-                            pagination.total = response.data.pagination.total || 0
-                        }
-                        if (response.data.unread_count !== undefined) {
-                            unreadCount.value = response.data.unread_count
-                        }
-                    } else {
-                        // Trường hợp không khớp cấu trúc nào
-                        console.warn('Cấu trúc dữ liệu thông báo không nhận dạng được:', response.data)
-                        notifications.value = []
-                    }
+                const newNotifications = Array.isArray(response.data.notifications) ? response.data.notifications : []
+                
+                if (append) {
+                    // Nối thêm mảng mới vào mảng hiện tại
+                    notifications.value = [...notifications.value, ...newNotifications]
                 } else {
-                    // Không phân trang, xử lý như mảng đơn giản (thường là response.data.notifications)
-                    notifications.value = Array.isArray(response.data.notifications) ? response.data.notifications : (Array.isArray(response.data) ? response.data : [])
-                    // Cập nhật unreadCount nếu có
-                     if (response.data.unread_count !== undefined) {
-                         unreadCount.value = response.data.unread_count
-                     }
+                    // Thay thế mảng hiện tại bằng mảng mới
+                    notifications.value = newNotifications
+                }
+                
+                // Cập nhật thông tin phân trang từ response
+                if (response.data.pagination) {
+                    // Cập nhật chỉ khi response có dữ liệu pagination
+                    currentPage.value = response.data.pagination.current_page || page
+                    hasMorePages.value = response.data.pagination.has_more_pages || 
+                                      (response.data.pagination.current_page < response.data.pagination.last_page)
+                } else if (response.data.current_page !== undefined && response.data.last_page !== undefined) {
+                    // Hỗ trợ cả định dạng cũ nếu API chưa được cập nhật
+                    currentPage.value = response.data.current_page
+                    hasMorePages.value = response.data.current_page < response.data.last_page
+                } else {
+                    // Nếu không có thông tin phân trang, giả định không còn trang nào nữa
+                    if (!append) {
+                        currentPage.value = 1
+                    }
+                    hasMorePages.value = false
+                }
+
+                // Cập nhật unreadCount
+                if (response.data.unread_count !== undefined) {
+                    unreadCount.value = response.data.unread_count
+                } else {
+                    // Nếu API không trả về số lượng chưa đọc, tính toán từ dữ liệu hiện tại
+                    updateUnreadCount()
                 }
             } else {
-                // Nếu không có dữ liệu
-                notifications.value = []
-                pagination.current_page = 1
-                pagination.last_page = 1
-                pagination.total = 0
+                // Nếu không có dữ liệu trả về
+                if (!append) {
+                    notifications.value = []
+                    currentPage.value = 1
+                }
+                hasMorePages.value = false
+                console.warn('Cấu trúc dữ liệu thông báo không nhận dạng được hoặc không có dữ liệu:', response.data)
             }
-            
-            // Đếm số thông báo chưa đọc
-            updateUnreadCount()
         } catch (error) {
             console.error('Lỗi khi lấy thông báo:', error)
+            hasMorePages.value = false // Dừng tải thêm nếu có lỗi
         } finally {
-            loading.value = false
+            // Tắt loading sau khi tải xong
+            if (!append) {
+                loading.value = false
+            }
+        }
+    }
+
+    // Tải thêm thông báo
+    const loadMoreNotifications = async (filter = 'all') => {
+        if (loading.value || !hasMorePages.value) return
+        
+        loading.value = true // Cập nhật trạng thái loading
+        try {
+            // Tải trang tiếp theo và append dữ liệu
+            await fetchNotifications(currentPage.value + 1, filter, true) // true để append
+        } catch (error) {
+            console.error('Lỗi khi tải thêm thông báo:', error)
+        } finally {
+            loading.value = false // Đảm bảo reset trạng thái loading
         }
     }
 
@@ -263,8 +280,9 @@ export function useNotifications(withPagination = false) {
         notifications,
         unreadCount,
         loading,
-        pagination: toRefs(pagination),
+        hasMorePages, // Trả về trạng thái còn trang hay không
         fetchNotifications,
+        loadMoreNotifications, // Trả về hàm tải thêm
         markAsRead,
         markAllAsRead,
         fetchUnreadCount

@@ -11,7 +11,7 @@
                 <div v-if="listLikes.length > 0" class="flex items-center">
                     <span v-if="isLiked && listLikes.length > 1" class="text-gray-500 text-sm font-medium">Bạn và {{ listLikes.length - 1 }} người khác</span>
                     <span v-else-if="isLiked && listLikes.length === 1" class="text-gray-500 text-sm font-medium">Bạn đã thích</span>
-                    <span v-else-if="listLikes.length > 1" class="text-gray-500 text-sm font-medium">{{ listLikes.length }} người khác đã thích</span>
+                    <span v-else-if="listLikes.length > 0" class="text-gray-500 text-sm font-medium">{{ listLikes.length }} người khác đã thích</span>
                 </div>
                 <div v-else class="text-gray-500 text-sm font-medium">Chưa có ai thích. Hãy là người đầu tiên thích!</div>
             </div>

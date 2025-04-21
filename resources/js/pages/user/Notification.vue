@@ -38,7 +38,7 @@
       </div>
       
       <!-- Danh sách thông báo -->
-      <div v-if="loading" class="py-8 text-center text-gray-500">
+      <div v-if="loading && !isLoadingMore" class="py-8 text-center text-gray-500">
         <svg class="animate-spin h-8 w-8 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -62,7 +62,7 @@
           @click="viewNotification(notification)"
         >
           <div class="flex items-start space-x-4">
-            <div v-if="notification.data.liker_avatar" class="flex-shrink-0">
+            <div v-if="notification.data && notification.data.liker_avatar" class="flex-shrink-0">
               <img 
                 :src="notification.data.liker_avatar" 
                 alt="avatar"
@@ -76,7 +76,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-base text-gray-800 whitespace-normal break-words">
-                {{ notification.data.message }}
+                {{ notification.data && notification.data.message ? notification.data.message : 'Thông báo mới' }}
               </p>
               <p class="text-sm text-gray-500 mt-1 flex items-center">
                 {{ formatTime(notification.created_at) }}
@@ -87,49 +87,22 @@
         </div>
       </div>
       
-      <!-- Phân trang -->
-      <div v-if="filteredNotifications.length > 0 && pagination.last_page > 1" class="mt-8 flex justify-center">
-        <div class="flex space-x-1">
-          <button 
-            @click="changePage(pagination.current_page - 1)" 
-            :disabled="pagination.current_page === 1"
-            :class="[
-              'px-4 py-2 rounded-md',
-              pagination.current_page === 1 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            &laquo; Trước
-          </button>
-          
-          <button 
-            v-for="page in pageNumbers" 
-            :key="page"
-            @click="changePage(page)"
-            :class="[
-              'px-4 py-2 rounded-md',
-              pagination.current_page === page 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            {{ page }}
-          </button>
-          
-          <button 
-            @click="changePage(pagination.current_page + 1)" 
-            :disabled="pagination.current_page === pagination.last_page"
-            :class="[
-              'px-4 py-2 rounded-md',
-              pagination.current_page === pagination.last_page 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            Sau &raquo;
-          </button>
-        </div>
+      <!-- Nút Xem thêm -->
+      <div v-if="hasMorePages" class="mt-8 flex justify-center">
+        <button 
+          @click="handleLoadMore"
+          :disabled="loading" 
+          class="px-6 py-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+        >
+          <span v-if="isLoadingMore" class="flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Đang tải...
+          </span>
+          <span v-else>Xem thêm</span>
+        </button>
       </div>
     </div>
   </div>
@@ -139,13 +112,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotifications } from '@/composables/user/useNotifications'
+import { formatTimev2 } from '@/utils'
 import useImage from '@/composables/user/useImage'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/vi'
-
-dayjs.locale('vi')
-dayjs.extend(relativeTime)
 
 export default {
   name: 'NotificationsPage',
@@ -153,6 +121,7 @@ export default {
   setup() {
     const router = useRouter()
     const currentFilter = ref('all')
+    const isLoadingMore = ref(false)
     const {
       goToImageDetail
     } = useImage()
@@ -160,46 +129,23 @@ export default {
       notifications, 
       unreadCount, 
       loading, 
-      pagination,
+      hasMorePages, 
       fetchNotifications, 
+      loadMoreNotifications, 
       markAsRead, 
       markAllAsRead 
-    } = useNotifications(true) // true để lấy tất cả thông báo với phân trang
+    } = useNotifications(true) // true để kích hoạt chế độ tải thêm
     
-    // Lọc thông báo theo trạng thái
-    const filteredNotifications = computed(() => {
-      if (currentFilter.value === 'unread') {
-        return notifications.value.filter(notification => !notification.read_at)
-      }
-      return notifications.value
-    })
+    // filteredNotifications trả về danh sách từ API (đã được lọc/phân trang bởi backend)
+    const filteredNotifications = computed(() => notifications.value)
     
-    // Tính toán các số trang cần hiển thị
-    const pageNumbers = computed(() => {
-      const currentPage = pagination.value.current_page
-      const lastPage = pagination.value.last_page
-      const pages = []
+    // Xử lý tải thêm thông báo
+    const handleLoadMore = async () => {
+      if (loading.value || !hasMorePages.value) return
       
-      // Luôn hiển thị trang đầu, trang hiện tại và trang cuối
-      // Cộng thêm 1 trang trước và 1 trang sau trang hiện tại
-      
-      for (let i = 1; i <= lastPage; i++) {
-        if (
-          i === 1 || // Trang đầu
-          i === lastPage || // Trang cuối
-          (i >= currentPage - 1 && i <= currentPage + 1) // Trang hiện tại và lân cận
-        ) {
-          pages.push(i)
-        }
-      }
-      
-      return pages
-    })
-    
-    // Đổi trang
-    const changePage = (page) => {
-      if (page < 1 || page > pagination.value.last_page) return
-      fetchNotifications(page)
+      isLoadingMore.value = true
+      await loadMoreNotifications(currentFilter.value)
+      isLoadingMore.value = false
     }
     
     // Xem chi tiết thông báo
@@ -210,24 +156,14 @@ export default {
       }
       
       // Xử lý điều hướng dựa vào loại thông báo
-      if (notification.data.type === 'like_image' && notification.data.image_id) {
+      if (notification.data && notification.data.type === 'like_image' && notification.data.image_id) {
         const convertInt = parseInt(notification.data.image_id)
         goToImageDetail(convertInt)
       }
     }
     
     // Format thời gian
-    const formatTime = (timestamp) => {
-      const date = dayjs(timestamp)
-      
-      // Nếu thông báo trong vòng 24 giờ, hiển thị "x phút/giờ trước"
-      // Nếu không, hiển thị ngày tháng đầy đủ
-      if (dayjs().diff(date, 'day') < 1) {
-        return date.fromNow()
-      } else {
-        return date.format('HH:mm - DD/MM/YYYY')
-      }
-    }
+    const formatTime = (timestamp) => formatTimev2(timestamp)
     
     // Lấy thông báo khi component được mount
     onMounted(async () => {
@@ -235,8 +171,9 @@ export default {
     })
     
     // Cập nhật lại danh sách khi thay đổi bộ lọc
-    watch(currentFilter, () => {
-      fetchNotifications(1) // Reset về trang 1 khi đổi bộ lọc
+    watch(currentFilter, (newFilter) => {
+      // Gọi fetchNotifications với trang 1 và bộ lọc mới, không append
+      fetchNotifications(1, newFilter, false)
     })
     
     return {
@@ -245,13 +182,14 @@ export default {
       unreadCount,
       loading,
       currentFilter,
-      pagination,
-      pageNumbers,
+      hasMorePages,
+      isLoadingMore,
       viewNotification,
       formatTime,
       markAllAsRead,
-      changePage
+      loadMoreNotifications,
+      handleLoadMore
     }
   }
 }
-</script> 
+</script>

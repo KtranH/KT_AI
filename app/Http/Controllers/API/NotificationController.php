@@ -13,16 +13,32 @@ class NotificationController extends Controller
     /**
      * Lấy danh sách thông báo của người dùng hiện tại
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
-        $notifications = DatabaseNotification::where('notifiable_type', get_class($user))
-            ->where('notifiable_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $filter = $request->input('filter', 'all');
+        $perPage = $request->input('per_page', 10);
+        
+        $query = DatabaseNotification::where('notifiable_type', get_class($user))
+            ->where('notifiable_id', $user->id);
             
+        // Áp dụng bộ lọc nếu có
+        if ($filter === 'unread') {
+            $query->whereNull('read_at');
+        } elseif ($filter === 'read') {
+            $query->whereNotNull('read_at');
+        }
+        
+        // Sắp xếp theo thời gian tạo giảm dần (mới nhất lên đầu)
+        $query->orderBy('created_at', 'desc');
+        
+        // Phân trang kết quả
+        $notifications = $query->paginate($perPage);
+            
+        // Đếm số lượng thông báo chưa đọc
         $unreadCount = DatabaseNotification::where('notifiable_type', get_class($user))
             ->where('notifiable_id', $user->id)
             ->whereNull('read_at')
@@ -34,7 +50,8 @@ class NotificationController extends Controller
                 'total' => $notifications->total(),
                 'per_page' => $notifications->perPage(),
                 'current_page' => $notifications->currentPage(),
-                'last_page' => $notifications->lastPage()
+                'last_page' => $notifications->lastPage(),
+                'has_more_pages' => $notifications->hasMorePages(),
             ],
             'unread_count' => $unreadCount
         ]);

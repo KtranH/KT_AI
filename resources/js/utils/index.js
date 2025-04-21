@@ -94,3 +94,22 @@ export const formatTime = (dateString) => {
   }).format(date);
 }
 
+// Hàm định dạng ngày tháng có giờ v2
+import 'dayjs/locale/vi'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.locale('vi')
+dayjs.extend(relativeTime)
+export const formatTimev2 = (timestamp) => {
+  
+  const date = dayjs(timestamp)
+  
+  // Nếu thông báo trong vòng 24 giờ, hiển thị "x phút/giờ trước"
+  // Nếu không, hiển thị ngày tháng đầy đủ
+  if (dayjs().diff(date, 'day') < 1) {
+    return date.fromNow()
+  } else {
+    return date.format('HH:mm - DD/MM/YYYY')
+  }
+}
