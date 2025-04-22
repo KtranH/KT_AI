@@ -35,7 +35,6 @@
                 </svg>
             </button>-->
         </div>
-        <VueSonner />
     </div>
 </template>
 
@@ -46,13 +45,10 @@ import { onMounted, watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { decodedID, encodedID } from '@/utils'
 import { isActionTooQuick } from '@/utils'
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast } from 'vue-sonner'
 
 export default {
     name: 'LikeSection',
-    components: {
-        VueSonner
-    },
     setup() { 
         const isFast = ref(false)
         const lastLikeTime = ref(0)

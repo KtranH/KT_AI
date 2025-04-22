@@ -1,6 +1,5 @@
 <template>
   <div>
-    <VueSonner position="top-right" theme="light" />
     <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 flex items-center justify-center py-24 px-4">
     <div class="w-full max-w-[70%]">
       <h1 class="text-3xl font-extrabold text-center mb-10 flex items-center justify-center gap-2">
@@ -172,12 +171,11 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { profileAPI } from '@/services/api'
 import { formatDate, formatTime, isActionTooQuick } from '@/utils'
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast } from 'vue-sonner'
 
 export default {
   name: 'Settings',
   components: {
-    VueSonner,
     ConfirmUpdate
   },
   setup() {

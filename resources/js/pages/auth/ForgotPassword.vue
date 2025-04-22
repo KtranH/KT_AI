@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <VueSonner position="top-right" theme="light" />
     <div class="max-w-md w-full space-y-8">
       <AuthFormHeader
         :title="pageTitle"
@@ -250,7 +249,7 @@ import VerificationCodeInput from '@/components/auth/VerificationCodeInput.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useForgotPassword } from '@/composables/auth/useForgotPassword'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast} from 'vue-sonner'
 
 export default {
   name: 'ForgotPassword',
@@ -259,7 +258,6 @@ export default {
     AuthFormHeader,
     AlertMessage,
     VerificationCodeInput,
-    VueSonner
   },
   
   setup() {

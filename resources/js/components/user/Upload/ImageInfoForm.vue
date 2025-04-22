@@ -98,13 +98,12 @@
       </div>
     </form>
   </div>
-  <VueSonner theme="dark" />
 </template>
 
 <script>
 import ConfirmUpload from '@/components/common/ConfirmUpload.vue'
 import { ref, inject, computed } from 'vue'
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast } from 'vue-sonner'
 import { encodedID } from '@/utils'
 import { useImageStore } from '@/stores/user/imagesStore'
 import { useRouter } from 'vue-router'
@@ -113,7 +112,6 @@ import { isTextLengthValid } from '@/utils'
 export default {
   components: {
     ConfirmUpload,
-    VueSonner
   },
   props: {
     featureId: {

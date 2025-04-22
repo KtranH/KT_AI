@@ -45,19 +45,14 @@
       </button>
     </div>
   </div>
-  <!-- Toast -->
-  <VueSonner theme="dark" />
 </template>
 
 <script>
 import { ref, inject } from 'vue';
 import { isFileImage, isImageSizeValid } from '@/utils';
-import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { toast } from 'vue-sonner'
 
 export default {
-  components: {
-    VueSonner
-  },
   setup() {
     // Lấy instance từ component cha
     const imageUploadInstance = inject('imageUploadInstance');
