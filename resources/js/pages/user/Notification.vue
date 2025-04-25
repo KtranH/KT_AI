@@ -21,7 +21,7 @@
           :class="[
             'px-4 py-2 text-sm rounded-md',
             currentFilter === 'unread' 
-              ? 'bg-blue-500 text-white' 
+              ? 'bg-gradient-text text-white' 
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           ]"
         >
@@ -31,7 +31,7 @@
         <button 
           v-if="unreadCount > 0"
           @click="markAllAsRead"
-          class="px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
+          class="px-4 py-2 text-sm bg-gradient-text-v2 hover:text-blue-800"
         >
           Đánh dấu tất cả đã đọc
         </button>
@@ -92,7 +92,7 @@
         <button 
           @click="handleLoadMore"
           :disabled="loading" 
-          class="px-6 py-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+          class="px-6 py-3 rounded-md bg-gradient-text text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-150 ease-in-out"
         >
           <span v-if="isLoadingMore" class="flex items-center">
             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

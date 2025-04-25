@@ -27,7 +27,7 @@
         <button 
           v-if="unreadCount > 0"
           @click="markAllAsRead" 
-          class="text-xs text-blue-500 hover:text-blue-700"
+          class="text-xs bg-gradient-text-v2 hover:text-blue-700"
         >
           Đánh dấu tất cả đã đọc
         </button>
@@ -80,7 +80,7 @@
       <div v-if="notifications.length > 0" class="py-2 px-3 bg-gray-100 text-center">
         <router-link 
           to="/notifications" 
-          class="text-sm text-blue-500 hover:text-blue-700 flex items-center justify-center"
+          class="text-sm bg-gradient-text-v2 hover:text-blue-700 flex items-center justify-center"
           @click="isOpen = false"
         >
           Xem tất cả thông báo

@@ -22,20 +22,25 @@ export const profileAPI = {
   updateName: (formData) => apiClient.post('/update-name', formData),
   updatePassword: (formData) => apiClient.post('/update-password', formData),
   checkPassword: (formData) => apiClient.post('/check-password', formData),
-  // API quên mật khẩu
   forgotPassword: (formData) => apiClient.post('/forgot-password', formData),
-  
-  // API xác nhận mã xác thực
   verifyResetCode: (formData) => apiClient.post('/verify-reset-code', formData),
-  
-  // API đặt lại mật khẩu
   resetPassword: (formData) => apiClient.post('/reset-password', formData),
-  
+
 }
-  
+
 // Gọi API Notifications
 export const notificationAPI = {
-  
+  getNotifications: (page = 1, filter = 'all', append = false) => apiClient.get('/notifications', {
+    params: {
+      page: page,
+      per_page: 10,
+      paginate: true,
+      filter: filter
+    }
+  }),
+  markAsRead: (notificationId) => apiClient.post(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => apiClient.post('/notifications/mark-all-read'),
+  getUnreadCount: () => apiClient.get('/notifications/unread-count')
 }
 
 // Các gọi API xác minh người dùng

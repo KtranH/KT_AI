@@ -1,7 +1,7 @@
 import { ref, onMounted, onUnmounted, reactive, toRefs } from 'vue'
-import axios from 'axios'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
+import { notificationAPI } from '@/services/api'
 
 export function useNotifications(loadMore = false) { // Đổi tên tham số để rõ ràng hơn
     const notifications = ref([])
@@ -9,7 +9,6 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
     const loading = ref(false)
     const currentPage = ref(1)
     const hasMorePages = ref(true)
-    const perPage = 10 // Số lượng thông báo mỗi lần tải
     const authStore = useAuthStore()
     let echo = null
 
@@ -23,14 +22,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                 loading.value = true 
             }
             
-            const response = await axios.get('/api/notifications', {
-                params: {
-                    page: page,
-                    per_page: perPage,
-                    paginate: true, // Luôn yêu cầu backend phân trang
-                    filter: filter
-                }
-            })
+            const response = await notificationAPI.getNotifications(page, filter, append)
             
             if (response.data.data) {
                 const newNotifications = Array.isArray(response.data.data.notifications) ? response.data.data.notifications : []
@@ -108,7 +100,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
         if (!authStore.isAuthenticated) return
 
         try {
-            await axios.post(`/api/notifications/${notificationId}/read`)
+            await notificationAPI.markAsRead(notificationId)
             
             // Cập nhật trạng thái thông báo trong danh sách hiện tại
             const index = notifications.value.findIndex(n => n.id === notificationId)
@@ -128,7 +120,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
         if (!authStore.isAuthenticated) return
 
         try {
-            await axios.post('/api/notifications/mark-all-read')
+            await notificationAPI.markAllAsRead()
             
             // Cập nhật trạng thái tất cả thông báo trong danh sách hiện tại
             notifications.value.forEach(notification => {
@@ -149,7 +141,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
         if (!authStore.isAuthenticated) return
 
         try {
-            const response = await axios.get('/api/notifications/unread-count')
+            const response = await notificationAPI.getUnreadCount()
             unreadCount.value = response.data.data.count
         } catch (error) {
             console.error('Lỗi khi lấy số lượng thông báo chưa đọc:', error)
