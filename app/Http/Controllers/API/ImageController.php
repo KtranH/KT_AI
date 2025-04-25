@@ -1,32 +1,28 @@
 <?php
 
 namespace App\Http\Controllers\API;
-
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ImageResource;
+use App\Http\Resources\PaginateAnRespondResource;
 use App\Models\Image;
-use App\Services\R2StorageService;
-use App\Repositories\ImageRepository;
-use App\Policies\ImagePolicy;
-use App\Http\Requests\Image\StoreImageRequest;
+use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Gate;
 
 class ImageController extends Controller
 {
-    public function __construct(private readonly ImageRepository $imageRepository, 
-                                private readonly R2StorageService $r2StorageService) {}
-
-    public function getImages($id): JsonResponse
+    protected ImageService $imageService;
+    public function __construct(ImageService $imageService) 
+    {
+        $this->imageService = $imageService;
+    }
+    public function getImages($id)
     {
         try {
-            $result = $this->imageRepository->getImages($id);
-            
+            $result = $this->imageService->getImages($id);
             return response()->json([
                 'success' => true,
                 'images' => $result['images'],
@@ -34,11 +30,6 @@ class ImageController extends Controller
                 'user' => $result['user']
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Images Error: ' . $e->getMessage(), [
-                'image_id' => $id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu ảnh',
@@ -46,23 +37,16 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    
-    public function getImagesByFeature($id): JsonResponse
+    public function getImagesByFeature($id)
     {
         try {
-            $result = $this->imageRepository->getImagesByFeature($id);
-            
+            $result = $this->imageService->getImagesByFeature($id);
             return response()->json([
                 'success' => true,
                 'data' => ImageResource::collection($result['data']),
                 'pagination' => $result['pagination']
             ]);
-        } catch (\Exception $e) {
-            Log::error('Get Images By Feature Error: ' . $e->getMessage(), [
-                'feature_id' => $id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+        } catch (\Exception $e) {            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu ảnh',
@@ -70,54 +54,11 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    
-    /**
-     * Xử lý phân trang và trả về kết quả JSON
-     * 
-     * @param Collection $images Danh sách hình ảnh
-     * @param int $page Trang hiện tại
-     * @param int $perPage Số lượng mục trên mỗi trang
-     * @param string $errorType Loại lỗi để ghi log
-     * @return JsonResponse
-     */
-    private function paginateAndRespond($images, int $page, int $perPage, string $errorType): JsonResponse
+    public function paginateAndRespond(Request $request, string $typeImage, string $errorType)
     {
         try {
-            // Nếu không có ảnh nào
-            if ($images->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [],
-                    'pagination' => [
-                        'current_page' => $page,
-                        'last_page' => 1,
-                        'per_page' => $perPage,
-                        'total' => 0
-                    ]
-                ]);
-            }
-            
-            // Phân trang thủ công
-            $totalItems = $images->count();
-            $offset = ($page - 1) * $perPage;
-            $paginatedData = $images->slice($offset, $perPage)->values()->all();
-            
-            return response()->json([
-                'success' => true,
-                'data' => $paginatedData,
-                'pagination' => [
-                    'current_page' => $page,
-                    'last_page' => ceil($totalItems / $perPage),
-                    'per_page' => $perPage,
-                    'total' => $totalItems
-                ]
-            ]);
+            return $this->imageService->paginateAndRespond($request, $typeImage, $errorType);
         } catch (\Exception $e) {
-            Log::error($errorType . ': ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu ảnh',
@@ -125,43 +66,20 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    
-    // Lấy danh sách ảnh người dùng tạo
-    public function getImagesCreatedByUser(Request $request): JsonResponse
+    public function getImagesCreatedByUser(Request $request)
     {
-        $perPage = (int)$request->input('per_page', 5);
-        $page = (int)$request->input('page', 1);
-        $images = $this->imageRepository->getImagesCreatedByUser();
-        
-        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Created By User Error');
+        return $this->paginateAndRespond($request, 'created', 'Get Images Created By User Error');
     }
-    
-    // Lấy danh sách ảnh đã thích
-    public function getImagesLiked(Request $request): JsonResponse
+    public function getImagesLiked(Request $request)
     {
-        $perPage = (int)$request->input('per_page', 5);
-        $page = (int)$request->input('page', 1);
-        $images = $this->imageRepository->getImagesLiked();
-        
-        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Liked Error');
+        return $this->paginateAndRespond($request, 'liked', 'Get Images Liked Error');
     }
-
-    // Lấy danh sách ảnh đã tải lên
-    public function getImagesUploaded(Request $request): JsonResponse
+    public function getImagesUploaded(Request $request)
     {
-        $perPage = (int)$request->input('per_page', 5);
-        $page = (int)$request->input('page', 1);
-        $images = $this->imageRepository->getImagesUploaded();
-        
-        return $this->paginateAndRespond($images, $page, $perPage, 'Get Images Uploaded Error');
+        return $this->paginateAndRespond($request, 'uploaded', 'Get Images Uploaded Error');
     }
-
-    // Lưu trữ hình ảnh tải lên
     public function store(Request $request, $featureId)
     {
-        #$request->validate(StoreImageRequest::rules());
-        $storeImageRequest = new StoreImageRequest();
-        $request->validate($storeImageRequest->rules());
         try {
             // Kiểm tra xem có file được gửi lên không
             if (!$request->hasFile('images')) {
@@ -170,35 +88,18 @@ class ImageController extends Controller
                     'message' => 'Vui lòng tải lên ít nhất một ảnh.'
                 ], 422);
             }
-    
-            $files = $request->file('images');
-        
-            // Duyệt qua từng file ảnh
-            $uploadedPaths = [];
-            foreach ($files as $file) {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $path = "uploads/features/{$featureId}/user/" . Auth::user()->email . '/' . $fileName;
-                $filePath = $this->r2StorageService->upload($path, $file, 'public');
-                $uploadedPaths[] = $this->r2StorageService->getUrlR2() . "/" . $path;
+            $result = $this->imageService->storeImage($request, $featureId);    
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tải lên thành công'
+                ]);
             }
-    
-            // Lưu trữ vào database
-            $data = [
-                'title' => $request->title,
-                'description' => $request->description,
-                'feature_id' => $featureId
-            ];
-            $this->imageRepository->storeImage($uploadedPaths, Auth::user(), $data);
-            
             return response()->json([
-                'success' => true,
-                'message' => 'Tải lên thành công'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Store Image Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-    
+                'success' => false,
+                'message' => 'Không thể tải lên'
+            ], 403);
+        } catch (\Exception $e) {    
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải lên',
@@ -206,21 +107,21 @@ class ImageController extends Controller
             ], 500);
         }
     }
-
-    // Cập nhật thông tin hình ảnh
-    public function update(Request $request, Image $image): JsonResponse
+    public function update(Request $request, Image $image)
     {
         try {
-            $this->imageRepository->updateImage($image, $request->title, $request->prompt);
+            $result = $this->imageService->updateImage($request, $image);
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cập nhật thành công'
+                ]);
+            }
             return response()->json([
-                'success' => true,
-                'message' => 'Cập nhật thành công'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Update Image Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+                'success' => false,
+                'message' => 'Không thể cập nhật'
+            ], 403);
+        } catch (\Exception $e) {            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể cập nhật',
@@ -228,25 +129,21 @@ class ImageController extends Controller
             ], 500);
         }
     }
-
-    // Xóa hình ảnh
-    public function destroy(Image $image): JsonResponse
+    public function destroy(Image $image)
     {
-        if (Gate::denies('delete', $image)) {
-            return response()->json(['message' => 'Không được phép xóa hình ảnh này'], 403);
-        }
-        
         try {
-            $this->imageRepository->deleteImage($image);
+            $result = $this->imageService->deleteImage($image);
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Xóa thành công'
+                ]);
+            }
             return response()->json([
-                'success' => true,
-                'message' => 'Xóa thành công'
-            ]);
+                'success' => false,
+                'message' => 'Không thể xóa'
+            ], 403);
         } catch (\Exception $e) {
-            Log::error('Delete Image Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể xóa',

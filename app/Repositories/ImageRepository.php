@@ -20,12 +20,10 @@ class ImageRepository implements ImageRepositoryInterface
     public function __construct(private readonly FeatureRepositoryInterface $featureRepository, private readonly UserRepositoryInterface $userRepository) {}
     public function getImages(int $id): array
     {
-        $image = Image::with('user')->with('aiFeature')->find($id);
-        
+        $image = Image::with('user')->with('aiFeature')->find($id); 
         if (!$image) {
             throw new \Exception('Không tìm thấy ảnh với ID: ' . $id);
         }
-        
         return [
             'success' => true,
             'images' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
@@ -194,10 +192,6 @@ class ImageRepository implements ImageRepositoryInterface
         }
         catch(\Exception $e)
         {
-            Log::error('Update Image Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
             return false;
         }
     }

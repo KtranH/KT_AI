@@ -20,7 +20,7 @@ class CommentController extends Controller
     {
         $this->commentService = $commentService;
     }
-    public function getComments(int $imageId, Request $request): JsonResponse
+    public function getComments(int $imageId, Request $request)
     {
         try{
             $result = $this->commentService->getComments($imageId, $request);
@@ -39,7 +39,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Lỗi khi lấy bình luận'], 500);
         }
     }
-    public function store(StoreCommentRequest $request): JsonResponse
+    public function store(StoreCommentRequest $request)
     {
         try{
             $comment = $this->commentService->storeComment($request);
@@ -48,7 +48,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Lỗi khi tạo bình luận'], 500);
         }
     }
-    public function storeReply(StoreReplyRequest $request, Comment $comment): JsonResponse
+    public function storeReply(StoreReplyRequest $request, Comment $comment)
     {
         try{
             $reply = $this->commentService->storeReply($request, $comment);
@@ -57,16 +57,26 @@ class CommentController extends Controller
             return response()->json(['message' => 'Lỗi khi tạo phản hồi'], 500);
         }
     }
-    public function destroy(Comment $comment): JsonResponse
+    public function destroy(Comment $comment)
     {
         try {
-            $this->commentService->deleteComment($comment);
+            $result = $this->commentService->deleteComment($comment);
+            if($result)
+            {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Xóa thành công'
+                ]);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Lỗi khi xóa bình luận'], 500);
         }
-        return response()->json(['message' => 'Bình luận đã được xóa thành công']);
     }
-    public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
+    public function update(UpdateCommentRequest $request, Comment $comment)
     {
         try {
             $comment = $this->commentService->update($request, $comment);
@@ -75,7 +85,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Lỗi khi cập nhật bình luận'], 500);
         }
     }
-    public function toggleLike(Comment $comment): JsonResponse
+    public function toggleLike(Comment $comment)
     {
         try {
             $result = $this->commentService->toggleLike($comment);

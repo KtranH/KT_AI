@@ -31,9 +31,10 @@ class CommentService
     public function destroy(Comment $comment)
     {
         if (Gate::denies('delete', $comment)) {
-            return response()->json(['message' => 'Không được phép xóa bình luận này'], 403);
+            return false;
         }
         $this->commentRepository->deleteComment($comment);
+        return true;
     }
     public function update(UpdateCommentRequest $request, Comment $comment)
     {

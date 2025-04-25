@@ -145,8 +145,7 @@ class CommentRepository implements CommentRepositoryInterface
             $comment->replies()->delete();
         }
 
-        $this->decrementImageCommentCount($comment->image_id);
-        
+        $this->decrementImageCommentCount($comment->image_id);        
         $comment->delete();
     }
     public function incrementImageCommentCount(int $imageId): void
