@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Interfaces\FeatureRepositoryInterface;
+use App\Services\FeatureService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class FeatureController extends Controller
 {
-    public function __construct(private readonly FeatureRepositoryInterface $featureRepository) {}
-    //
+    protected FeatureService $featureService;
+    public function __construct(FeatureService $featureService) {
+        $this->featureService = $featureService;
+    }
     public function getFeatures()
     {
         try {            
-            $features = $this->featureRepository->getFeatures();
+            $features = $this->featureService->getFeatures();
             return response()->json([
                 'success' => true,
                 'data' => $features,
@@ -24,8 +25,6 @@ class FeatureController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Lỗi khi tải chức năng: ' . $e->getMessage());
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu chức năng',
@@ -38,7 +37,7 @@ class FeatureController extends Controller
     public function getFeatureById($id)
     {
         try {
-            $feature = $this->featureRepository->getFeatureById($id);
+            $feature = $this->featureService->getFeatureById($id);
             if ($feature) {
                 return response()->json([
                     'success' => true,

@@ -19,7 +19,6 @@ class CommentRepository implements CommentRepositoryInterface
         if ($commentId) {
             return $this->getReplies($commentId, $page);
         }
-        
         return $this->getMainComments($imageId, $page);
     }
     public function getReplies(int $commentId, int $page): array

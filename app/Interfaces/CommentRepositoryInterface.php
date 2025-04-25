@@ -16,7 +16,7 @@ interface CommentRepositoryInterface
     
     // Lấy các bình luận trả lời theo parent_id với phân trang
     public function getReplies(int $commentId, int $page): array;
-    
+
     // Tạo bình luận mới
     public function storeComment(array $data): Comment;
     
