@@ -138,7 +138,6 @@ class ImageRepository implements ImageRepositoryInterface
                 'title' => $data['title'],
                 'prompt' => $data['description'],
                 'features_id' => $data['feature_id'],
-                'status_image' => 'completed',
                 'sum_like' => 0,
                 'sum_comment' => 0,
                 'privacy_status' => 'public',

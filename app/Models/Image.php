@@ -21,7 +21,6 @@ class Image extends Model
         'sum_comment',
         'privacy_status',
         'metadata',
-        'status_image',
         'list_like'
     ];
 
@@ -31,7 +30,6 @@ class Image extends Model
         'sum_comment' => 'integer',
         'metadata' => 'json',
         'privacy_status' => 'string',
-        'status_image' => 'string'
     ];
 
     // Relationship với User (nhiều-1)

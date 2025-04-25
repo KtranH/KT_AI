@@ -34,7 +34,6 @@ class ImageTestSeeder extends Seeder
                 ]),
                 'created_at' => now()->toDateTimeString(),
                 'updated_at' => now()->toDateTimeString(),
-                'status_image' => 'completed',
             ],
             [
                 'id' => 2,
@@ -52,7 +51,6 @@ class ImageTestSeeder extends Seeder
                 ]),
                 'created_at' => now()->toDateTimeString(),
                 'updated_at' => now()->toDateTimeString(),
-                'status_image' => 'completed',
             ],
         ];
         foreach ($image as $img) {
