@@ -22,7 +22,6 @@ class CommentRepository implements CommentRepositoryInterface
         
         return $this->getMainComments($imageId, $page);
     }
-    
     public function getReplies(int $commentId, int $page): array
     {
         $replies = Comment::with(['user'])
@@ -34,7 +33,6 @@ class CommentRepository implements CommentRepositoryInterface
             'hasMore' => $replies->hasMorePages()
         ];
     }
-    
     public function getMainComments(int $imageId, int $page): array
     {
         $comments = Comment::with(['user', 'replies' => function ($query) {
@@ -58,10 +56,6 @@ class CommentRepository implements CommentRepositoryInterface
             'hasMore' => $comments->hasMorePages()
         ];
     }
-    
-    /**
-     * Xử lý phản hồi lồng nhau
-     */
     private function processReplies($comment): void
     {
         // Không làm gì nếu không có replies
@@ -83,10 +77,6 @@ class CommentRepository implements CommentRepositoryInterface
         // Thay thế collection replies bằng collection mới đã gộp và sắp xếp
         $comment->setRelation('replies', $allReplies);
     }
-    
-    /**
-     * Lấy tất cả phản hồi lồng nhau cho một danh sách ID bình luận
-     */
     private function getAllNestedReplies(array $parentIds): \Illuminate\Support\Collection
     {
         if (empty($parentIds)) {
@@ -112,7 +102,6 @@ class CommentRepository implements CommentRepositoryInterface
         
         return $replies;
     }
-    
     public function storeComment(array $data): Comment
     {
         $comment = Comment::create([
@@ -125,12 +114,10 @@ class CommentRepository implements CommentRepositoryInterface
         ]);
 
         $this->incrementImageCommentCount($data['image_id']);
-
         $comment->load(['user', 'replies.user']);
         
         return $comment;
     }
-
     public function storeReply(array $data, Comment $comment): Comment
     {
         $reply = Comment::create([
@@ -148,13 +135,11 @@ class CommentRepository implements CommentRepositoryInterface
         
         return $reply;
     }
-    
     public function updateComment(Comment $comment, string $content): Comment
     {
         $comment->update(['content' => $content]);
         return $comment;
     }
-    
     public function deleteComment(Comment $comment): void
     {
         if ($comment->parent_id === null) {
@@ -165,29 +150,6 @@ class CommentRepository implements CommentRepositoryInterface
         
         $comment->delete();
     }
-    
-    public function toggleLike(Comment $comment): array
-    {
-        $userId = Auth::id();
-        $listLike = $comment->list_like ?? [];
-        
-        if (in_array($userId, $listLike)) {
-            $listLike = array_diff($listLike, [$userId]);
-            $comment->sum_like = max(0, $comment->sum_like - 1);
-        } else {
-            $listLike[] = $userId;
-            $comment->sum_like += 1;
-        }
-        
-        $comment->list_like = $listLike;
-        $comment->save();
-        
-        return [
-            'likes' => $comment->sum_like,
-            'isLiked' => in_array($userId, $listLike)
-        ];
-    }
-    
     public function incrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);
@@ -195,7 +157,6 @@ class CommentRepository implements CommentRepositoryInterface
             $image->increment('sum_comment');
         }
     }
-    
     public function decrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);

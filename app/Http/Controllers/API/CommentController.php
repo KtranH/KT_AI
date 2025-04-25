@@ -8,96 +8,80 @@ use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ReplyResource;
-use App\Interfaces\CommentRepositoryInterface;
+use App\Services\CommentService;
 use App\Models\Comment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
-    public function __construct( private readonly CommentRepositoryInterface $commentRepository) {}
-
-    /**
-     * Lấy danh sách bình luận cho một hình ảnh
-     */
+    protected CommentService $commentService;
+    public function __construct(CommentService $commentService) 
+    {
+        $this->commentService = $commentService;
+    }
     public function getComments(int $imageId, Request $request): JsonResponse
     {
-        $page = $request->input('page', 1);
-        $commentId = $request->input('comment_id');
-        
-        $result = $this->commentRepository->getComments($imageId, $commentId, $page);
-        
-        if (isset($result['replies'])) {
+        try{
+            $result = $this->commentService->getComments($imageId, $request);
+            if (isset($result['replies'])) {
+                return response()->json([
+                    'replies' => ReplyResource::collection($result['replies']),
+                    'hasMore' => $result['hasMore'],
+                ]);
+            }
+            
             return response()->json([
-                'replies' => ReplyResource::collection($result['replies']),
-                'hasMore' => $result['hasMore'],
+                'comments' => CommentResource::collection($result['comments']),
+                'hasMore' => $result['hasMore']
             ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi lấy bình luận'], 500);
         }
-        
-        return response()->json([
-            'comments' => CommentResource::collection($result['comments']),
-            'hasMore' => $result['hasMore']
-        ]);
     }
-
-    /**
-     * Tạo bình luận mới
-     */
     public function store(StoreCommentRequest $request): JsonResponse
     {
-        $comment = $this->commentRepository->storeComment($request->validated());
-        return response()->json(new CommentResource($comment), 201);
+        try{
+            $comment = $this->commentService->storeComment($request);
+            return response()->json(new CommentResource($comment), 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi tạo bình luận'], 500);
+        }
     }
-
-    /**
-     * Tạo phản hồi cho một bình luận
-     */
     public function storeReply(StoreReplyRequest $request, Comment $comment): JsonResponse
     {
-        // Tìm parent_id đúng (có thể là comment chính hoặc một phản hồi)
-        $parentId = $comment->id;
-        
-        // Tạo phản hồi mới
-        $reply = $this->commentRepository->storeReply($request->validated(), $comment);
-        
-        return response()->json(new ReplyResource($reply), 201);
+        try{
+            $reply = $this->commentService->storeReply($request, $comment);
+            return response()->json(new ReplyResource($reply), 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi tạo phản hồi'], 500);
+        }
     }
-
-    /**
-     * Xóa một bình luận
-     */
     public function destroy(Comment $comment): JsonResponse
     {
-        if (Gate::denies('delete', $comment)) {
-            return response()->json(['message' => 'Không được phép xóa bình luận này'], 403);
+        try {
+            $this->commentService->deleteComment($comment);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi xóa bình luận'], 500);
         }
-        
-        $this->commentRepository->deleteComment($comment);
         return response()->json(['message' => 'Bình luận đã được xóa thành công']);
     }
-
-    /**
-     * Cập nhật một bình luận
-     */
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
-        if (Gate::denies('update', $comment)) {
-            return response()->json(['message' => 'Không được phép cập nhật bình luận này'], 403);
+        try {
+            $comment = $this->commentService->update($request, $comment);
+            return response()->json(new CommentResource($comment));
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi cập nhật bình luận'], 500);
         }
-        
-        $comment = $this->commentRepository->updateComment($comment, $request->input('content'));
-        return response()->json(new CommentResource($comment));
     }
-
-    /**
-     * Thích hoặc bỏ thích một bình luận
-     */
     public function toggleLike(Comment $comment): JsonResponse
     {
-        $result = $this->commentRepository->toggleLike($comment);
-        return response()->json($result);
+        try {
+            $result = $this->commentService->toggleLike($comment);
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Lỗi khi thay đổi trạng thái thích'], 500);
+        }
     }
 }

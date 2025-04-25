@@ -30,9 +30,6 @@ interface CommentRepositoryInterface
     // Xóa bình luận
     public function deleteComment(Comment $comment): void;
         
-    // Cập nhật trạng thái thích của một bình luận
-    public function toggleLike(Comment $comment): array;
-
     // Tăng số lượng bình luận cho một hình ảnh
     public function incrementImageCommentCount(int $imageId): void;
     

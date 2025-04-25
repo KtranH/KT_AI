@@ -17,7 +17,7 @@ class StoreCommentRequest extends FormRequest
         $isReply = $this->route('comment') !== null;
         
         $rules = [
-            'content' => 'required|string|max:1000',
+            'content' => 'required|string|max:150',
         ];
         
         if (!$isReply) {
