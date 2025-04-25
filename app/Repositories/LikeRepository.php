@@ -15,12 +15,6 @@ use Illuminate\Support\Facades\Notification;
 
 class LikeRepository implements LikeRepositoryInterface
 {
-    /**
-     * Thích một hình ảnh
-     */
-    /**
-     * Kiểm tra xem người dùng đã thích hình ảnh hay chưa
-     */
     public function checkLiked(int $imageId): bool
     {
         return Interaction::where('image_id', $imageId)
@@ -28,10 +22,6 @@ class LikeRepository implements LikeRepositoryInterface
             ->where('type_interaction', 'like')
             ->exists();
     }
-    
-    /**
-     * Lấy danh sách người dùng đã thích hình ảnh
-     */
     public function getLikes(int $imageId, int $limit = 3): Collection
     {
         return Interaction::with('user')
@@ -40,10 +30,6 @@ class LikeRepository implements LikeRepositoryInterface
             ->take($limit)
             ->get();
     }
-    
-    /**
-     * Thích một hình ảnh
-     */
     public function likePost(int $imageId): void
     {
         // Kiểm tra xem ảnh có tồn tại không
@@ -110,10 +96,6 @@ class LikeRepository implements LikeRepositoryInterface
             throw $e;
         }
     }
-    
-    /**
-     * Bỏ thích một hình ảnh
-     */
     public function unlikePost(int $imageId): void
     {
         // Kiểm tra xem ảnh có tồn tại không

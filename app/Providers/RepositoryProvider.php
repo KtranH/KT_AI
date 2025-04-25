@@ -6,12 +6,14 @@ use App\Interfaces\ImageRepositoryInterface;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Interfaces\LikeRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
+use App\Interfaces\NotificationRepositoryInterface;
 use App\Interfaces\FeatureRepositoryInterface;
 use App\Repositories\ImageRepository;
 use App\Repositories\CommentRepository;
 use App\Repositories\LikeRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\FeatureRepository;
+use App\Repositories\NotificationRepository;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -34,6 +36,8 @@ class RepositoryProvider extends ServiceProvider
         $this->app->bind(LikeRepositoryInterface::class, LikeRepository::class);
         // Feature
         $this->app->bind(FeatureRepositoryInterface::class, FeatureRepository::class);
+        // Noticaition
+        $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
     }
 
     /**

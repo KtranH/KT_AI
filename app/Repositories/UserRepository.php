@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Request;
 
 class UserRepository implements UserRepositoryInterface
 {
-    // Kiểm tra trạng thái đăng nhập 
     public function checkStatus()
     {
         try {
@@ -31,7 +30,6 @@ class UserRepository implements UserRepositoryInterface
             throw $e;
         }
     }
-    // Tăng số lượng ảnh tải lên của tài khoản
     public function increaseSumImg($id)
     {
         $user = User::find($id);
@@ -39,7 +37,6 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-    // Giảm số lượng ảnh tải lên của tài khoản
     public function decreaseSumImg($id)
     {
         $user = User::find($id);
@@ -47,42 +44,30 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-
-    // Kiểm tra email của tài khoản
     public function checkEmail($email)
     {
         $user = User::where('email', $email)->first();
         return $user;
     }
-
-    // Lấy user mới nhất từ database
     public function getUser()
     {
         $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find(Auth::user()->id);
         return $user;
     }
-
-    // Lấy user theo ID
     public function getUserById($id)
     {
         $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find($id);
         return $user;
     }
-
-    // Lấy user theo Email
     public function getUserByEmail($email)
     {
         $user = User::where('email', $email)->first();
         return $user;
     }
-
-    // Lấy danh sách user
     public function getUsers(): Collection
     {
         return User::all();
     }
-
-    // Tạo user
     public function store($request)
     {
         return User::create([
@@ -98,8 +83,6 @@ class UserRepository implements UserRepositoryInterface
             'is_verified' => false
         ]);
     }
-
-    // Cập nhật thông tin user
     public function updateName($request)
     {
         $user = Auth::user();
@@ -113,8 +96,6 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-
-    // Cập nhật trạng thái email của user
     public function updateStatus()
     {
         $user = Auth::user();
@@ -122,8 +103,6 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-
-    // Cập nhật mật khẩu
     public function updatePassword($request, $user = null)
     {
         if (!$user) {
@@ -139,8 +118,6 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-    
-    // Cập nhật avatar
     public function updateAvatar($path)
     {
         $user = Auth::user();
@@ -148,8 +125,6 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-
-    // Cập nhật cover image
     public function updateCoverImage($path)
     {
         $user = Auth::user();
@@ -157,23 +132,17 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-
-    // Xóa user
     public function delete($id)
     {
         $user = User::find($id);
         $user->delete();
         return $user;
     }
-
-    // Kiểm tra mật khẩu
     public function checkPassword($current_password)
     {
         $user = Auth::user();
         return Hash::check($current_password, $user->password);
     }
-
-    // Kiểm tra số lượng ảnh
     public function checkSumImg($id)
     {
         $user = User::find($id);

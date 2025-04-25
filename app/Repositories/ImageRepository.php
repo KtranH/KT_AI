@@ -18,9 +18,6 @@ use Illuminate\Support\Facades\Auth;
 class ImageRepository implements ImageRepositoryInterface
 {
     public function __construct(private readonly FeatureRepositoryInterface $featureRepository, private readonly UserRepositoryInterface $userRepository) {}
-    /**
-     * Lấy thông tin chi tiết của một hình ảnh
-     */
     public function getImages(int $id): array
     {
         $image = Image::with('user')->with('aiFeature')->find($id);
@@ -36,10 +33,6 @@ class ImageRepository implements ImageRepositoryInterface
             'user' => $image->user
         ];
     }
-    
-    /**
-     * Lấy danh sách hình ảnh theo feature
-     */
     public function getImagesByFeature(int $featureId, int $perPage = 5): array
     {
         $images = Image::with('user')
@@ -57,10 +50,6 @@ class ImageRepository implements ImageRepositoryInterface
             ]
         ];
     }
-    
-    /**
-     * Lấy danh sách hình ảnh của người dùng hiện tại
-     */
     public function getImagesCreatedByUser(): Collection
     {
         $images = Image::with('user')
@@ -86,10 +75,6 @@ class ImageRepository implements ImageRepositoryInterface
         
         return $result;
     }
-    
-    /**
-     * Lấy danh sách hình ảnh đã tải lên
-     */
     public function getImagesUploaded(): Collection
     {
         $images = Image::with('user')
@@ -115,10 +100,6 @@ class ImageRepository implements ImageRepositoryInterface
         
         return $result;
     }
-
-    /**
-     * Lấy danh sách hình ảnh đã tải lên
-     */
     public function getImagesLiked(): Collection
     {
         $list_images_liked = Interaction::where('user_id', Auth::id())
@@ -147,8 +128,6 @@ class ImageRepository implements ImageRepositoryInterface
         
         return $result;
     }
-
-    // Lưu trữ hình ảnh tải lên
     public function storeImage($uploadedPaths, $user, $data): bool
     {
         try
@@ -183,8 +162,6 @@ class ImageRepository implements ImageRepositoryInterface
             return false;
         }
     }
-
-    // Xóa hình ảnh
     public function deleteImage(Image $image): bool
     {
         try
@@ -206,8 +183,6 @@ class ImageRepository implements ImageRepositoryInterface
             return false;
         }
     }
-    
-    // Cập nhật thông tin hình ảnh
     public function updateImage(Image $image, string $title, string $prompt): bool
     {
         try
@@ -227,22 +202,18 @@ class ImageRepository implements ImageRepositoryInterface
             return false;
         }
     }
-    // Tăng số lượng ảnh cho mục Feature
     public function increaseSumImg(int $featureId): void
     {
         $this->featureRepository->increaseSumImg($featureId);
     }
-    // Tăng số lượng ảnh cho user
     public function increaseSumImgUser(int $userId): void
     {
         $this->userRepository->increaseSumImg($userId);
     }
-    //Giảm số lượng ảnh cho mục Feature
     public function decreaseSumImg(int $featureId): void
     {
         $this->featureRepository->decreaseSumImg($featureId);
     }
-    // Giảm số lượng ảnh cho user
     public function decreaseSumImgUser(int $userId): void
     {
         $this->userRepository->decreaseSumImg($userId);

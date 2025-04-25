@@ -32,8 +32,8 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                 }
             })
             
-            if (response.data) {
-                const newNotifications = Array.isArray(response.data.notifications) ? response.data.notifications : []
+            if (response.data.data) {
+                const newNotifications = Array.isArray(response.data.data.notifications) ? response.data.data.notifications : []
                 
                 if (append) {
                     // Nối thêm mảng mới vào mảng hiện tại
@@ -44,15 +44,15 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                 }
                 
                 // Cập nhật thông tin phân trang từ response
-                if (response.data.pagination) {
+                if (response.data.data.pagination) {
                     // Cập nhật chỉ khi response có dữ liệu pagination
-                    currentPage.value = response.data.pagination.current_page || page
-                    hasMorePages.value = response.data.pagination.has_more_pages || 
-                                      (response.data.pagination.current_page < response.data.pagination.last_page)
-                } else if (response.data.current_page !== undefined && response.data.last_page !== undefined) {
+                    currentPage.value = response.data.data.pagination.current_page || page
+                    hasMorePages.value = response.data.data.pagination.has_more_pages || 
+                                      (response.data.data.pagination.current_page < response.data.data.pagination.last_page)
+                } else if (response.data.data.current_page !== undefined && response.data.data.last_page !== undefined) {
                     // Hỗ trợ cả định dạng cũ nếu API chưa được cập nhật
-                    currentPage.value = response.data.current_page
-                    hasMorePages.value = response.data.current_page < response.data.last_page
+                    currentPage.value = response.data.data.current_page
+                    hasMorePages.value = response.data.data.current_page < response.data.data.last_page
                 } else {
                     // Nếu không có thông tin phân trang, giả định không còn trang nào nữa
                     if (!append) {
@@ -62,8 +62,8 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                 }
 
                 // Cập nhật unreadCount
-                if (response.data.unread_count !== undefined) {
-                    unreadCount.value = response.data.unread_count
+                if (response.data.data.unread_count !== undefined) {
+                    unreadCount.value = response.data.data.unread_count
                 } else {
                     // Nếu API không trả về số lượng chưa đọc, tính toán từ dữ liệu hiện tại
                     updateUnreadCount()
@@ -150,7 +150,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
 
         try {
             const response = await axios.get('/api/notifications/unread-count')
-            unreadCount.value = response.data.count
+            unreadCount.value = response.data.data.count
         } catch (error) {
             console.error('Lỗi khi lấy số lượng thông báo chưa đọc:', error)
         }
