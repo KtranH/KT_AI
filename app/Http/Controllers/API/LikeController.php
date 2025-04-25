@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Interfaces\LikeRepositoryInterface;
 use App\Http\Resources\LikeResource;
+use App\Services\LikeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -13,13 +14,14 @@ use Illuminate\Support\Facades\Auth;
 
 class LikeController extends Controller
 {
-    public function __construct(private readonly LikeRepositoryInterface $likeRepository) {}
-    
-    public function checkLiked($id): JsonResponse
+    protected $likeService;
+    public function __construct(LikeService $likeService) {
+        $this->likeService = $likeService;
+    }
+    public function checkLiked($id)
     {
         try {
-            $isLiked = $this->likeRepository->checkLiked($id);
-            
+            $isLiked = $this->likeService->checkLiked($id);
             return response()->json([
                 'success' => true,
                 'data' => $isLiked,
@@ -38,12 +40,10 @@ class LikeController extends Controller
             ], 500);
         }
     }
-
-    public function getLikes($id): JsonResponse
+    public function getLikes($id)
     {
         try {
-            $likes = $this->likeRepository->getLikes($id);
-            
+            $likes = $this->likeService->getLikes($id);
             return response()->json([
                 'success' => true,
                 'like' => LikeResource::collection($likes),
@@ -62,11 +62,10 @@ class LikeController extends Controller
         }
     }
     
-    public function likePost($id): JsonResponse
+    public function likePost($id)
     {
         try {
-            $this->likeRepository->likePost($id);
-            
+            $this->likeService->likePost($id);
             return response()->json([
                 'success' => true,
                 'message' => 'Đã thích bài viết thành công'
@@ -86,11 +85,10 @@ class LikeController extends Controller
         }
     }
     
-    public function unlikePost($id): JsonResponse
+    public function unlikePost($id)
     {
         try {
-            $this->likeRepository->unlikePost($id);
-            
+            $this->likeService->unlikePost($id);         
             return response()->json([
                 'success' => true,
                 'message' => 'Đã bỏ thích thành công'
