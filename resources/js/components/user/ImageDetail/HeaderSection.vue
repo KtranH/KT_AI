@@ -5,7 +5,7 @@
         <img :src="currentUserImage && currentUserImage.avatar_url ? currentUserImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
-                <router-link to="#" class="font-semibold cursor-pointer hover:text-purple-500 transition-colors duration-300 ease-in-out">
+                <router-link to="#" class="font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out">
                     {{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}
                 </router-link>
                 <div class="flex items-center ml-1">

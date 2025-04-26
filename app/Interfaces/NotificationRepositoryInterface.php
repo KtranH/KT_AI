@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Interfaces;
+use Illuminate\Notifications\DatabaseNotification;
 
 interface NotificationRepositoryInterface
 {
@@ -8,12 +9,12 @@ interface NotificationRepositoryInterface
     public function getNotification($user);
 
     // Đếm thông báo chưa đọc
-    public function countUnreadNotifications($user);
+    public function countUnreadNotifications($user): int;
 
     // Tìm kiếm thông báo
-    public function findNotification($id);
-
-    // Cập nhật thông báo đã đọc
-    public function updateReadAllNotifications($user);
+    public function findNotification($id): DatabaseNotification;
+    
+    // Cập nhật thông báo đã đọc 
+    public function updateReadAllNotifications($user): void;
 }
 

@@ -3,7 +3,9 @@
         <img :src="comment.avatar" class="w-8 h-8 rounded-full" :alt="comment.username" />
         <div class="flex-1">
             <div class="flex items-start">
-                <span class="font-semibold mr-2">{{ comment.username }}</span>
+                <router-link to="#">
+                    <span class="mr-2 font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out">{{ comment.username }}</span>
+                </router-link>
                 
                 <!-- Nội dung bình luận - chế độ xem -->
                 <span v-if="!isEditing" class="flex-1" v-html="comment.text"></span>
@@ -80,7 +82,9 @@
                         <img :src="reply.avatar" class="w-6 h-6 rounded-full" :alt="reply.username" />
                         <div class="flex-1">
                             <div class="flex items-start">
-                                <span class="font-semibold mr-2">{{ reply.username }}</span>
+                                <router-link to="#">
+                                    <span class="mr-2 font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out">{{ reply.username }}</span>
+                                </router-link>
                                 
                                 <!-- Nội dung phản hồi - chế độ xem -->
                                 <span v-if="!isEditingReply[replyIndex]" class="flex-1">
