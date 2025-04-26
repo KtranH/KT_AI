@@ -41,7 +41,7 @@ class LikeRepository implements LikeRepositoryInterface
             ->where('type_interaction', 'like')
             ->first();
     }
-    public function store($imageID, $userID): void
+    public function store($imageID, $userID): Interaction
     {
         $interaction = new Interaction();
         $interaction->image_id = $imageID;
@@ -49,6 +49,7 @@ class LikeRepository implements LikeRepositoryInterface
         $interaction->status_interaction = 'active';
         $interaction->type_interaction = 'like';
         $interaction->save();
+        return $interaction;
     }
     public function delete(Interaction $interaction): void
     {

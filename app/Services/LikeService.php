@@ -49,7 +49,7 @@ class LikeService
         DB::beginTransaction();     
         try {
             // Tạo mới tương tác
-            $this->likeRepository->store($id, Auth::id());
+            $interaction = $this->likeRepository->store($id, Auth::id());
             // Cập nhật số lượt thích cho ảnh
             $this->imageRepository->incrementSumLike($id);
             

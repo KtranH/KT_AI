@@ -20,7 +20,7 @@ interface LikeRepositoryInterface
     public function checkInteraction(int $imageId): ?Interaction;
     
     // Thêm tương tác
-    public function store($imageID, $userID): void;
+    public function store($imageID, $userID): Interaction;
     
     // Xóa tương tác
     public function delete(Interaction $interaction): void;

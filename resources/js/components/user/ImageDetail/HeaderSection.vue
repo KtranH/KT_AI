@@ -5,10 +5,11 @@
         <img :src="currentUserImage && currentUserImage.avatar_url ? currentUserImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
-                <span class="font-semibold">{{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}</span>
+                <router-link to="#" class="font-semibold cursor-pointer hover:text-purple-500 transition-colors duration-300 ease-in-out">
+                    {{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}
+                </router-link>
                 <div class="flex items-center ml-1">
-                    <span class="text-purple-400 mr-1">🔮</span>
-                    <span class="text-pink-500">👡</span>
+                    <img :src="icon_title" class="w-4 h-4" alt="Icon" />
                 </div>
             </div>
             <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ dataImage && dataImage.created_at ? formatTime(dataImage.created_at) : 'vừa xong' }}</span>
@@ -112,6 +113,7 @@ export default {
         const { dataImage, deleteImage } = useImage()
         const imageStore = useImageStore()
         const auth = useAuthStore()
+        const icon_title = ref("/img/creativity.png")
 
         // Đảm bảo trạng thái đăng nhập được khởi tạo
         onMounted(async () => {
@@ -204,6 +206,7 @@ export default {
             formatTime,
             isDropdownOpen,
             isEditing,
+            icon_title,
             toggleDropdown,
             handleEdit,
             handleDelete,
