@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Interfaces;
+use App\Models\Image;
+use App\Models\Interaction;
 use Illuminate\Support\Collection;
 
 interface LikeRepositoryInterface
@@ -12,8 +14,14 @@ interface LikeRepositoryInterface
     public function getLikes(int $imageId, int $limit = 3): Collection;
 
     // Kiểm tra xem hình ảnh có tồn tại hay không
-    public function checkImageExist(int $imageId);
+    public function checkImageExist(int $imageId): Image;
 
     // Kiểm tra xem tương tác có tồn tại hay không
-    public function checkInteraction(int $imageId);
+    public function checkInteraction(int $imageId): ?Interaction;
+    
+    // Thêm tương tác
+    public function store($imageID, $userID): void;
+    
+    // Xóa tương tác
+    public function delete(Interaction $interaction): void;
 }

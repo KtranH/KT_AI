@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Http\JsonResponse;
 
 class UserRepository implements UserRepositoryInterface
 {
-    public function checkStatus()
+    public function checkStatus(): JsonResponse
     {
         try {
             if (Auth::check()) {
@@ -30,36 +31,46 @@ class UserRepository implements UserRepositoryInterface
             throw $e;
         }
     }
-    public function increaseSumImg($id)
+    public function increaseSumImg($id): User
     {
         $user = User::find($id);
         $user->sum_img++;
         $user->save();
         return $user;
     }
-    public function decreaseSumImg($id)
+    public function increaseSumLike(User $user): void
+    {
+        $user->sum_like++;
+        $user->save();
+    }
+    public function decreaseSumImg($id): User
     {
         $user = User::find($id);
         $user->sum_img--;
         $user->save();
         return $user;
     }
-    public function checkEmail($email)
+    public function decreaseSumLike(User $user): void
+    {
+        $user->sum_like--;
+        $user->save();
+    }
+    public function checkEmail($email): User
     {
         $user = User::where('email', $email)->first();
         return $user;
     }
-    public function getUser()
+    public function getUser(): User
     {
         $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find(Auth::user()->id);
         return $user;
     }
-    public function getUserById($id)
+    public function getUserById($id): User
     {
         $user = User::with(['images', 'comments', 'notifications', 'interactions'])->find($id);
         return $user;
     }
-    public function getUserByEmail($email)
+    public function getUserByEmail($email): User
     {
         $user = User::where('email', $email)->first();
         return $user;
@@ -68,7 +79,7 @@ class UserRepository implements UserRepositoryInterface
     {
         return User::all();
     }
-    public function store($request)
+    public function store($request): User
     {
         return User::create([
             'name' => $request->name,
@@ -83,7 +94,7 @@ class UserRepository implements UserRepositoryInterface
             'is_verified' => false
         ]);
     }
-    public function updateName($request)
+    public function updateName($request): User
     {
         $user = Auth::user();
         $user->name = $request->name;
@@ -96,14 +107,14 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-    public function updateStatus()
+    public function updateStatus(): User
     {
         $user = Auth::user();
         $user->is_verified = !$user->is_verified;
         $user->save();
         return $user;
     }
-    public function updatePassword($request, $user = null)
+    public function updatePassword($request, $user = null): User
     {
         if (!$user) {
             $user = Auth::user();
@@ -118,32 +129,32 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
         return $user;
     }
-    public function updateAvatar($path)
+    public function updateAvatar($path): User
     {
         $user = Auth::user();
         $user->avatar_url = $path;
         $user->save();
         return $user;
     }
-    public function updateCoverImage($path)
+    public function updateCoverImage($path): User
     {
         $user = Auth::user();
         $user->cover_image_url = $path;
         $user->save();
         return $user;
     }
-    public function delete($id)
+    public function delete($id): User
     {
         $user = User::find($id);
         $user->delete();
         return $user;
     }
-    public function checkPassword($current_password)
+    public function checkPassword($current_password): bool
     {
         $user = Auth::user();
         return Hash::check($current_password, $user->password);
     }
-    public function checkSumImg($id)
+    public function checkSumImg($id): int
     {
         $user = User::find($id);
         return $user->sum_img;

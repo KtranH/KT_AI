@@ -45,4 +45,10 @@ interface ImageRepositoryInterface
     
     // Giảm số lượng ảnh cho user
     public function decreaseSumImgUser(int $userId): void;
+
+    // Tăng số lượng like
+    public function incrementSumLike(int $imageId): void;
+    
+    // Giảm số lượng like
+    public function decrementSumLike(int $imageId): void;
 } 

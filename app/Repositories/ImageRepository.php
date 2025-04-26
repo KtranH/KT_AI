@@ -211,4 +211,18 @@ class ImageRepository implements ImageRepositoryInterface
     {
         $this->userRepository->decreaseSumImg($userId);
     }
+    public function incrementSumLike(int $imageId): void
+    {
+        $image = Image::find($imageId);
+        if ($image) {
+            $image->increment('sum_like');
+        }
+    }
+    public function decrementSumLike(int $imageId): void
+    {
+        $image = Image::find($imageId);
+        if ($image) {
+            $image->decrement('sum_like');
+        }
+    }
 } 

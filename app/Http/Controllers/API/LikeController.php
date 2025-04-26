@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Interfaces\LikeRepositoryInterface;
 use App\Http\Resources\LikeResource;
 use App\Services\LikeService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -26,13 +23,7 @@ class LikeController extends Controller
                 'success' => true,
                 'data' => $isLiked,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Check Liked Error: ' . $e->getMessage(), [
-                'image_id' => $id,
-                'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+        } catch (\Exception $e) {            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu like',
@@ -65,18 +56,19 @@ class LikeController extends Controller
     public function likePost($id)
     {
         try {
-            $this->likeService->likePost($id);
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã thích bài viết thành công'
-            ]);
+            $result = $this->likeService->likePost($id);
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã thích bài viết thành công'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể like'
+                ], 500);
+            }
         } catch (\Exception $e) {
-            Log::error('Like Post Error: ' . $e->getMessage(), [
-                'image_id' => $id,
-                'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể like',
@@ -88,18 +80,19 @@ class LikeController extends Controller
     public function unlikePost($id)
     {
         try {
-            $this->likeService->unlikePost($id);         
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã bỏ thích thành công'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Unlike Post Error: ' . $e->getMessage(), [
-                'image_id' => $id,
-                'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+            $result = $this->likeService->unlikePost($id);
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã bỏ thích thành công'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể bỏ thích'
+                ], 500);
+            }
+        } catch (\Exception $e) {            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể bỏ thích bài viết',

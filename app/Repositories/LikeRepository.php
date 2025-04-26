@@ -30,15 +30,30 @@ class LikeRepository implements LikeRepositoryInterface
             ->take($limit)
             ->get();
     }
-    public function checkImageExist(int $imageId)
+    public function checkImageExist(int $imageId): Image
     {
         return Image::findOrFail($imageId);
     }
-    public function checkInteraction(int $imageId)
+    public function checkInteraction(int $imageId): ?Interaction
     {
         return Interaction::where('image_id', $imageId)
             ->where('user_id', Auth::id())
             ->where('type_interaction', 'like')
             ->first();
+    }
+    public function store($imageID, $userID): void
+    {
+        $interaction = new Interaction();
+        $interaction->image_id = $imageID;
+        $interaction->user_id = $userID;
+        $interaction->status_interaction = 'active';
+        $interaction->type_interaction = 'like';
+        $interaction->save();
+    }
+    public function delete(Interaction $interaction): void
+    {
+        if ($interaction) {
+            $interaction->delete();
+        }
     }
 }
