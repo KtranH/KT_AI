@@ -3,8 +3,6 @@
 namespace App\Interfaces;
 
 use App\Models\Comment;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 interface CommentRepositoryInterface
 {

@@ -20,13 +20,13 @@
         <input
           id="seed"
           type="text"
-          class="w-[85%] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="w-[80%] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="Nhập seed hoặc tạo ngẫu nhiên"
           v-model="seedValue"
           @input="updateSeed"
         >
-        <button @click="RandomSeed" class="bg-gradient-text font-medium text-sm text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          Tạo ngẫu nhiên
+        <button @click="RandomSeed" class="mx-2 bg-gradient-text font-medium text-sm text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Ngẫu nhiên
         </button>
         <!--<Button label="Tạo ngẫu nhiên" type="button" class="w-[200px]" @click="generateRandomSeed" />-->
       </div>
