@@ -7,7 +7,6 @@ use App\Services\R2StorageService;
 use App\Http\Resources\PaginateAndRespondResource;
 use App\Http\Requests\Image\UpdateImageRequest;
 use App\Models\Image;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;

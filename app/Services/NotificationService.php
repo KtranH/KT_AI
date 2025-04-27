@@ -6,7 +6,6 @@ use App\Http\Resources\NotificationCollection;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\JsonResponse;
 
 class NotificationService
 {

@@ -3,16 +3,10 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use App\Policies\UserPolicy;
 use Illuminate\Validation\Rules\Password;
 
 class SignUpRequest extends FormRequest
 {
-    public function __construct(private readonly UserPolicy $policy)
-    {
-    }
     public function authorize(): bool
     {
         return true;

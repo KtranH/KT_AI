@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class MailController extends Controller
 {
@@ -23,7 +24,7 @@ class MailController extends Controller
         ]);
 
         $storedCode = Redis::get("verify_code:{$request->email}");
-        
+
         if (!$storedCode) {
             throw ValidationException::withMessages([
                 'code' => ['Mã xác thực đã hết hạn hoặc không tồn tại.'],
@@ -37,7 +38,7 @@ class MailController extends Controller
         }
 
         $user = $this->userRepository->checkEmail($request->email);
-        
+
         if (!$user) {
             throw ValidationException::withMessages([
                 'email' => ['Không tìm thấy tài khoản.'],
@@ -45,7 +46,9 @@ class MailController extends Controller
         }
 
         // Cập nhật trạng thái user
-        $this->userRepository->updateUserStatus($user->id);
+        // Sử dụng Auth::login để đăng nhập user trước khi cập nhật trạng thái
+        Auth::login($user);
+        $this->userRepository->updateStatus();
 
         Redis::del("verify_code:{$request->email}");
         Redis::del("verify_attempts:{$request->email}");
@@ -68,7 +71,7 @@ class MailController extends Controller
         if($resendCount === 1) {
             Redis::expire("verify_resend_count:{$request->email}", 300); // 5 phút
         }
-        
+
         // Kiểm tra có vượt số lần gửi chưa
         if ($resendCount > 3) {
             $ttl = Redis::ttl("verify_resend_count:{$request->email}");
@@ -86,7 +89,7 @@ class MailController extends Controller
         }
 
         $user = $this->userRepository->getUserByEmail($request->email);
-        
+
         if (!$user) {
             throw ValidationException::withMessages([
                 'email' => ['Không tìm thấy tài khoản.'],

@@ -11,17 +11,18 @@ use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Http;
-
 
 class AuthController extends Controller
 {
-    public function __construct(
-        private readonly MailService $mailService, 
-        private readonly UserRepository $userRepository,
-        private readonly TurnStileService $turnStileService
-    ) {}
-    
+    protected UserRepository $userRepository;
+    protected TurnStileService $turnStileService;
+    protected MailService $mailService;
+    public function __construct(UserRepository $userRepository, TurnStileService $turnStileService, MailService $mailService) {
+        $this->userRepository = $userRepository;
+        $this->turnStileService = $turnStileService;
+        $this->mailService = $mailService;
+    }
+
     public function checkStatus()
     {
         try {
@@ -41,7 +42,7 @@ class AuthController extends Controller
 
         // Xác thực Turnstile
         $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
-        
+
         if (!$turnstileResponse['success']) {
             return response()->json([
                 'success' => false,
@@ -84,7 +85,7 @@ class AuthController extends Controller
         }
         // Lấy user mới nhất từ database
         $user = $this->userRepository->getUser();
-        
+
         if (!$user->is_verified) {
             Auth::logout();
             return response()->json([
@@ -97,7 +98,7 @@ class AuthController extends Controller
         // Tạo token Sanctum với thời hạn phù hợp với lựa chọn remember_me
         $tokenName = 'auth_token';
         $tokenExpiration = null;
-        
+
         if ($request->boolean('remember')) {
             // Nếu người dùng chọn remember_me, token sẽ hết hạn sau 7 ngày (được cấu hình trong sanctum.php)
             $tokenName = 'auth_token_remember';
@@ -105,9 +106,9 @@ class AuthController extends Controller
             // Nếu không chọn remember_me, token sẽ hết hạn khi đóng trình duyệt (session->expire_on_close = true)
             $tokenName = 'auth_token_session';
         }
-        
+
         $token = $user->createToken($tokenName)->plainTextToken;
-        
+
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user' => $user,
@@ -127,7 +128,7 @@ class AuthController extends Controller
 
             // Nếu dùng session-based (Google OAuth), logout session
             Auth::guard('web')->logout();
-            
+
             // Đảm bảo regenerate session
             if ($request->session()) {
                 $request->session()->invalidate();
@@ -138,25 +139,21 @@ class AuthController extends Controller
             if ($request->session()) {
                 $request->session()->forget('user');
             }
-            
+
             // Lấy CSRF token mới
             $token = csrf_token();
-            
+
             // Chuẩn bị response với CSRF token mới
             return response()->json([
                 'message' => 'Đã đăng xuất thành công',
                 'csrf_token' => $token
             ])->cookie('XSRF-TOKEN', $token, 120, null, null, null, false);
-            
+
         } catch (\Exception $e) {
             report($e);
             return response()->json(['message' => 'Đã xảy ra lỗi khi đăng xuất: ' . $e->getMessage()], 500);
         }
     }
 
-    /*public function user(Request $request)
-    {
-        return response()->json(Auth::user());
-    }*/
-} 
+}
 

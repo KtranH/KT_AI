@@ -3,12 +3,11 @@
 namespace App\Services;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use App\Services\R2StorageService;
 use App\Services\MailService;
-use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Requests\Auth\ChangePassRequest;
 
