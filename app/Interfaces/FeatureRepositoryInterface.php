@@ -14,4 +14,7 @@ interface FeatureRepositoryInterface
     
     // Cập nhật số lượng ảnh khi người dùng tải lên
     public function increaseSumImg($id);
+
+    // Giảm số lượng ảnh khi người dùng xóa
+    public function decreaseSumImg(int $featureId);
 }

@@ -5,8 +5,6 @@ namespace App\Repositories;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Models\Comment;
 use App\Models\Image;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class CommentRepository implements CommentRepositoryInterface

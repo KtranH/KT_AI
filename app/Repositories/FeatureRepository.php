@@ -7,24 +7,54 @@ use App\Models\AIFeature;
 
 class FeatureRepository implements FeatureRepositoryInterface
 {
-    public function getFeatures()
+    /**
+     * Lấy danh sách feature
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getFeatures(): \Illuminate\Support\Collection
     {
         return AIFeature::where('status_feature', 'active')->get();
     }
-    public function getFeatureById($id)
+
+    /**
+     * Lấy thông tin feature theo ID
+     *
+     * @param int $id ID của feature
+     * @return AIFeature|null
+     */
+    public function getFeatureById($id): ?AIFeature
     {
         return AIFeature::where('id', $id)->first();
     }
-    public function increaseSumImg($id)
+
+    /**
+     * Cập nhật số lượng ảnh khi người dùng tải lên
+     *
+     * @param int $id ID của feature
+     * @return void
+     */
+    public function increaseSumImg($id): void
     {
         $feature = AIFeature::find($id);
-        $feature->sum_img = $feature->sum_img + 1;
-        $feature->save();
+        if ($feature) {
+            $feature->sum_img = $feature->sum_img + 1;
+            $feature->save();
+        }
     }
-    public function decreaseSumImg(int $featureId)
+
+    /**
+     * Giảm số lượng ảnh khi người dùng xóa
+     *
+     * @param int $featureId ID của feature
+     * @return void
+     */
+    public function decreaseSumImg(int $featureId): void
     {
         $feature = AIFeature::find($featureId);
-        $feature->sum_img = $feature->sum_img - 1;
-        $feature->save();
+        if ($feature && $feature->sum_img > 0) {
+            $feature->sum_img = $feature->sum_img - 1;
+            $feature->save();
+        }
     }
 }

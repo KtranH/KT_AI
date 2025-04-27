@@ -10,7 +10,6 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\ReplyResource;
 use App\Services\CommentService;
 use App\Models\Comment;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CommentController extends Controller
@@ -60,7 +59,7 @@ class CommentController extends Controller
     public function destroy(Comment $comment)
     {
         try {
-            $result = $this->commentService->deleteComment($comment);
+            $result = $this->commentService->destroy($comment);
             if($result)
             {
                 return response()->json([

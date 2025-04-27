@@ -3,214 +3,233 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Interfaces\UserRepositoryInterface;
-use App\Services\R2StorageService;
-use App\Services\MailService;
-use App\Auth\MailController;
-use App\Http\Requests\Auth\ChangePassRequest;
-use Illuminate\Http\Request;
+use App\Services\UserService;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    //
-    public function __construct(
-        private readonly UserRepositoryInterface $userRepository,
-        private readonly R2StorageService $r2StorageService,
-        private readonly MailService $mailService
-    ) {}
+    protected UserService $userService;
 
-    // Lấy thông tin người dùng hiện tại
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function getUserProfile() {
         try {
-            $user = $this->userRepository->getUser();
+            $user = $this->userService->getUserProfile();
             return response()->json([
                 'success' => true,
                 'data' => $user
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
+            \Log::error('Lỗi khi tải thông tin người dùng: ' . $exception->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi khi tải thông tin người dùng',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi tải thông tin người dùng'
             ], 500);
         }
     }
-    // Lấy thông tin người dùng bằng ID
+
     public function getUserById($id) {
         try {
-            $user = $this->userRepository->getUserById($id);
+            // Xác thực ID
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID không hợp lệ'
+                ], 400);
+            }
+
+            $user = $this->userService->getUserById($id);
             return response()->json([
                 'success' => true,
                 'data' => $user
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi khi tải thông tin người dùng',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi tải thông tin người dùng'
             ], 500);
         }
     }
-    // Lấy thông tin người dùng bằng email
+
     public function getUserByEmail($email) {
         try {
-            $user = $this->userRepository->getUserByEmail($email);
+            // Xác thực email
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email không hợp lệ'
+                ], 400);
+            }
+
+            $user = $this->userService->getUserByEmail($email);
             return response()->json([
                 'success' => true,
                 'data' => $user
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi khi tải thông tin người dùng',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi tải thông tin người dùng'
             ], 500);
         }
     }
-    // Cập nhật tên user
+
     public function updateName(Request $request) {
         try {
-            $user = $this->userRepository->updateName($request);
-            return response()->json([
-                'success' => true,
-                'data' => $user
+            // Xác thực dữ liệu đầu vào
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:30',
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi cập nhật thông tin người dùng',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-    // Cập nhật avatar
-    public function updateAvatar(Request $request) {
-        try {
-            $path = "avatars/user/" . Auth::user()->email . '/' . $request->file('image')->getClientOriginalName();
-            $this->r2StorageService->upload($path, $request->file('image'));
-            $user = $this->userRepository->updateAvatar($this->r2StorageService->getUrlR2() . "/" . $path);
-            //$this->r2StorageService->delete($user->avatar_url);
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi cập nhật avatar',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-    // Cập nhật cover image
-    public function updateCoverImage(Request $request) {
-        try {
-            $path = "cover_images/user/" . Auth::user()->email . '/' . $request->file('image')->getClientOriginalName();
-            $this->r2StorageService->upload($path, $request->file('image'));
-            $user = $this->userRepository->updateCoverImage($this->r2StorageService->getUrlR2() . "/" . $path);
-            //$this->r2StorageService->delete($user->cover_image_url);
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi cập nhật cover image',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-    // Cập nhật mật khẩu với xác thực mã
-    public function updatePassword(Request $request) {
-        $changePassRequest = new ChangePassRequest();
-        try {
-            $request->validate($changePassRequest->rules());
 
-            $user = Auth::user();
-            if (!$user) {
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Người dùng chưa đăng nhập'
                 ], 401);
-            } 
-            // Kiểm tra mã xác thực
-            $storedCode = Redis::get("password_change_code:{$user->email}");
-            if (!$storedCode) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Mã xác thực đã hết hạn hoặc không tồn tại'
-                ], 400);
             }
 
-            if ($request->verification_code !== $storedCode) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Mã xác thực không đúng'
-                ], 400);
-            }
-
-            // Cập nhật mật khẩu
-            $user = $this->userRepository->updatePassword($request);
-
-            // Xóa mã xác thực sau khi đã sử dụng
-            Redis::del("password_change_code:{$user->email}");
-            Redis::del("password_change_last_sent:{$user->email}");
-
+            $user = $this->userService->updateName($request);
             return response()->json([
                 'success' => true,
-                'message' => 'Đổi mật khẩu thành công',
                 'data' => $user
             ]);
-        } catch (ValidationException $e) {
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dữ liệu không hợp lệ',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi cập nhật mật khẩu',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi cập nhật thông tin người dùng'
             ], 500);
         }
     }
-    // Kiểm tra mật khẩu hiện tại
-    public function checkPassword(Request $request) {
-        try
-        {
-            $request->validate([
-                'current_password' => ['required', 'string']
+
+    public function updateAvatar(Request $request) {
+        try {
+            // Xác thực file
+            $validator = Validator::make($request->all(), [
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             ]);
 
-            if (!$this->userRepository->checkPassword($request->current_password)) {
+            if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Mật khẩu hiện tại không đúng'
-                ]);
+                    'message' => 'File không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
             }
+
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+
+            $result = $this->userService->updateAvatar($request);
+            return $result;
+        } catch (\Exception $exception) {
             return response()->json([
-                'success' => true,
-                'message' => 'Mật khẩu hiện tại đúng'
+                'success' => false,
+                'message' => 'Lỗi khi cập nhật avatar'
+            ], 500);
+        }
+    }
+
+    public function updateCoverImage(Request $request) {
+        try {
+            // Xác thực file
+            $validator = Validator::make($request->all(), [
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             ]);
-        } catch (ValidationException $e) {
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+
+            $result = $this->userService->updateCoverImage($request);
+            return $result;
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dữ liệu không hợp lệ',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
+                'message' => 'Lỗi khi cập nhật ảnh bìa'
+            ], 500);
+        }
+    }
+
+    public function updatePassword(Request $request) {
+        try {
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+
+            $result = $this->userService->updatePassword($request);
+            return $result;
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi khi kiểm tra mật khẩu',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi cập nhật mật khẩu'
+            ], 500);
+        }
+    }
+
+    public function checkPassword(Request $request) {
+        try {
+            // Xác thực dữ liệu đầu vào
+            $validator = Validator::make($request->all(), [
+                'current_password' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+
+            $result = $this->userService->checkPassword($request);
+            return $result;
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi kiểm tra mật khẩu'
             ], 500);
         }
     }

@@ -5,9 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LikeResource;
 use App\Services\LikeService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-
 
 class LikeController extends Controller
 {
@@ -39,12 +36,7 @@ class LikeController extends Controller
                 'success' => true,
                 'like' => LikeResource::collection($likes),
             ]);
-        } catch (\Exception $e) {
-            Log::error('Get Likes Error: ' . $e->getMessage(), [
-                'image_id' => $id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+        } catch (\Exception $e) {            
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu like',

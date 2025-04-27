@@ -3,7 +3,9 @@
 namespace App\Services;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Models\Comment;
+use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
+use App\Http\Requests\Comment\UpdateCommentRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +22,10 @@ class CommentService
         $page = $request->input('page', 1);
         $commentId = $request->input('comment_id');
         return $this->commentRepository->getComments($imageId, $commentId, $page);
+    }
+    public function storeComment(StoreCommentRequest $request)
+    {
+        return $this->commentRepository->storeComment($request->validated());
     }
     public function storeReply(StoreReplyRequest $request, Comment $comment)
     {

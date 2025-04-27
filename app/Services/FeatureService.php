@@ -1,9 +1,7 @@
 <?php
 
 namespace App\Services;
-use App\Models\AIFeature;
 use App\Interfaces\FeatureRepositoryInterface;
-
 
 class FeatureService
 {

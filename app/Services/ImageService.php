@@ -4,10 +4,10 @@ namespace App\Services;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Http\Requests\Image\StoreImageRequest;
 use App\Services\R2StorageService;
-use App\Http\Resources\PaginateAnRespondResource;
+use App\Http\Resources\PaginateAndRespondResource;
 use App\Http\Requests\Image\UpdateImageRequest;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
+use App\Models\Image;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
@@ -32,38 +32,42 @@ class ImageService
     /**
      * Xử lý phân trang và trả về kết quả JSON
      *
-     * @param Collection $images Danh sách hình ảnh
-     * @param int $page Trang hiện tại
-     * @param int $perPage Số lượng mục trên mỗi trang
+     * @param Request $request Request object
+     * @param string $typeImage Loại hình ảnh (liked, created, uploaded)
      * @param string $errorType Loại lỗi để ghi log
-     * @return JsonResponse
+     * @return \Illuminate\Http\Resources\Json\JsonResource
      */
     public function paginateAndRespond(Request $request, string $typeImage, string $errorType)
     {
-        $perPage = (int)$request->input('per_page', 5);
-        $page = (int)$request->input('page', 1);
-        $images = $this->getImagesByType($typeImage);
+        try {
+            $perPage = (int)$request->input('per_page', 5);
+            $page = (int)$request->input('page', 1);
+            $images = $this->getImagesByType($typeImage);
 
-        // Nếu không có ảnh nào
-        if ($images->isEmpty()) {
-            return new PaginateAnRespondResource($images);
+            // Nếu không có ảnh nào
+            if ($images->isEmpty()) {
+                return new PaginateAndRespondResource($images);
+            }
+
+            // Phân trang sử dụng LengthAwarePaginator thay vì thủ công
+            $totalItems = $images->count();
+            $offset = ($page - 1) * $perPage;
+            $paginatedItems = $images->slice($offset, $perPage)->values();
+
+            // Tạo một LengthAwarePaginator object
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $paginatedItems,
+                $totalItems,
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return new PaginateAndRespondResource($paginator);
+        } catch (\Exception $exception) {
+            \Log::error("Lỗi khi phân trang {$errorType}: " . $exception->getMessage());
+            return new PaginateAndRespondResource(collect([]));
         }
-
-        // Phân trang sử dụng LengthAwarePaginator thay vì thủ công
-        $totalItems = $images->count();
-        $offset = ($page - 1) * $perPage;
-        $paginatedItems = $images->slice($offset, $perPage)->values();
-
-        // Tạo một LengthAwarePaginator object
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedItems,
-            $totalItems,
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        return new PaginateAnRespondResource($paginator);
     }
     // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db
     private function getImagesByType(string $typeImage)
@@ -89,7 +93,8 @@ class ImageService
         foreach ($files as $file) {
             $fileName = time() . '_' . $file->getClientOriginalName();
             $path = "uploads/features/{$featureId}/user/" . Auth::user()->email . '/' . $fileName;
-            $filePath = $this->r2StorageService->upload($path, $file, 'public');
+            // Upload file và bỏ qua giá trị trả về vì chúng ta chỉ cần path
+            $this->r2StorageService->upload($path, $file, 'public');
             $uploadedPaths[] = $this->r2StorageService->getUrlR2() . "/" . $path;
         }
         // Lưu trữ vào database

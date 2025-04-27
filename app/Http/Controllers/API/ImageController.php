@@ -3,19 +3,14 @@
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ImageResource;
-use App\Http\Resources\PaginateAnRespondResource;
 use App\Models\Image;
 use App\Services\ImageService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class ImageController extends Controller
 {
     protected ImageService $imageService;
-    public function __construct(ImageService $imageService) 
+    public function __construct(ImageService $imageService)
     {
         $this->imageService = $imageService;
     }
@@ -46,7 +41,7 @@ class ImageController extends Controller
                 'data' => ImageResource::collection($result['data']),
                 'pagination' => $result['pagination']
             ]);
-        } catch (\Exception $e) {            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải dữ liệu ảnh',
@@ -88,7 +83,7 @@ class ImageController extends Controller
                     'message' => 'Vui lòng tải lên ít nhất một ảnh.'
                 ], 422);
             }
-            $result = $this->imageService->storeImage($request, $featureId);    
+            $result = $this->imageService->storeImage($request, $featureId);
             if ($result) {
                 return response()->json([
                     'success' => true,
@@ -99,7 +94,7 @@ class ImageController extends Controller
                 'success' => false,
                 'message' => 'Không thể tải lên'
             ], 403);
-        } catch (\Exception $e) {    
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tải lên',
@@ -121,7 +116,7 @@ class ImageController extends Controller
                 'success' => false,
                 'message' => 'Không thể cập nhật'
             ], 403);
-        } catch (\Exception $e) {            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể cập nhật',

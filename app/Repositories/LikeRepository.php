@@ -5,13 +5,9 @@ namespace App\Repositories;
 use App\Interfaces\LikeRepositoryInterface;
 use App\Models\Image;
 use App\Models\Interaction;
-use App\Models\User;
-use App\Notifications\LikeImageNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
+
 
 class LikeRepository implements LikeRepositoryInterface
 {
