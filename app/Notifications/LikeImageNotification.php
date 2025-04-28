@@ -45,7 +45,7 @@ class LikeImageNotification extends Notification implements ShouldBroadcast
      * Get the mail representation of the notification.
      */
     public function toMail(object $notifiable): MailMessage
-    {
+    {      
         return (new MailMessage)
             ->subject('Có người thích ảnh của bạn')
             ->line($this->liker->name . ' đã thích ảnh ' . $this->image->title . ' của bạn.')
@@ -63,10 +63,7 @@ class LikeImageNotification extends Notification implements ShouldBroadcast
     {
         // Đảm bảo lấy avatar URL từ đối tượng liker đã được truyền vào
         // và gán giá trị mặc định nếu nó null hoặc rỗng.
-        $likerAvatar = $this->liker->avatar_url ?? "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
-        if (empty($likerAvatar)) { // Kiểm tra thêm trường hợp rỗng sau khi dùng null coalescing
-            $likerAvatar = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
-        }
+        $likerAvatar = $this->takeAvatarUser($this->liker);
 
         // Lấy URL ảnh đầu tiên từ JSON hoặc mảng
         $imageUrl = null;
@@ -102,10 +99,7 @@ class LikeImageNotification extends Notification implements ShouldBroadcast
     {
         // Đảm bảo lấy avatar URL từ đối tượng liker đã được truyền vào
         // và gán giá trị mặc định nếu nó null hoặc rỗng.
-        $likerAvatar = $this->liker->avatar_url ?? "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
-        if (empty($likerAvatar)) { // Kiểm tra thêm trường hợp rỗng sau khi dùng null coalescing
-            $likerAvatar = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
-        }
+        $likerAvatar = $this->takeAvatarUser($this->liker);
 
         // Lấy URL ảnh đầu tiên từ JSON hoặc mảng
         $imageUrl = null;
@@ -142,5 +136,13 @@ class LikeImageNotification extends Notification implements ShouldBroadcast
     public function broadcastType(): string
     {
         return 'like.image';
+    }
+    public function takeAvatarUser($liker)
+    {
+        $likerAvatar = $liker->avatar_url ?? "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        if (empty($likerAvatar)) { // Kiểm tra thêm trường hợp rỗng sau khi dùng null coalescing
+            $likerAvatar = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+        }
+        return $likerAvatar;
     }
 }

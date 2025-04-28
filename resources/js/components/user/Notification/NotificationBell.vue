@@ -66,7 +66,7 @@
               </svg>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-800 whitespace-normal break-words">
+              <p class="text-sm text-gray-800 whitespace-normal break-words truncate">
                 {{ notification.data.message }}
               </p>
               <p class="text-xs text-gray-500 mt-1">
@@ -97,6 +97,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotifications } from '@/composables/user/useNotifications'
+import { encodedID } from '@/utils'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/vi'
@@ -137,7 +138,7 @@ export default {
       
       // Xử lý điều hướng dựa vào loại thông báo
       if (notification.data.type === 'like_image' && notification.data.image_id) {
-        router.push(`/image/${notification.data.image_id}`)
+        router.push(`/image/detail/${encodedID(notification.data.image_id)}`)
         isOpen.value = false
       }
     }

@@ -14,7 +14,8 @@ export default function useComments(imageId) {
     const error = ref(null)
     const currentPage = ref(1)
     const hasMoreComments = ref(false)
-    
+    const lastActionTime = ref(null)
+
     // Lấy danh sách bình luận từ API
     const fetchComments = async (page = 1) => {
         if (!imageId) {
@@ -51,9 +52,9 @@ export default function useComments(imageId) {
         }
     }
 
-    // Thêm bình luận mớiư
+    // Thêm bình luận mới
     const addComment = async () => {
-        if (isActionTooQuick(lastActionTime.value)) {
+        if (lastActionTime.value && isActionTooQuick(lastActionTime.value)) {
             toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
             return
         }

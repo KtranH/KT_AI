@@ -2,12 +2,15 @@
 
 namespace App\Services;
 use App\Interfaces\CommentRepositoryInterface;
+use App\Notifications\LikeCommentNotification;
 use App\Models\Comment;
+use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
 
 class CommentService
@@ -62,6 +65,15 @@ class CommentService
             $comment->sum_like += 1;
         }
         
+        // Kiểm tra thông tin liker
+        $liker = User::find($userId);
+        if($liker instanceof User)
+        {
+            if($comment->user_id !== $userId) {
+                $this->sendNotification($comment, $liker);
+            }
+        }
+
         $comment->list_like = $listLike;
         $comment->save();
         
@@ -69,5 +81,32 @@ class CommentService
             'likes' => $comment->sum_like,
             'isLiked' => in_array($userId, $listLike)
         ];
+    }
+    public function sendNotification(Comment $comment, User $liker)
+    {
+        try
+        {
+            // Lấy thông tin người sở hữu bình luận
+            $commentOwner = User::find($comment->user_id);
+            if (!$commentOwner instanceof User) {
+                return;
+            }
+
+            // Đảm bảo tải đầy đủ thông tin người dùng
+            $fullLikerInfo = User::select('id', 'name', 'avatar_url')->find($liker->id);
+            if (!$fullLikerInfo instanceof User) {
+                return;
+            }
+
+            // Nếu avatar_url là null, gán giá trị mặc định
+            if ($fullLikerInfo->avatar_url === null) {
+                $fullLikerInfo->avatar_url = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+            }
+
+            // Gửi thông báo tới chủ sở hữu bình luận
+            $commentOwner->notify(new LikeCommentNotification($fullLikerInfo, $comment));
+        } catch (\Exception $exception) {
+            \Log::error('Lỗi khi gửi thông báo: ' . $exception->getMessage());
+        }
     }
 }
