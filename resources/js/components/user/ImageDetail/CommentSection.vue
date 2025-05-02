@@ -20,7 +20,7 @@
         </div>
 
         <!-- Comments scrollable section -->
-        <CommentList 
+        <CommentList
             v-else
             :comments="comments"
             :replyingToIndex="replyingToIndex"
@@ -29,6 +29,7 @@
             :replyToParentId="replyToParentId"
             :hasMoreComments="hasMoreComments"
             :loading="loading"
+            :highlightCommentId="highlightCommentId"
             @reply="handleStartReply"
             @cancel-reply="handleCancelReply"
             @reply-submit="handleReplySubmit"
@@ -42,7 +43,7 @@
         <LikeSection />
 
         <!-- New comment input -->
-        <CommentInput 
+        <CommentInput
             :newComment="newComment"
             @update:newComment="newComment = $event"
             @add-comment="handleAddComment"
@@ -73,20 +74,28 @@ export default {
             validator: function(value) {
                 return value !== null && value !== undefined && value !== '';
             }
+        },
+        highlightCommentId: {
+            type: [Number, String],
+            default: null
+        },
+        shouldHighlight: {
+            type: Boolean,
+            default: false
         }
     },
-    setup(props) {        
-        const { 
-            comments, 
+    setup(props) {
+        const {
+            comments,
             newComment,
             addComment,
-            replyingToIndex, 
-            replyingToReply, 
-            replyToUsername, 
+            replyingToIndex,
+            replyingToReply,
+            replyToUsername,
             replyToParentId,
-            startReply, 
-            cancelReply, 
-            handleReplySubmit, 
+            startReply,
+            cancelReply,
+            handleReplySubmit,
             deleteComment,
             updateComment,
             loading,
@@ -96,10 +105,43 @@ export default {
             loadMoreReplies,
             hasMoreComments
         } = useComments(props.imageId)
-        
+
         onMounted(async () => {
             if (props.imageId) {
                 await fetchComments();
+
+                // Nếu có highlightCommentId, tìm và xử lý comment đó
+                if (props.highlightCommentId) {
+                    await nextTick();
+
+                    // Tìm comment trong danh sách
+                    const commentIndex = comments.value.findIndex(c => c.id == props.highlightCommentId);
+
+                    // Nếu tìm thấy và cần highlight, đưa lên đầu danh sách
+                    if (commentIndex > 0 && props.shouldHighlight) {
+                        // Lấy comment ra khỏi danh sách
+                        const highlightedComment = comments.value[commentIndex];
+                        comments.value.splice(commentIndex, 1);
+                        // Đưa lên đầu danh sách
+                        comments.value.unshift(highlightedComment);
+
+                        // Đánh dấu để highlight
+                        highlightedComment.is_highlighted = true;
+
+                        // Sau 3 giây, bỏ highlight
+                        setTimeout(() => {
+                            highlightedComment.is_highlighted = false;
+                        }, 3000);
+                    }
+
+                    // Cuộn đến comment (dù đã đưa lên đầu hay không)
+                    await nextTick();
+                    const commentElement = document.getElementById(`comment-${props.highlightCommentId}`);
+                    if (commentElement) {
+                        commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+
                 console.log(hasMoreComments.value)
             } else {
                 console.log("imageId không tồn tại hoặc không hợp lệ")
@@ -123,7 +165,7 @@ export default {
         const handleCancelReply = () => {
             cancelReply()
         }
-        
+
         const handleAddComment = () => {
             addComment()
             nextTick(() => {
@@ -136,7 +178,7 @@ export default {
         }
 
         const handleUpdateComment = (data) => {
-            updateComment(data.commentId, data.content, data.isReply, data.parentIndex)
+            updateComment(data.commentId, data.content)
         }
 
         return {

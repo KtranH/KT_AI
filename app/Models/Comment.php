@@ -15,6 +15,7 @@ class Comment extends Model
         'user_id',
         'image_id',
         'parent_id',
+        'origin_comment',
         'content',
         'sum_like',
         'list_like'
@@ -48,4 +49,16 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_id');
     }
-} 
+
+    // Self relationship cho origin comment
+    public function originComment()
+    {
+        return $this->belongsTo(Comment::class, 'origin_comment');
+    }
+
+    // Self relationship cho các replies của origin comment
+    public function originReplies(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'origin_comment');
+    }
+}

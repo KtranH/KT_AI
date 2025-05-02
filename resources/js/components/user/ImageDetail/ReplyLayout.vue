@@ -12,10 +12,10 @@
             </button>
 
             <!-- Input -->
-            <input 
+            <input
                 ref="inputRef"
-                type="text" 
-                v-model="replyText" 
+                type="text"
+                v-model="replyText"
                 class="flex-1 bg-transparent text-sm focus:outline-none ml-2"
                 :placeholder="`Trả lời cho ${replyToUsername}...`"
                 @keyup.enter="handleSubmitReply"
@@ -32,10 +32,10 @@
                 </div>
                 </div>
             </Teleport>
-            
+
             <!-- Nút Đăng -->
-            <button 
-                @click="handleSubmitReply" 
+            <button
+                @click="handleSubmitReply"
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500 font-semibold text-sm"
                 :class="{'opacity-50 cursor-default': !canSubmit, 'hover:text-blue-600': canSubmit}"
                 :disabled="!canSubmit"
@@ -44,8 +44,8 @@
             </button>
 
             <!-- Nút Hủy -->
-            <button 
-                @click="cancelReply" 
+            <button
+                @click="cancelReply"
                 class="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm hover:text-gray-700"
             >
                 Hủy
@@ -80,6 +80,10 @@ export default {
         replyId: {
             type: [Number, String, null],
             default: null
+        },
+        originCommentId: {
+            type: [Number, String, null],
+            default: null
         }
     },
     components: {
@@ -89,47 +93,48 @@ export default {
     setup(props, { emit, expose }) {
         const authStore = useAuthStore()
         const user = authStore.user
-        
+
         // Không sử dụng composable useReply để tránh xung đột
         const replyText = ref('')
-        
+
         // Xử lý gửi phản hồi
         const submitReply = () => {
             if (!replyText.value.trim()) return
-            
+
             // Emit sự kiện reply-submitted với nội dung phản hồi và replyId nếu có
             emit('reply-submitted', {
                 commentId: props.commentId,
                 content: replyText.value.trim(),
-                replyId: props.replyId
+                replyId: props.replyId,
+                originCommentId: props.originCommentId
             })
-            
+
             // Reset nội dung phản hồi
             replyText.value = ''
         }
-        
+
         // Xử lý hủy phản hồi
         const cancelReply = () => {
             replyText.value = ''
             emit('cancel-reply')
         }
-        
+
         const { showEmojiPicker, toggleEmojiPicker, addEmoji } = useEmoji(replyText)
-        
+
         const canSubmit = computed(() => {
             return replyText.value && replyText.value.trim() !== ''
         })
-        
+
         const handleSubmitReply = () => {
             if (!canSubmit.value) return
-            
+
             console.log(`Đang gửi phản hồi cho ${props.replyToUsername}:`, replyText.value)
             submitReply()
         }
 
         // Thêm phương thức focus để có thể gọi từ component cha
         const inputRef = ref(null)
-        
+
         // Phương thức focus sẽ tập trung vào input
         const focus = () => {
             // Đảm bảo inputRef đã được gán và có phương thức focus
@@ -139,7 +144,7 @@ export default {
                 }
             })
         }
-        
+
         // Tự động focus khi component được render
         onMounted(() => {
             nextTick(() => {
@@ -148,19 +153,19 @@ export default {
                 }
             })
         })
-        
+
         // Tự động focus khi isReplying thay đổi từ false sang true
         onUpdated(() => {
             if (props.isReplying && inputRef.value) {
                 inputRef.value.focus()
             }
         })
-        
+
         // Expose phương thức focus để component cha có thể gọi
         expose({
             focus
         })
-        
+
         return {
             replyText,
             submitReply,

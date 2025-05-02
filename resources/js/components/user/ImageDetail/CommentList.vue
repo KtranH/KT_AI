@@ -4,7 +4,7 @@
         <div v-if="comments.length === 0" class="flex justify-center items-center h-full">
             <p class="text-gray-500 text-center">Chưa có bình luận nào.<br>Hãy là người đầu tiên bình luận!</p>
         </div>
-        
+
         <!-- Danh sách bình luận -->
         <div v-else class="space-y-4 p-4">
             <CommentItem
@@ -16,6 +16,7 @@
                 :replyingToReply="replyingToReply"
                 :replyToUsername="replyToUsername"
                 :replyToParentId="replyToParentId"
+                :highlightCommentId="highlightCommentId"
                 @reply="handleReply"
                 @cancel-reply="handleCancelReply"
                 @reply-submit="handleReplySubmit"
@@ -26,7 +27,7 @@
 
             <!-- Nút xem thêm bình luận -->
             <div v-if="hasMoreComments" class="flex justify-center mt-4">
-                <button 
+                <button
                     @click="handleLoadMoreComments"
                     class="text-blue-500 hover:text-blue-600 font-medium"
                     :disabled="loading"
@@ -74,11 +75,15 @@ export default {
         loading: {
             type: Boolean,
             default: false
+        },
+        highlightCommentId: {
+            type: [Number, String],
+            default: null
         }
     },
     emits: [
-        'reply', 
-        'cancel-reply', 
+        'reply',
+        'cancel-reply',
         'reply-submit',
         'delete',
         'update',
@@ -86,8 +91,8 @@ export default {
         'load-more-replies'
     ],
     setup(props, { emit }) {
-        const handleReply = (index, username, replyId = null) => {
-            emit('reply', index, username, replyId)
+        const handleReply = (index, username, replyId = null, originCommentId = null) => {
+            emit('reply', index, username, replyId, originCommentId)
         }
 
         const handleCancelReply = () => {
@@ -97,11 +102,11 @@ export default {
         const handleReplySubmit = (data) => {
             emit('reply-submit', data)
         }
-        
+
         const handleDelete = (data) => {
             emit('delete', data)
         }
-        
+
         const handleUpdate = (data) => {
             emit('update', data)
         }
@@ -114,7 +119,7 @@ export default {
             if (index === undefined) {
                 index = props.comments.findIndex(comment => comment.id === commentId);
             }
-            
+
             if (index !== -1) {
                 emit('load-more-replies', commentId, index);
             }
@@ -151,4 +156,4 @@ div::-webkit-scrollbar-thumb {
 div::-webkit-scrollbar-thumb:hover {
   background: #ccc;
 }
-</style> 
+</style>

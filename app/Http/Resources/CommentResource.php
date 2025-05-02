@@ -12,7 +12,7 @@ class CommentResource extends JsonResource
     {
         $userId = Auth::id();
         $listLike = $this->list_like ?? [];
-        
+
         return [
             'id' => $this->id,
             'username' => $this->user->name,
@@ -29,6 +29,8 @@ class CommentResource extends JsonResource
             'hasMoreReplies' => $this->whenLoaded('replies', function() {
                 return count($this->replies) >= 3;
             }, false),
+            'parent_id' => $this->parent_id,
+            'origin_comment' => $this->origin_comment,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];

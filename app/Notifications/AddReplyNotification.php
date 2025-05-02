@@ -5,17 +5,16 @@ namespace App\Notifications;
 use App\Models\User;
 use App\Models\Comment;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class LikeCommentNotification extends Notification implements ShouldBroadcast
+class AddReplyNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
     protected $liker;
     protected $comment;
-
     /**
      * Create a new notification instance.
      */
@@ -23,7 +22,7 @@ class LikeCommentNotification extends Notification implements ShouldBroadcast
     {
         //
         $this->liker = $liker;
-        $this->comment = $comment;
+        $this->comment = $comment;  
     }
 
     /**
@@ -42,8 +41,8 @@ class LikeCommentNotification extends Notification implements ShouldBroadcast
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Có người thích bình luận của bạn')
-            ->line($this->liker->name . ' đã thích bình luận ' . $this->comment->content . ' của bạn.')
+            ->subject('Có người trả lời bình luận của bạn')
+            ->line($this->liker->name . ' đã trả lời bình luận "' . $this->comment->content . '" của bạn.')
             ->action('Xem bình luận', url('/comment/' . $this->comment->id))
             ->line('Cảm ơn bạn đã sử dụng ứng dụng của chúng tôi!');
     }
@@ -55,8 +54,6 @@ class LikeCommentNotification extends Notification implements ShouldBroadcast
      */
     public function toArray(object $notifiable): array
     {
-        // Lấy avatar URL từ đối tượng liker đã được truyền vào
-        // và gán giá trị mặc định nếu nó null hoặc rỗng.
         $likerAvatar = $this->takeAvatarUser($this->liker);
         return [
             //
@@ -66,18 +63,12 @@ class LikeCommentNotification extends Notification implements ShouldBroadcast
             'image_id' => $this->comment->image_id,
             'comment_id' => $this->comment->id,
             'comment_content' => $this->comment->content,
-            'type' => 'like_comment',
-            'message' => $this->liker->name . ' đã thích bình luận ' . $this->comment->content . ' của bạn.',
+            'type' => 'add_reply',
+            'message' => $this->liker->name . ' đã trả lời bình luận "' . $this->comment->content . '" của bạn.',
             'created_at' => now()->toIso8601String(),
             'read_at' => null,
         ];
     }
-    /**
-     * Get the broadcastable representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return BroadcastMessage
-     */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         $likerAvatar = $this->takeAvatarUser($this->liker);
@@ -89,15 +80,15 @@ class LikeCommentNotification extends Notification implements ShouldBroadcast
             'image_id' => $this->comment->image_id,
             'comment_id' => $this->comment->id,
             'comment_content' => $this->comment->content,
-            'type' => 'like_comment',
-            'message' => $this->liker->name . ' đã thích bình luận "' . $this->comment->content . '" của bạn.',
+            'type' => 'add_reply',
+            'message' => $this->liker->name . ' đã trả lời bình luận "' . $this->comment->content . '" của bạn.',
             'created_at' => now()->toIso8601String(),
             'read_at' => null,
         ]);
     }
     public function broadcastType(): string
     {
-        return 'like.comment';
+        return 'add_reply';
     }
     public function takeAvatarUser($liker)
     {

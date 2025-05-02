@@ -6,7 +6,10 @@ use App\Models\Comment;
 
 interface CommentRepositoryInterface
 {
-    // Lấy bình luận theo image_id với phân trang
+    // Lấy bình luận theo ID
+    public function getCommentByID(int $commentId): Comment;
+    
+    // Lấy các bình luận theo image_id với phân trang
     public function getComments(int $imageId, ?int $commentId = null, int $page): array;
     
     // Lấy bình luận gốc theo image_id với phân trang
