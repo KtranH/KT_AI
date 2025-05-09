@@ -30,13 +30,13 @@
           <template v-if="!isAuthenticated">
             <router-link 
               to="/login" 
-              class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition"
+              class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition"
             >
               Đăng nhập
             </router-link>
             <router-link 
               to="/register" 
-              class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-full hover:bg-purple-700 transition"
+              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition"
             >
               Đăng ký
             </router-link>
