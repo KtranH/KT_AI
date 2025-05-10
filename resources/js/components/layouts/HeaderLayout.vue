@@ -3,16 +3,6 @@
   <header class="fixed top-0 left-0 right-0 z-50 shadow-sm" style="backdrop-filter: blur(50px);" data-aos="fade-down">
     <div class="container mx-auto px-2">
       <div class="flex items-center justify-between h-16">
-        <!-- Logo -->
-        <div class="flex items-center">
-          <a href="/" class="flex items-center space-x-2">
-            <img :src="logo" alt="KT_AI Logo" class="h-8 w-8">
-            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              KT_AI
-            </span>
-          </a>
-        </div>
-
         <!-- Navigation -->
         <nav class="hidden md:flex items-center ml-24 space-x-6" v-if="shouldShowHeader">
           <router-link 
@@ -23,6 +13,15 @@
             >
               {{ item.name }}
           </router-link>
+        </nav>
+        <nav v-else>
+          <!-- Logo -->
+          <a href="/" class="flex items-center space-x-2">
+            <img :src="logo" alt="KT_AI Logo" class="h-8 w-8">
+            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              KT_AI
+            </span>
+          </a>
         </nav>
 
         <!-- Auth Buttons -->
@@ -45,9 +44,9 @@
             <div class="relative" v-click-outside="closeUserMenu">
               <div class="flex items-center space-x-2">
                   <button 
-                  @click="toggleUserMenu"
-                  class="flex items-center space-x-2 focus:outline-none"
-                >
+                    @click="toggleUserMenu"
+                    class="flex items-center space-x-2 focus:outline-none"
+                  >
                   <img 
                     :src="user.avatar_url || '/img/default-avatar.png'" 
                     alt="User avatar"
@@ -122,9 +121,6 @@ export default {
 
     // Data
     const menuItems = [
-      { name: 'Trang chủ', path: '/dashboard' },
-      { name: 'Tạo ảnh', path: '/features' },
-      { name: 'Thông tin', path: '/' },
     ]
 
     // Methods

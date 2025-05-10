@@ -21,6 +21,7 @@
         "dayjs": "^1.11.13",
         "emoji-picker-element": "^1.26.1",
         "fullpage.js": "^4.0.33",
+        "gsap": "^3.13.0",
         "laravel-echo": "^1.19.0",
         "masonry-layout": "^4.2.2",
         "pinia": "^3.0.1",

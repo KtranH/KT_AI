@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-100 pt-24" data-aos="zoom-out">
-    <div class="max-w-[80%] mx-auto my-4">
+  <div class="min-h-screen bg-gray-100 pt-4" data-aos="zoom-out">
+    <div class="max-w-[90%] mx-auto my-4">
       <h1 class="text-4xl font-bold text-center w-full">
         <div class="flex items-center justify-center">
           <span class="text-3xl font-bold feature-title bg-gradient-text-v2 from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>

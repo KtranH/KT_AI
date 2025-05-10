@@ -4,7 +4,14 @@
   </div>
   <div v-else>
     <Header />
-    <router-view v-slot="{ Component }" :key="$route.fullPath">
+    <Sidebar v-if="showSidebar">
+      <router-view v-slot="{ Component }" :key="$route.fullPath">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </Sidebar>
+    <router-view v-else v-slot="{ Component }" :key="$route.fullPath">
       <transition name="fade" mode="out-in">
         <component :is="Component" />
       </transition>
@@ -14,7 +21,9 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import Sidebar from './components/layouts/SidebarLayout.vue';
 import Header from './components/layouts/HeaderLayout.vue';
 import Loading from './components/layouts/LoadingLayout.vue';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
@@ -23,12 +32,21 @@ import { toast, Toaster as VueSonner } from 'vue-sonner'
 export default {
   name: 'App',
   components: {
+    Sidebar,
     Header,
     Loading,
     VueSonner
   },
   setup() {
     const isLoading = ref(true);
+    const route = useRoute();
+
+    const showSidebar = computed(() => {
+      // Các route không hiển thị sidebar
+      const noSidebarRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password']; 
+      // Kiểm tra xem route hiện tại có nằm trong danh sách không hiển thị sidebar không
+      return !noSidebarRoutes.includes(route.path);
+    });
 
     onMounted(() => {
       setTimeout(() => {
@@ -36,7 +54,7 @@ export default {
       }, 1000);
     });
 
-    return { isLoading };
+    return { isLoading, showSidebar };
   }
 }
 </script>
@@ -152,4 +170,4 @@ export default {
 #app {
   min-height: 100vh;
 }
-</style> 
+</style>

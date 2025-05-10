@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-100 pt-24">
+  <div class="min-h-screen bg-gray-100">
     <!-- Toast notifications are handled globally in App.vue -->
     <!-- Ảnh background và avtar -->
     <!-- Container chính -->
-    <div class="max-w-[90%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
+    <div class="max-w-[100%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
         <div class="relative">
           <!-- Cover Image section -->
           <div class="h-[300px] bg-purple-600 rounded-t-lg relative overflow-hidden group">

@@ -113,3 +113,8 @@ export const formatTimev2 = (timestamp) => {
     return date.format('HH:mm - DD/MM/YYYY')
   }
 }
+
+// Hàm lấy URL hiện tại
+export const getCurrentURL = () => {
+  return window.location.href;
+}

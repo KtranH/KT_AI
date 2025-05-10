@@ -23,6 +23,12 @@ import Upload from '../pages/user/Upload.vue'
 // User routes
 //import Profile from '../pages/user/ProfilePage.vue'
 import Notifications from '../pages/user/Notification.vue'
+// Test Pages
+import TestLayout from '../pages/test/TestLayout.vue'
+import Test1 from '../pages/test/Test1.vue'
+import Test2 from '../pages/test/Test2.vue'
+import Test3 from '../pages/test/Test3.vue'
+import Test4 from '../pages/test/Test4.vue'
 
 const routes = [
   {
@@ -107,6 +113,39 @@ const routes = [
     name: 'notifications',
     component: Notifications,
     meta: { requiresAuth: true, title: 'KT_AI - Thông báo' }
+  },
+  // Test routes
+  {
+    path: '/test',
+    name: 'test',
+    component: TestLayout,
+    meta: { title: 'KT_AI - Test' },
+    children: [
+      {
+        path: '1',
+        name: 'test-1',
+        component: Test1,
+        meta: { title: 'KT_AI - Test 1' }
+      },
+      {
+        path: '2',
+        name: 'test-2',
+        component: Test2,
+        meta: { title: 'KT_AI - Test 2' }
+      },
+      {
+        path: '3',
+        name: 'test-3',
+        component: Test3,
+        meta: { title: 'KT_AI - Test 3' }
+      },
+      {
+        path: '4',
+        name: 'test-4',
+        component: Test4,
+        meta: { title: 'KT_AI - Test 4' }
+      }
+    ]
   }
 ]
 
