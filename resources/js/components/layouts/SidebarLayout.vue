@@ -72,8 +72,8 @@
             class="flex items-center justify-between w-full px-3 py-2 rounded-md text-sm font-medium transition hover:bg-white/20 text-gray-700"
           >
             <div class="flex items-center">
-              <i class="fas fa-flask mr-3 text-lg"></i>
-              Test
+              <i class="fa-solid fa-screwdriver-wrench text-lg mr-3"></i>
+              Chức năng
             </div>
             <i 
               class="fas transition-transform duration-200" 
@@ -186,7 +186,7 @@ export default {
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard', icon: 'fas fa-home' },
       { name: 'Tạo ảnh', path: '/features', icon: 'fas fa-image' },
-      { name: 'Thống kê', path: '/', icon: 'fas fa-chart-line' },
+      { name: 'Thống kê', path: '/statistics', icon: 'fas fa-chart-line' },
     ]
     
     const testSubMenu = [
@@ -311,4 +311,4 @@ export default {
 button {
   touch-action: manipulation;
 }
-</style> 
+</style>

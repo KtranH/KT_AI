@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\TurnstileController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\StatisticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,4 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount']);
     Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead']);
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
-}); 
+
+    // Statistics Route
+    Route::get('/statistics', [StatisticsController::class, 'getStatistics']);
+});

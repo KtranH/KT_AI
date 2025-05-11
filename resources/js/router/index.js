@@ -29,6 +29,8 @@ import Test1 from '../pages/test/Test1.vue'
 import Test2 from '../pages/test/Test2.vue'
 import Test3 from '../pages/test/Test3.vue'
 import Test4 from '../pages/test/Test4.vue'
+// Statistics Pages
+import StatisticsPage from '../pages/user/StatisticsPage.vue';
 
 const routes = [
   {
@@ -114,6 +116,12 @@ const routes = [
     component: Notifications,
     meta: { requiresAuth: true, title: 'KT_AI - Thông báo' }
   },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: StatisticsPage,
+    meta: { requiresAuth: true }
+  },
   // Test routes
   {
     path: '/test',
@@ -180,4 +188,4 @@ router.afterEach(() => {
   window.dispatchEvent(new Event('router-changed'))
 })
 
-export default router 
+export default router

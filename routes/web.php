@@ -11,6 +11,7 @@ use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\StatisticsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -87,6 +88,8 @@ Route::prefix('api')->group(function () {
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        // Statistics Route
+        Route::get('/statistics', [StatisticsController::class, 'getStatistics']);
     });
 });
 

@@ -12,6 +12,7 @@ import { createPinia } from 'pinia'
 import { registerGlobalComponents } from './components/common'
 import { clickOutside } from './directives/clickOutside'
 import { createApp } from 'vue'
+import PrimeVue from 'primevue/config';
 
 // Cấu hình Axios interceptor để tự động thêm token
 axios.interceptors.request.use(config => {
@@ -45,6 +46,8 @@ app.use(VueFullPage, {
   credits: { enabled: false }
 })
 app.use(VueSweetalert2)
+// Use PrimeVue
+app.use(PrimeVue);
 
 // Đăng ký các component toàn cục
 registerGlobalComponents(app);
