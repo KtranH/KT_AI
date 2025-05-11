@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-100 pt-24" data-aos="zoom-out">
-    <div class="max-w-[90%] mx-auto my-4">
+  <div class="min-h-screen bg-gray-100" data-aos="zoom-out">
+    <div class="max-w-full mx-auto my-4">
         <h1 v-if="error_message != null" class="text-2xl font-bold text-center mb-2 text-red-600 bg-red-100 p-4 rounded-full">{{ error_message }}</h1>
         <div class="min-h-screen bg-gray-50">
             <div class="container mx-auto p-6">
@@ -12,14 +12,7 @@
                     <img :src="icon_title" loading="lazy" class="w-12 h-12 ml-2" alt="">
                 </div>
                 
-                <!-- Phần hướng dẫn sử dụng -->
-                <GuideSection 
-                  title="Hướng dẫn sử dụng"
-                  :guideItems="guideItems"
-                  :thumbnailUrl="feature?.thumbnail_url || 'https://balico.com.vn/wp-content/uploads/2020/09/loi-404-tren-cyber-panel.jpg'"
-                />
-                
-                <div class="grid gap-8" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
+                <div class="grid gap-8 mb-8" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
                     <!-- Phần nhập thông tin bên trái -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <h2 class="text-xl font-semibold text-gray-700 mb-6">Thông số hình ảnh</h2>
@@ -61,6 +54,14 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Phần hướng dẫn sử dụng -->
+                <GuideSection 
+                  title="Hướng dẫn sử dụng"
+                  :guideItems="guideItems"
+                  :thumbnailUrl="feature?.thumbnail_url || 'https://balico.com.vn/wp-content/uploads/2020/09/loi-404-tren-cyber-panel.jpg'"
+                />
+
                 <ImageGalleryLayout 
                     :featureId="featureId"
                     :featureName="featureName"

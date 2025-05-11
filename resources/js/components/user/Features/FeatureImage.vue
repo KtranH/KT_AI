@@ -5,7 +5,7 @@
     <img 
       :src="imageUrl" 
       :alt="feature.title"
-      class="rounded-3xl shadow-2xl w-full max-w-lg border-2 border-transparent group-hover:border-indigo-200/50 transform transition-all duration-700"
+      class="rounded-3xl shadow-2xl mr-16 w-full max-w-lg border-2 border-transparent group-hover:border-indigo-200/50 transform transition-all duration-700"
       :class="{'hover:scale-105': hoverEffect}"
       @click="$emit('click')"
     />
