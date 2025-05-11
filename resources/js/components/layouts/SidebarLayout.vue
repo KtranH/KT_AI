@@ -186,14 +186,15 @@ export default {
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard', icon: 'fas fa-home' },
       { name: 'Tạo ảnh', path: '/features', icon: 'fas fa-image' },
-      { name: 'Thống kê', path: '/statistics', icon: 'fas fa-chart-line' },
+      { name: 'Tiến trình', path: '/', icon: 'fas fa-spinner'},
     ]
     
     const testSubMenu = [
-      { name: 'Test 1', path: '/test/1' },
-      { name: 'Test 2', path: '/test/2' },
-      { name: 'Test 3', path: '/test/3' },
-      { name: 'Test 4', path: '/test/4' },
+      { name: 'Thống kê', path: '/statistics'},
+      { name: 'Tùy chỉnh', path: '/test/1' },
+      { name: 'Lịch sử hoạt động', path: '/test/2' },
+      { name: 'Thanh toán', path: '/test/3' },
+      { name: 'Hỗ trợ', path: '/test/4' },
     ]
 
     // Methods

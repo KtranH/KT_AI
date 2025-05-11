@@ -146,3 +146,9 @@ export const genericAPI = {
   put: (endpoint, data, config) => apiClient.put(endpoint, data, config),
   delete: (endpoint, config) => apiClient.delete(endpoint, config)
 }
+
+// API ComfyUI
+export const comfyuiAPI = {
+  generateImage: (prompt) => apiClient.post('/generate-image', { prompt }),
+  cancelGenerateImage: () => apiClient.post('/cancel-generate-image')
+}
