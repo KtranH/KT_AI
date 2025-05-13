@@ -3,10 +3,9 @@
 namespace App\Services;
 
 use App\Repositories\ImageJobsRepository;
-use App\Services\R2Service;
+use App\Services\R2StorageService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\ImageJob;
@@ -20,7 +19,7 @@ class ComfyUIService
     public $r2Service;
     protected string $comfyuiBaseUrl;
 
-    public function __construct(ImageJobsRepository $imageJobsRepository, R2Service $r2Service)
+    public function __construct(ImageJobsRepository $imageJobsRepository, R2StorageService $r2Service)
     {
         $this->imageJobsRepository = $imageJobsRepository;
         $this->r2Service = $r2Service;
@@ -357,19 +356,52 @@ class ComfyUIService
      */
     public function checkAndUpdatePendingJobs()
     {
-        // Lấy tất cả các tiến trình đang trong trạng thái 'processing'
-        $processingJobs = ImageJob::where('status', 'processing')
-            ->whereNotNull('comfy_prompt_id')
-            ->get();
-        
-        foreach ($processingJobs as $job) {
-            // Kiểm tra trạng thái từ ComfyUI
-            $historyData = $this->checkJobStatus($job->comfy_prompt_id);
+        try {
+            // Kiểm tra trạng thái kết nối ComfyUI trước
+            $comfyUIAvailable = $this->isComfyUIAvailable();
             
-            // Nếu không có lỗi và có dữ liệu outputs
-            if (!isset($historyData['error']) && isset($historyData['outputs'])) {
-                $this->updateCompletedJob($job, $historyData);
+            if (!$comfyUIAvailable) {
+                Log::warning("ComfyUI không khả dụng, bỏ qua cập nhật tiến trình");
+                return false;
             }
+            
+            // Lấy tất cả các tiến trình đang trong trạng thái 'processing'
+            $processingJobs = ImageJob::where('status', 'processing')
+                ->whereNotNull('comfy_prompt_id')
+                ->get();
+            
+            foreach ($processingJobs as $job) {
+                try {
+                    // Kiểm tra trạng thái từ ComfyUI
+                    $historyData = $this->checkJobStatus($job->comfy_prompt_id);
+                    
+                    // Nếu không có lỗi và có dữ liệu outputs
+                    if (!isset($historyData['error']) && isset($historyData['outputs'])) {
+                        $this->updateCompletedJob($job, $historyData);
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Lỗi khi cập nhật tiến trình {$job->id}: " . $e->getMessage());
+                }
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Lỗi khi kiểm tra tiến trình: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Kiểm tra xem ComfyUI có khả dụng không
+     */
+    protected function isComfyUIAvailable(): bool
+    {
+        try {
+            $response = Http::timeout(3)->get($this->comfyuiBaseUrl);
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::warning("Không thể kết nối tới ComfyUI: " . $e->getMessage());
+            return false;
         }
     }
 }

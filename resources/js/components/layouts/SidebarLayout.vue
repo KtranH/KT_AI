@@ -142,19 +142,27 @@
     <!-- Main Content -->
     <div class="flex-1 ml-0 lg:ml-64 transition-all duration-300">
       <!-- Top Bar with Hamburger -->
-      <div class="sticky top-0 z-40 flex items-center justify-between p-4 bg-white/30 backdrop-blur-md shadow-sm">
+      <div class="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-white shadow-sm lg:ml-64">
         <button 
           @click="toggleSidebar" 
-          class="text-gray-500 hover:text-gray-700 focus:outline-none p-2 rounded-md hover:bg-white/30"
+          class="hamburger-btn"
+          aria-expanded="false"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          <span class="sr-only">Mở menu</span>
+          <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
+        <div class="flex items-center">
+          <img :src="logo" alt="KT_AI Logo" class="h-8 w-8 mr-2">
+          <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            KT_AI
+          </span>
+        </div>
       </div>
 
       <!-- Page Content -->
-      <main class="px-4 py-6">
+      <main class="px-4 py-6 mt-16">
         <slot></slot>
       </main>
     </div>
@@ -177,7 +185,7 @@ export default {
     const router = useRouter()
     const route = useRoute()
     const auth = useAuthStore()
-    const isOpen = ref(window.innerWidth >= 1024) // Open by default on large screens
+    const isOpen = ref(false) // Default closed on mobile, will adjust in mounted
     const isTestMenuOpen = ref(false)
     const logo = ref('/img/voice.png')
     const testSubmenu = ref(null)
@@ -199,14 +207,22 @@ export default {
 
     // Methods
     const toggleSidebar = () => {
-      isOpen.value = !isOpen.value
-      
-      // Thêm class để ngăn scroll trên mobile khi sidebar mở
-      if (isOpen.value && window.innerWidth < 1024) {
-        document.body.classList.add('overflow-hidden')
+      // Nếu màn hình lớn, luôn mở sidebar
+      if (window.innerWidth >= 1024) {
+        isOpen.value = true;
       } else {
-        document.body.classList.remove('overflow-hidden')
+        // Trên mobile, toggle sidebar
+        isOpen.value = !isOpen.value;
+        
+        // Thêm class để ngăn scroll trên mobile khi sidebar mở
+        if (isOpen.value) {
+          document.body.classList.add('overflow-hidden');
+        } else {
+          document.body.classList.remove('overflow-hidden');
+        }
       }
+      
+      console.log('Toggled sidebar:', isOpen.value);
     }
     
     const toggleTestMenu = () => {
@@ -255,6 +271,9 @@ export default {
     onMounted(() => {
       auth.checkAuth()
       window.addEventListener('resize', handleResize)
+      
+      // Thiết lập trạng thái ban đầu dựa trên kích thước màn hình
+      isOpen.value = window.innerWidth >= 1024
     })
     
     onBeforeUnmount(() => {
@@ -311,5 +330,29 @@ export default {
 /* Tăng vùng tương tác cho nút hamburger */
 button {
   touch-action: manipulation;
+}
+
+/* Custom styles for hamburger button */
+.hamburger-btn {
+  position: relative;
+  z-index: 60;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 0.375rem;
+}
+
+.hamburger-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 1024px) {
+  .hamburger-btn {
+    display: none;
+  }
 }
 </style>

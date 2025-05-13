@@ -28,7 +28,7 @@
         />
         <button
           @click="generateNewSeed"
-          class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition"
+          class="bg-gradient-text text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition"
           :disabled="isGenerating"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -59,7 +59,7 @@
     <!-- Nút tạo ảnh -->
     <button
       @click="handleGenerate"
-      class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition shadow-md flex items-center justify-center"
+      class="w-full bg-gradient-text text-white py-3 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition shadow-md flex items-center justify-center"
       :disabled="isGenerating"
     >
       <span v-if="isGenerating" class="mr-2">
@@ -132,6 +132,19 @@ export default {
     
     watch(() => props.style, (newVal) => {
       localStyle.value = newVal
+    })
+    
+    // Thêm watcher cho các biến local để emit sự thay đổi
+    watch(localPrompt, (newVal) => {
+      emit('update:prompt', newVal)
+    })
+    
+    watch(localSeed, (newVal) => {
+      emit('update:seed', newVal)
+    })
+    
+    watch(localStyle, (newVal) => {
+      emit('update:style', newVal)
     })
     
     // Event handlers

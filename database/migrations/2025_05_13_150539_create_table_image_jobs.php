@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('image_jobs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('feature_id')->constrained()->onDelete('cascade');
+            $table->unsignedInteger('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedInteger('feature_id');
+            $table->foreign("feature_id")->references("id")->on("ai_features")->onDelete("cascade");
             $table->text('prompt');
             $table->integer('width')->default(512);
             $table->integer('height')->default(768);

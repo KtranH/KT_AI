@@ -47,7 +47,7 @@ class ImageJob extends Model
      */
     public function feature(): BelongsTo
     {
-        return $this->belongsTo(Feature::class);
+        return $this->belongsTo(AIFeature::class);
     }
 
     /**

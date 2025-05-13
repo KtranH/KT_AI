@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100" data-aos="zoom-out">
+  <div class="min-h-screen bg-gray-50">
     <div class="max-w-full mx-auto my-4">
         <h1 v-if="error_message != null" class="text-2xl font-bold text-center mb-2 text-red-600 bg-red-100 p-4 rounded-full">{{ error_message }}</h1>
         <div class="min-h-screen bg-gray-50">
@@ -96,6 +96,7 @@
                 />
 
                 <ImageGalleryLayout 
+                    v-if="featureId !== null"
                     :featureId="featureId"
                     :featureName="featureName"
                 />
@@ -148,7 +149,7 @@ export default {
             { value: 'digital-art', label: 'Nghệ thuật số' },
             { value: 'abstract', label: 'Trừu tượng' }
         ])
-        const featureId = ref(null)
+        const featureId = ref(0)
         const featureName = ref(null)
         // Các state cho phần ảnh
         const mainImage = ref(null)

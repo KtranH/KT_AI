@@ -58,10 +58,11 @@ app.directive('click-outside', clickOutside);
 // Khởi tạo AOS với cấu hình mặc định
 AOS.init({
     duration: 300,
-    delay: 100,
-    once: true,
-    offset:150,
-    easing: 'ease-in-sine',
+    delay: 50,
+    once: false,
+    offset: 20,
+    easing: 'ease-in-out',
+    disable: 'mobile'
 })
 
 // Thêm sự kiện để refresh AOS khi chuyển trang

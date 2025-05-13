@@ -12,7 +12,7 @@ use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\StatisticsController;
-use App\Http\Controllers\API\ComfyuiController;
+use App\Http\Controllers\API\ImageJobController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -91,9 +91,12 @@ Route::prefix('api')->group(function () {
         Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         // Statistics Route
         Route::get('/statistics', [StatisticsController::class, 'getStatistics']);
-        // ComfyUI Route
-        Route::post('/generate-image', [ComfyuiController::class, 'generateImage']);
-        Route::post('/cancel-generate-image', [ComfyuiController::class, 'cancelGenerateImage']);
+        // Image Jobs API Routes
+        Route::post('/image-jobs/create', [ImageJobController::class, 'create']);
+        Route::get('/image-jobs/active', [ImageJobController::class, 'getActiveJobs']);
+        Route::get('/image-jobs/completed', [ImageJobController::class, 'getCompletedJobs']);
+        Route::get('/image-jobs/{jobId}', [ImageJobController::class, 'checkJobStatus']);
+        Route::delete('/image-jobs/{jobId}', [ImageJobController::class, 'cancelJob']);
     });
 });
 
