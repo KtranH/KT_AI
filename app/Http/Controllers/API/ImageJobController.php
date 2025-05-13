@@ -33,7 +33,7 @@ class ImageJobController extends Controller
                 'height' => 'required|integer|min:64|max:2048',
                 'seed' => 'required|numeric',
                 'style' => 'nullable|string',
-                'feature_id' => 'required|exists:features,id',
+                'feature_id' => 'required|exists:ai_features,id',
                 'main_image' => 'nullable|image|max:10240', // max 10MB
                 'secondary_image' => 'nullable|image|max:10240', // max 10MB
             ]);

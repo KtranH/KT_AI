@@ -61,8 +61,7 @@
           false,
           true
         ]
-      },
-      "result": "1girl, cute, 3D"
+      }
     },
     "class_type": "StringFunction|pysssss",
     "_meta": {
@@ -143,16 +142,17 @@
       "title": "HighRes-Fix Script"
     }
   },
-  "17": {
+  "18": {
     "inputs": {
+      "filename_prefix": "ComfyUI",
       "images": [
         "14",
         5
       ]
     },
-    "class_type": "PreviewImage",
+    "class_type": "SaveImage",
     "_meta": {
-      "title": "Preview Image"
+      "title": "Save Image"
     }
   }
 }

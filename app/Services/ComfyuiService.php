@@ -267,13 +267,20 @@ class ComfyUIService
     public function checkJobStatus(string $comfyPromptId): array
     {
         try {
-            $response = Http::get($this->comfyuiBaseUrl . '/history/' . $comfyPromptId);
+            // Đảm bảo đường dẫn API đúng định dạng - sửa từ /history/ thành /api/history/
+            $apiUrl = $this->comfyuiBaseUrl . '/api/history/' . $comfyPromptId;
+            Log::debug("Gọi API kiểm tra job: " . $apiUrl);
+            
+            $response = Http::get($apiUrl);
             
             if (!$response->successful()) {
                 throw new Exception("Lỗi khi kiểm tra trạng thái tiến trình: " . $response->body());
             }
             
-            return $response->json();
+            $data = $response->json();
+            Log::debug("Dữ liệu trả về từ ComfyUI cho job {$comfyPromptId}: " . json_encode($data));
+            
+            return $data;
             
         } catch (Exception $e) {
             Log::error("Lỗi khi kiểm tra trạng thái: " . $e->getMessage());
@@ -287,16 +294,46 @@ class ComfyUIService
     public function downloadResultImage(string $imageFilename): ?string
     {
         try {
-            $response = Http::get($this->comfyuiBaseUrl . '/view?filename=' . $imageFilename);
+            // Đảm bảo đường dẫn API đúng
+            $apiUrl = $this->comfyuiBaseUrl . '/view?filename=' . $imageFilename;
+            Log::debug("Tải ảnh kết quả từ: " . $apiUrl);
+            
+            $response = Http::timeout(10)->get($apiUrl);
             
             if (!$response->successful()) {
-                throw new Exception("Lỗi khi tải ảnh kết quả: " . $response->body());
+                Log::error("API trả về lỗi khi tải ảnh: " . $response->status() . " - " . $response->body());
+                throw new Exception("Lỗi khi tải ảnh kết quả: " . $response->status());
+            }
+            
+            // Kiểm tra có phải là dữ liệu ảnh
+            $contentType = $response->header('Content-Type');
+            if (!$contentType || !str_contains($contentType, 'image')) {
+                // Thử URL thay thế
+                $alternateUrl = $this->comfyuiBaseUrl . '/api/view?filename=' . $imageFilename;
+                Log::debug("URL đầu tiên không trả về ảnh, thử URL thay thế: " . $alternateUrl);
+                
+                $response = Http::timeout(10)->get($alternateUrl);
+                
+                if (!$response->successful() || !str_contains($response->header('Content-Type') ?? '', 'image')) {
+                    throw new Exception("Không thể tải ảnh kết quả: phản hồi không chứa dữ liệu ảnh");
+                }
+            }
+            
+            // Đảm bảo thư mục tồn tại
+            $directory = 'images/results';
+            if (!Storage::exists($directory)) {
+                Storage::makeDirectory($directory);
             }
             
             // Lưu ảnh vào storage
-            $storePath = 'images/results/' . time() . '_' . basename($imageFilename);
-            Storage::put($storePath, $response->body());
+            $storePath = $directory . '/' . time() . '_' . basename($imageFilename);
+            $saved = Storage::put($storePath, $response->body());
             
+            if (!$saved) {
+                throw new Exception("Không thể lưu ảnh kết quả vào storage");
+            }
+            
+            Log::debug("Đã lưu ảnh kết quả tại: " . $storePath);
             return $storePath;
             
         } catch (Exception $e) {
@@ -311,22 +348,37 @@ class ComfyUIService
     public function updateCompletedJob(ImageJob $job, array $historyData): bool
     {
         try {
-            // Lấy tên file ảnh từ kết quả
-            $outputs = $historyData['outputs'] ?? [];
+            Log::debug("Bắt đầu cập nhật tiến trình hoàn thành cho job {$job->id}");
+            Log::debug("Dữ liệu lịch sử: " . json_encode($historyData));
+            
+            // Lấy tên file ảnh từ kết quả - hỗ trợ nhiều cấu trúc dữ liệu khác nhau
             $imageFilename = null;
             
-            foreach ($outputs as $output) {
-                if (isset($output['images']) && count($output['images']) > 0) {
-                    $imageFilename = $output['images'][0]['filename'] ?? null;
-                    break;
-                }
+            // Cấu trúc 1: {prompt_id: {outputs: {...}}}
+            if (isset($historyData[$job->comfy_prompt_id]['outputs'])) {
+                $outputs = $historyData[$job->comfy_prompt_id]['outputs'];
+                Log::debug("Tìm thấy outputs trong cấu trúc 1 cho job {$job->id}");
+                $imageFilename = $this->findImageFilenameInOutputs($outputs);
+            } 
+            // Cấu trúc 2: {outputs: {...}}
+            elseif (isset($historyData['outputs'])) {
+                $outputs = $historyData['outputs'];
+                Log::debug("Tìm thấy outputs trong cấu trúc 2 cho job {$job->id}");
+                $imageFilename = $this->findImageFilenameInOutputs($outputs);
+            } 
+            // Kiểm tra các cấu trúc khác
+            else {
+                Log::debug("Không tìm thấy cấu trúc outputs phổ biến, thử tìm các cấu trúc khác");
+                $imageFilename = $this->findImageFilenameInNestedData($historyData);
             }
             
             if (!$imageFilename) {
+                Log::error("Không tìm thấy ảnh kết quả trong dữ liệu trả về: " . json_encode($historyData));
                 throw new Exception("Không tìm thấy ảnh kết quả trong dữ liệu trả về");
             }
             
             // Tải ảnh kết quả
+            Log::debug("Bắt đầu tải ảnh kết quả: {$imageFilename}");
             $resultImagePath = $this->downloadResultImage($imageFilename);
             
             if (!$resultImagePath) {
@@ -338,6 +390,7 @@ class ComfyUIService
             $job->status = 'completed';
             $job->save();
             
+            Log::debug("Đã cập nhật tiến trình {$job->id} sang trạng thái hoàn thành");
             return true;
             
         } catch (Exception $e) {
@@ -350,7 +403,106 @@ class ComfyUIService
             return false;
         }
     }
+
+    /**
+     * Tìm tên file ảnh trong outputs
+     */
+    protected function findImageFilenameInOutputs(array $outputs): ?string
+    {
+        foreach ($outputs as $nodeId => $output) {
+            if (isset($output['images']) && count($output['images']) > 0) {
+                $filename = $output['images'][0]['filename'] ?? null;
+                if ($filename) {
+                    Log::debug("Tìm thấy tên file ảnh '{$filename}' từ node {$nodeId}");
+                    return $filename;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Tìm tên file ảnh trong dữ liệu lồng nhau
+     */
+    protected function findImageFilenameInNestedData(array $data): ?string
+    {
+        // Hàm đệ quy để tìm trong dữ liệu lồng nhau
+        $findInNested = function($data, $depth = 0, $maxDepth = 4) use (&$findInNested) {
+            if ($depth > $maxDepth) return null; // Giới hạn độ sâu tìm kiếm
+            
+            if (is_array($data)) {
+                // Kiểm tra trực tiếp
+                if (isset($data['images']) && !empty($data['images'])) {
+                    $filename = $data['images'][0]['filename'] ?? null;
+                    if ($filename) return $filename;
+                }
+                
+                // Tìm kiếm đệ quy
+                foreach ($data as $key => $value) {
+                    if (is_array($value)) {
+                        $result = $findInNested($value, $depth + 1, $maxDepth);
+                        if ($result) return $result;
+                    }
+                }
+            }
+            return null;
+        };
+        
+        $filename = $findInNested($data);
+        if ($filename) {
+            Log::debug("Tìm thấy tên file ảnh '{$filename}' trong cấu trúc dữ liệu lồng nhau");
+        }
+        return $filename;
+    }
     
+    /**
+     * Kiểm tra tiến độ xử lý của một tiến trình
+     */
+    public function checkJobProgress(string $comfyPromptId): array
+    {
+        try {
+            $apiUrl = $this->comfyuiBaseUrl . '/api/progress';
+            $response = Http::get($apiUrl);
+            
+            if (!$response->successful()) {
+                return ['status' => 'unknown', 'progress' => 0];
+            }
+            
+            $data = $response->json();
+            Log::debug("Dữ liệu tiến độ từ ComfyUI: " . json_encode($data));
+            
+            // Kiểm tra xem prompt_id có trong danh sách đang xử lý không
+            if (isset($data[$comfyPromptId])) {
+                // Tiến trình đang xử lý
+                $progress = $data[$comfyPromptId];
+                $percentage = isset($progress['value']) ? round($progress['value'] * 100) : 0;
+                $status = $percentage >= 100 ? 'completed' : 'processing';
+                
+                return [
+                    'status' => $status,
+                    'progress' => $percentage,
+                    'text_info' => $progress['text_info'] ?? ''
+                ];
+            } 
+            
+            // Kiểm tra history để xem đã hoàn thành chưa
+            $historyData = $this->checkJobStatus($comfyPromptId);
+            if (!isset($historyData['error']) && 
+                ($this->hasImagesInHistoryData($historyData) || 
+                 isset($historyData[$comfyPromptId]['outputs']) || 
+                 isset($historyData['outputs']))) {
+                return ['status' => 'completed', 'progress' => 100];
+            }
+            
+            // Nếu không tìm thấy trong progress và không có trong history, có thể đang chờ xử lý
+            return ['status' => 'pending', 'progress' => 0];
+            
+        } catch (Exception $e) {
+            Log::error("Lỗi khi kiểm tra tiến độ: " . $e->getMessage());
+            return ['status' => 'error', 'progress' => 0, 'error' => $e->getMessage()];
+        }
+    }
+
     /**
      * Kiểm tra và cập nhật trạng thái các tiến trình đang hoạt động
      */
@@ -365,19 +517,53 @@ class ComfyUIService
                 return false;
             }
             
-            // Lấy tất cả các tiến trình đang trong trạng thái 'processing'
-            $processingJobs = ImageJob::where('status', 'processing')
+            Log::debug("Bắt đầu kiểm tra và cập nhật các tiến trình đang chờ xử lý");
+            
+            // Lấy tất cả các tiến trình đang trong trạng thái 'processing' hoặc 'pending' nhưng có comfy_prompt_id
+            $jobs = ImageJob::whereIn('status', ['processing', 'pending'])
                 ->whereNotNull('comfy_prompt_id')
                 ->get();
             
-            foreach ($processingJobs as $job) {
+            Log::debug("Tìm thấy {$jobs->count()} tiến trình cần kiểm tra");
+            
+            foreach ($jobs as $job) {
                 try {
-                    // Kiểm tra trạng thái từ ComfyUI
-                    $historyData = $this->checkJobStatus($job->comfy_prompt_id);
+                    Log::debug("Kiểm tra trạng thái tiến trình {$job->id} với comfy_prompt_id: {$job->comfy_prompt_id}");
                     
-                    // Nếu không có lỗi và có dữ liệu outputs
-                    if (!isset($historyData['error']) && isset($historyData['outputs'])) {
-                        $this->updateCompletedJob($job, $historyData);
+                    // Kiểm tra tiến độ của tiến trình
+                    $progressData = $this->checkJobProgress($job->comfy_prompt_id);
+                    Log::debug("Tiến độ tiến trình {$job->id}: " . json_encode($progressData));
+                    
+                    // Luôn cập nhật tiến độ
+                    if (isset($progressData['progress']) && $progressData['progress'] != $job->progress) {
+                        $job->progress = $progressData['progress'];
+                        $job->save();
+                        Log::debug("Đã cập nhật tiến độ tiến trình {$job->id}: {$job->progress}%");
+                    }
+                    
+                    // Cập nhật trạng thái job dựa trên tiến độ
+                    if ($progressData['status'] === 'completed') {
+                        // Kiểm tra trạng thái từ ComfyUI
+                        $historyData = $this->checkJobStatus($job->comfy_prompt_id);
+                        
+                        // Nếu không có lỗi và có dữ liệu outputs
+                        if (!isset($historyData['error'])) {
+                            if (isset($historyData[$job->comfy_prompt_id]['outputs']) || 
+                                isset($historyData['outputs']) ||
+                                $this->hasImagesInHistoryData($historyData)) {
+                                Log::debug("Tiến trình {$job->id} có dữ liệu kết quả, tiến hành cập nhật");
+                                $this->updateCompletedJob($job, $historyData);
+                            } else {
+                                Log::debug("Tiến trình {$job->id} được đánh dấu hoàn thành nhưng không tìm thấy dữ liệu kết quả");
+                            }
+                        } else {
+                            Log::warning("Lỗi khi kiểm tra trạng thái tiến trình {$job->id}: " . $historyData['error']);
+                        }
+                    } else if ($progressData['status'] === 'processing' && $job->status === 'pending') {
+                        // Cập nhật trạng thái từ pending sang processing
+                        $job->status = 'processing';
+                        $job->save();
+                        Log::debug("Đã cập nhật tiến trình {$job->id} từ pending sang processing");
                     }
                 } catch (\Exception $e) {
                     Log::error("Lỗi khi cập nhật tiến trình {$job->id}: " . $e->getMessage());
@@ -389,6 +575,30 @@ class ComfyUIService
             Log::error("Lỗi khi kiểm tra tiến trình: " . $e->getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Kiểm tra xem dữ liệu history có chứa ảnh kết quả không
+     */
+    protected function hasImagesInHistoryData(array $historyData): bool
+    {
+        // Duyệt qua dữ liệu để tìm trường images
+        foreach ($historyData as $key => $value) {
+            if (is_array($value)) {
+                if (isset($value['images']) && !empty($value['images'])) {
+                    return true;
+                }
+                
+                // Kiểm tra các mảng lồng nhau
+                foreach ($value as $subKey => $subValue) {
+                    if (is_array($subValue) && isset($subValue['images']) && !empty($subValue['images'])) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**

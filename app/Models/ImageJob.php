@@ -24,6 +24,7 @@ class ImageJob extends Model
         'status', // 'pending', 'processing', 'completed', 'failed'
         'comfy_prompt_id',
         'error_message',
+        'progress', // thêm cột progress để lưu tiến độ (%)
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class ImageJob extends Model
         'seed' => 'integer',
         'feature_id' => 'integer',
         'user_id' => 'integer',
+        'progress' => 'integer',
     ];
 
     /**
@@ -47,7 +49,7 @@ class ImageJob extends Model
      */
     public function feature(): BelongsTo
     {
-        return $this->belongsTo(AIFeature::class);
+        return $this->belongsTo(AIFeature::class, 'feature_id');
     }
 
     /**
