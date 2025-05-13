@@ -21,11 +21,11 @@
           <p class="mt-1 text-xs text-gray-500">PNG, JPG hoặc GIF (tối đa 2MB)</p>
           <div class="mt-6">
             <label
-              :for="'file-upload-' + _uid"
+              :for="'file-upload-' + uniqueId"
               class="cursor-pointer inline-flex items-center px-4 py-2 border border-indigo-500 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50"
             >
               <span>Chọn hình ảnh</span>
-              <input :id="'file-upload-' + _uid" type="file" class="sr-only" accept="image/*" @change="onFileChange" />
+              <input :id="'file-upload-' + uniqueId" type="file" class="sr-only" accept="image/*" @change="onFileChange" />
             </label>
           </div>
         </div>
@@ -64,6 +64,8 @@ export default defineComponent({
     // Local state
     const isDragging = ref(false);
     const imagePreview = ref(props.imageValue);
+    // Tạo ID duy nhất cho component
+    const uniqueId = ref(`upload-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
     
     // Methods
     const onDrop = (event) => {
@@ -116,7 +118,8 @@ export default defineComponent({
       imagePreview,
       onDrop,
       onFileChange,
-      clearImage
+      clearImage,
+      uniqueId
     };
   }
 })

@@ -31,6 +31,8 @@ import Test3 from '../pages/test/Test3.vue'
 import Test4 from '../pages/test/Test4.vue'
 // Statistics Pages
 import StatisticsPage from '../pages/user/StatisticsPage.vue';
+// Image Jobs Management
+import ImageJobsManager from '../pages/user/ImageJobsManager.vue';
 
 const routes = [
   {
@@ -121,6 +123,13 @@ const routes = [
     name: 'Statistics',
     component: StatisticsPage,
     meta: { requiresAuth: true }
+  },
+  // Quản lý tiến trình tạo ảnh
+  {
+    path: '/image-jobs',
+    name: 'image-jobs',
+    component: ImageJobsManager,
+    meta: { requiresAuth: true, title: 'KT_AI - Quản lý tiến trình tạo ảnh' }
   },
   // Test routes
   {

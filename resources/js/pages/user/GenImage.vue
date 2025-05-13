@@ -32,6 +32,7 @@
                               :seed="randomSeed"
                               :style="selectedOption"
                               :options="options"
+                              :isGenerating="isGenerating"
                               @update:prompt="prompt = $event"
                               @update:seed="randomSeed = $event"
                               @update:style="selectedOption = $event"
@@ -51,6 +52,38 @@
                               :imageValue="index === 0 ? mainImage : secondaryImage"
                               @update:image="index === 0 ? mainImage = $event : secondaryImage = $event"
                             />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phần tiến trình đang xử lý -->
+                <div v-if="activeJobs.length > 0" class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Tiến trình đang xử lý ({{ activeJobs.length }}/5)</h2>
+                    
+                    <div class="space-y-4">
+                        <div v-for="job in activeJobs" :key="job.id" class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="font-medium">{{ job.prompt.substring(0, 50) }}{{ job.prompt.length > 50 ? '...' : '' }}</h3>
+                                    <p class="text-sm text-gray-600">Kích thước: {{ job.width }}x{{ job.height }}</p>
+                                    <p class="text-sm text-gray-600">Trạng thái: 
+                                        <span 
+                                            :class="{
+                                                'text-blue-600': job.status === 'pending',
+                                                'text-green-600': job.status === 'processing',
+                                            }"
+                                        >
+                                            {{ job.status === 'pending' ? 'Đang chờ' : 'Đang xử lý' }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <button 
+                                    @click="cancelJob(job.id)" 
+                                    class="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition"
+                                >
+                                    Hủy
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -78,12 +111,14 @@ import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
 import PromptInput  from '@/components/user/GenImage/PromptInput.vue'
 import ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
 import ButtonBackVue from '../../components/common/ButtonBack.vue'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
-import { generateRandomSeed } from '@/utils/index';
+import { generateRandomSeed } from '@/utils/index'
 import { decodedID } from '@/utils'
-
+import { toast } from 'vue-sonner'
+import axios from 'axios'
+ 
 export default {
     components: {
         GuideSection,
@@ -122,6 +157,11 @@ export default {
         const router = useRouter()
         const decoded_value = ref(null)
         const error_message = ref(null)
+        const isGenerating = ref(false)
+        
+        // State cho quản lý tiến trình
+        const activeJobs = ref([])
+        const checkInterval = ref(null)
         
         // Items cho hướng dẫn
         const guideItems = ref([
@@ -133,33 +173,116 @@ export default {
             "🚻 Không được nhập các từ ngữ nhạy cảm để tạo ảnh."
         ])
 
-        // Tạo ảnh (giả lập)
-        const generateImage = () => {
+        // Lấy danh sách tiến trình đang hoạt động
+        const fetchActiveJobs = async () => {
+            try {
+                const response = await axios.get('/api/image-jobs/active');
+                if (response.data.success) {
+                    activeJobs.value = response.data.active_jobs;
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy tiến trình:', error);
+            }
+        };
+
+        // Hủy tiến trình
+        const cancelJob = async (jobId) => {
+            try {
+                const response = await axios.delete(`/api/image-jobs/${jobId}`);
+                if (response.data.success) {
+                    toast.success('Đã hủy tiến trình thành công');
+                    fetchActiveJobs(); // Cập nhật lại danh sách
+                }
+            } catch (error) {
+                toast.error('Lỗi khi hủy tiến trình');
+                console.error('Lỗi khi hủy tiến trình:', error);
+            }
+        };
+
+        // Tạo ảnh
+        const generateImage = async () => {
             // Kiểm tra các điều kiện
             if (!prompt.value) {
                 error_message.value = "Vui lòng nhập mô tả để tạo ảnh";
+                toast.error("Vui lòng nhập mô tả để tạo ảnh");
                 return;
             }
             
             if (feature.value?.input_requirements && !mainImage.value) {
                 error_message.value = "Vui lòng tải lên ảnh chính";
+                toast.error("Vui lòng tải lên ảnh chính");
                 return;
             }
             
             if (feature.value?.input_requirements === 2 && !secondaryImage.value) {
                 error_message.value = "Vui lòng tải lên ảnh phụ";
+                toast.error("Vui lòng tải lên ảnh phụ");
                 return;
             }
             
-            // Đoạn này nên gửi dữ liệu lên server, nhưng tạm thời chỉ hiển thị thông báo
-            alert(`Sẽ tạo ảnh với:
-                - Prompt: ${prompt.value}
-                - Kích thước: ${width.value}x${height.value}
-                - Seed: ${randomSeed.value}
-                - Phong cách: ${selectedOption.value}
-            `);
-            
-            error_message.value = null;
+            // Kiểm tra số lượng tiến trình
+            if (activeJobs.value.length >= 5) {
+                error_message.value = "Bạn đã đạt đến giới hạn 5 tiến trình cùng lúc. Vui lòng đợi cho đến khi một số tiến trình hoàn thành.";
+                toast.error("Đã đạt giới hạn tiến trình");
+                return;
+            }
+
+            try {
+                // Đánh dấu đang tạo ảnh
+                isGenerating.value = true;
+                error_message.value = null;
+                
+                // Gửi API tới server
+                const formData = new FormData();
+                formData.append('prompt', prompt.value);
+                formData.append('width', width.value);
+                formData.append('height', height.value);
+                formData.append('seed', randomSeed.value);
+                formData.append('style', selectedOption.value);
+                formData.append('feature_id', featureId.value);
+                
+                if (mainImage.value) {
+                    formData.append('main_image', mainImage.value);
+                }
+                
+                if (secondaryImage.value) {
+                    formData.append('secondary_image', secondaryImage.value);
+                }
+                
+                const response = await axios.post('/api/image-jobs/create', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                if (response.data.success) {
+                    toast.success('Tiến trình tạo ảnh đã được khởi tạo');
+                    
+                    // Reset form sau khi tạo thành công
+                    prompt.value = '';
+                    randomSeed.value = generateRandomSeed();
+                    mainImage.value = null;
+                    secondaryImage.value = null;
+                    
+                    // Cập nhật danh sách tiến trình
+                    fetchActiveJobs();
+                } else {
+                    toast.error(response.data.message || 'Lỗi khi tạo ảnh');
+                }
+            } catch (error) {
+                console.error('Lỗi khi tạo ảnh:', error);
+                
+                // Hiển thị lỗi từ server nếu có
+                if (error.response && error.response.data && error.response.data.message) {
+                    error_message.value = error.response.data.message;
+                    toast.error(error.response.data.message);
+                } else {
+                    error_message.value = 'Lỗi khi gửi yêu cầu tạo ảnh';
+                    toast.error('Lỗi khi gửi yêu cầu tạo ảnh');
+                }
+            } finally {
+                isGenerating.value = false;
+            }
         }
 
         // Gọi API lấy thông tin
@@ -195,6 +318,17 @@ export default {
             }
             
             get_feature();
+            fetchActiveJobs();
+            
+            // Thiết lập interval kiểm tra trạng thái tiến trình
+            checkInterval.value = setInterval(fetchActiveJobs, 5000);
+        });
+        
+        // Xóa interval khi component bị hủy
+        onBeforeUnmount(() => {
+            if (checkInterval.value) {
+                clearInterval(checkInterval.value);
+            }
         });
         
         return {
@@ -213,7 +347,10 @@ export default {
             guideItems,
             generateImage,
             featureId,
-            featureName
+            featureName,
+            isGenerating,
+            activeJobs,
+            cancelJob
         }
     }
 }

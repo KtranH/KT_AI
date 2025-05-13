@@ -1,57 +1,56 @@
 <template>
   <div>
     <!-- Prompt -->
-    <div>
-      <label for="prompt" class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+    <div class="mb-4">
+      <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">Prompt (Mô tả)</label>
       <textarea
         id="prompt"
-        v-model="promptValue"
+        v-model="localPrompt"
         rows="4"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        placeholder="Nhập mô tả chi tiết cho hình ảnh..."
-        @input="updatePrompt"
+        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Nhập mô tả cho hình ảnh bạn muốn tạo..."
+        :disabled="isGenerating"
       ></textarea>
+      <p class="text-xs text-gray-500 mt-1">{{ localPrompt.length }}/1000 ký tự</p>
     </div>
 
     <!-- Seed -->
-    <div class="mt-4">
-      <label for="seed" class="block text-sm font-medium text-gray-700 mb-2">Seed</label>
-      <div class="flex items-center justify-between">
+    <div class="mb-4">
+      <label for="seed" class="block text-sm font-medium text-gray-700 mb-1">Seed (Số ngẫu nhiên)</label>
+      <div class="flex">
         <input
           id="seed"
-          type="text"
-          class="w-[80%] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="Nhập seed hoặc tạo ngẫu nhiên"
-          v-model="seedValue"
-          @input="updateSeed"
+          v-model="localSeed"
+          type="number"
+          class="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Nhập seed..."
+          :disabled="isGenerating"
+        />
+        <button
+          @click="generateNewSeed"
+          class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition"
+          :disabled="isGenerating"
         >
-        <button @click="RandomSeed" class="mx-2 bg-gradient-text font-medium text-sm text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          Ngẫu nhiên
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
         </button>
-        <!--<Button label="Tạo ngẫu nhiên" type="button" class="w-[200px]" @click="generateRandomSeed" />-->
       </div>
     </div>
     
     <!-- Lựa chọn phong cách -->
-    <div class="mt-4">
-      <label for="option" class="block text-sm font-medium text-gray-700 mb-2">Phong cách</label>
-      <div class="relative">
-        <select
-          id="option"
-          v-model="styleValue"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-          @change="updateStyle"
-        >
-          <option v-for="option in options" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
+    <div class="mb-6">
+      <label for="style" class="block text-sm font-medium text-gray-700 mb-1">Thể loại</label>
+      <select
+        id="style"
+        v-model="localStyle"
+        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        :disabled="isGenerating"
+      >
+        <option v-for="option in options" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
     </div>
     
     <!-- Slot cho các tùy chọn bổ sung -->
@@ -59,24 +58,31 @@
     
     <!-- Nút tạo ảnh -->
     <button
-      class="w-full mt-6 bg-gradient-text text-white py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 font-medium transition duration-150"
-      @click="$emit('generate')"
+      @click="handleGenerate"
+      class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition shadow-md flex items-center justify-center"
+      :disabled="isGenerating"
     >
-      Tạo hình ảnh
+      <span v-if="isGenerating" class="mr-2">
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </span>
+      {{ isGenerating ? 'Đang tạo...' : 'Tạo hình ảnh' }}
     </button>
-    <!--<Button label="Tạo hình ảnh" class="mt-6" type="button" @click="generate" />-->
   </div>
 </template>
 
 <script>
-import { ref, watch, toRefs } from 'vue';
-import { generateRandomSeed } from '@/utils/index';
+import { ref, watch, onMounted } from 'vue'
+import { generateRandomSeed } from '@/utils/index'
+
 /*import Button from './Button.vue';*/
 
 export default {
   name: 'PromptInput',
   components: {
-    /*Button*/
+    
   },
   props: {
     prompt: {
@@ -84,8 +90,8 @@ export default {
       default: ''
     },
     seed: {
-      type: [String, Number],
-      default: () => generateRandomSeed()
+      type: Number,
+      default: 0
     },
     style: {
       type: String,
@@ -103,63 +109,54 @@ export default {
         { value: 'digital-art', label: 'Nghệ thuật số' },
         { value: 'abstract', label: 'Trừu tượng' }
       ]
+    },
+    isGenerating: {
+      type: Boolean,
+      default: false
     }
   },
   setup(props, { emit }) {
     // Refs for form values
-    const promptValue = ref(props.prompt);
-    const seedValue = ref(props.seed);
-    const styleValue = ref(props.style);
-    
-    // Destructure props for watching
-    const { prompt, seed, style } = toRefs(props);
+    const localPrompt = ref(props.prompt)
+    const localSeed = ref(props.seed)
+    const localStyle = ref(props.style)
     
     // Watch for prop changes
-    watch(prompt, (newVal) => {
-      promptValue.value = newVal;
-    });
+    watch(() => props.prompt, (newVal) => {
+      localPrompt.value = newVal
+    })
     
-    watch(seed, (newVal) => {
-      seedValue.value = newVal;
-    });
+    watch(() => props.seed, (newVal) => {
+      localSeed.value = newVal
+    })
     
-    watch(style, (newVal) => {
-      styleValue.value = newVal;
-    });
+    watch(() => props.style, (newVal) => {
+      localStyle.value = newVal
+    })
     
     // Event handlers
-    const generate = () => {
-      console.log('generate');
-      emit('generate');
-    };
-    const updatePrompt = () => {
-      emit('update:prompt', promptValue.value);
-    };
+    const generateNewSeed = () => {
+      localSeed.value = generateRandomSeed()
+    }
     
-    const updateSeed = () => {
-      emit('update:seed', seedValue.value);
-    };
+    const handleGenerate = () => {
+      emit('generate')
+    }
     
-    const updateStyle = () => {
-      emit('update:style', styleValue.value);
-    };
-    
-    const RandomSeed = () => {
-      seedValue.value = generateRandomSeed();
-      emit('update:seed', seedValue.value);
-    };
+    onMounted(() => {
+      if (!localSeed.value) {
+        generateNewSeed()
+      }
+    })
     
     // Return all reactive data and methods
     return {
-      promptValue,
-      seedValue,
-      styleValue,
-      updatePrompt,
-      updateSeed,
-      updateStyle,
-      RandomSeed,
-      generate
-    };
+      localPrompt,
+      localSeed,
+      localStyle,
+      generateNewSeed,
+      handleGenerate
+    }
   }
 }
 </script>

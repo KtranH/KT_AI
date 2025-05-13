@@ -186,7 +186,7 @@ export default {
     const menuItems = [
       { name: 'Trang chủ', path: '/dashboard', icon: 'fas fa-home' },
       { name: 'Tạo ảnh', path: '/features', icon: 'fas fa-image' },
-      { name: 'Tiến trình', path: '/', icon: 'fas fa-spinner'},
+      { name: 'Tiến trình', path: '/image-jobs', icon: 'fas fa-tasks' },
     ]
     
     const testSubMenu = [

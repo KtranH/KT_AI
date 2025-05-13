@@ -149,6 +149,6 @@ export const genericAPI = {
 
 // API ComfyUI
 export const comfyuiAPI = {
-  generateImage: (prompt) => apiClient.post('/generate-image', { prompt }),
+  generateImage: (formData) => apiClient.post('/generate-image', formData),
   cancelGenerateImage: () => apiClient.post('/cancel-generate-image')
 }

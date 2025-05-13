@@ -61,4 +61,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Statistics Route
     Route::get('/statistics', [StatisticsController::class, 'getStatistics']);
+
+    // Image Jobs API Routes
+    Route::post('/image-jobs/create', 'App\Http\Controllers\API\ImageJobController@create');
+    Route::get('/image-jobs/active', 'App\Http\Controllers\API\ImageJobController@getActiveJobs');
+    Route::get('/image-jobs/completed', 'App\Http\Controllers\API\ImageJobController@getCompletedJobs');
+    Route::get('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@checkJobStatus');
+    Route::delete('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@cancelJob');
 });
