@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('image_jobs', function (Blueprint $table) {
-            $table->integer('progress')->default(0)->after('error_message')->comment('Tiến độ xử lý của tiến trình (%)');
+            $table->text('result_image')->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('image_jobs', function (Blueprint $table) {
-            $table->dropColumn('progress');
+            $table->string('result_image')->nullable()->change();
         });
     }
 };

@@ -74,13 +74,8 @@
                                             }"
                                         >
                                             {{ job.status === 'pending' ? 'Đang chờ' : 'Đang xử lý' }}
-                                            {{ job.status === 'processing' && job.progress ? ` (${job.progress}%)` : '' }}
                                         </span>
                                     </p>
-                                    <!-- Thanh tiến độ -->
-                                    <div v-if="job.progress && job.progress > 0" class="w-full mt-2 bg-gray-200 rounded-full h-2.5">
-                                        <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${job.progress}%` }"></div>
-                                    </div>
                                 </div>
                                 <button 
                                     @click="cancelJob(job.id)" 
@@ -327,7 +322,7 @@ export default {
             fetchActiveJobs();
             
             // Thiết lập interval kiểm tra trạng thái tiến trình
-            checkInterval.value = setInterval(fetchActiveJobs, 3000);
+            checkInterval.value = setInterval(fetchActiveJobs, 5000);
         });
         
         // Xóa interval khi component bị hủy

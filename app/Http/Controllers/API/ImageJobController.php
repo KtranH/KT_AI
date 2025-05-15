@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ImageJobController extends Controller
@@ -123,10 +124,21 @@ class ImageJobController extends Controller
             $user = Auth::user();
             
             // Kiểm tra và cập nhật các tiến trình đang xử lý
-            $this->comfyuiService->checkAndUpdatePendingJobs();
+            $updated = $this->comfyuiService->checkAndUpdatePendingJobs();
+            Log::debug("Kết quả cập nhật tiến trình: " . ($updated ? 'thành công' : 'thất bại'));
             
             // Lấy danh sách các tiến trình đang hoạt động
             $activeJobs = ImageJob::getActiveJobsByUser($user->id);
+            
+            // Nếu không có tiến trình đang hoạt động, thử kiểm tra lại một lần nữa
+            // (đề phòng trường hợp cập nhật trạng thái bị lỗi)
+            if ($activeJobs->isEmpty() && !$updated) {
+                Log::debug("Không có tiến trình đang hoạt động, thử cập nhật lại một lần nữa");
+                $this->comfyuiService->checkAndUpdatePendingJobs();
+                $activeJobs = ImageJob::getActiveJobsByUser($user->id);
+            }
+            
+            // Accessor result_image_url sẽ tự động được áp dụng cho mỗi job
             
             return response()->json([
                 'success' => true,
@@ -135,6 +147,7 @@ class ImageJobController extends Controller
             ]);
             
         } catch (\Exception $e) {
+            Log::error("Lỗi khi lấy danh sách tiến trình: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Đã xảy ra lỗi: ' . $e->getMessage()
@@ -153,12 +166,7 @@ class ImageJobController extends Controller
             // Lấy danh sách các tiến trình đã hoàn thành
             $completedJobs = ImageJob::getCompletedJobsByUser($user->id);
             
-            // Chuyển đổi result_image thành URL
-            $completedJobs->each(function ($job) {
-                if ($job->result_image) {
-                    $job->result_image_url = url(Storage::url($job->result_image));
-                }
-            });
+            // Accessor result_image_url sẽ tự động được áp dụng cho mỗi job
             
             return response()->json([
                 'success' => true,
@@ -186,21 +194,16 @@ class ImageJobController extends Controller
                 ->where('user_id', $user->id)
                 ->firstOrFail();
             
-            // Nếu tiến trình đang xử lý, kiểm tra với ComfyUI
-            if ($job->status === 'processing' && $job->comfy_prompt_id) {
-                $historyData = $this->comfyuiService->checkJobStatus($job->comfy_prompt_id);
+            // Nếu tiến trình đang xử lý hoặc đang chờ, kiểm tra với ComfyUI
+            if (($job->status === 'processing' || $job->status === 'pending') && $job->comfy_prompt_id) {
+                // Thử cập nhật tiến trình này
+                $this->comfyuiService->checkAndUpdatePendingJobs();
                 
-                // Nếu tiến trình đã hoàn thành, cập nhật
-                if (!isset($historyData['error']) && isset($historyData['outputs'])) {
-                    $this->comfyuiService->updateCompletedJob($job, $historyData);
-                    $job->refresh();
-                }
+                // Làm mới thông tin job
+                $job->refresh();
             }
             
-            // Chuyển đổi result_image thành URL
-            if ($job->result_image) {
-                $job->result_image_url = url(Storage::url($job->result_image));
-            }
+            // Accessor result_image_url sẽ tự động được áp dụng 
             
             return response()->json([
                 'success' => true,

@@ -36,6 +36,28 @@ class ImageJob extends Model
         'progress' => 'integer',
     ];
 
+    protected $appends = [
+        'result_image_url'
+    ];
+
+    /**
+     * Accessor cho result_image_url
+     */
+    public function getResultImageUrlAttribute()
+    {
+        if (!$this->result_image) {
+            return null;
+        }
+        
+        // Nếu đã là URL đầy đủ thì trả về luôn
+        if (str_starts_with($this->result_image, 'http')) {
+            return $this->result_image;
+        }
+        
+        // Nếu không, chuyển đổi thành URL
+        return url(\Illuminate\Support\Facades\Storage::url($this->result_image));
+    }
+
     /**
      * Lấy người dùng sở hữu tiến trình
      */
