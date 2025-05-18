@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
+      <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
       <h1 class="text-3xl font-bold text-gray-800 mb-8">Quản lý tiến trình tạo ảnh</h1>
       
       <!-- Tab Navigation -->
@@ -322,15 +323,17 @@
 </template>
 
 <script>
+import ButtonBackVue from '../../components/common/ButtonBack.vue'
+import axios from 'axios';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import axios from 'axios';
 import { toast } from 'vue-sonner';
-
 export default {
   name: 'ImageJobsManager',
-  
+  components: {
+    ButtonBackVue
+  },
   setup() {
     const activeTab = ref('active');
     const activeJobs = ref([]);

@@ -1,5 +1,6 @@
 <template>
   <div class="container mx-auto py-8 px-4 md:px-6">
+    <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
     <div class="max-w-4xl mx-auto">
       <h1 class="text-2xl font-bold text-gray-800 mb-6">Thông báo của bạn</h1>
       
@@ -71,7 +72,7 @@
             </div>
             <div v-else class="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
             <div class="flex-1 min-w-0">
@@ -114,10 +115,13 @@ import { useRouter } from 'vue-router'
 import { useNotifications } from '@/composables/user/useNotifications'
 import { formatTimev2 } from '@/utils'
 import useImage from '@/composables/user/useImage'
+import ButtonBackVue from '../../components/common/ButtonBack.vue'
 
 export default {
   name: 'NotificationsPage',
-  
+  components: {
+    ButtonBackVue
+  },
   setup() {
     const router = useRouter()
     const currentFilter = ref('all')

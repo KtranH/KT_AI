@@ -12,41 +12,6 @@
                     <img :src="icon_title" loading="lazy" class="w-12 h-12 ml-2" alt="">
                 </div>
                 
-                <!-- Preview ảnh khi tạo thành công -->
-                <div v-if="successfulJob" class="bg-green-50 border border-green-200 rounded-xl p-6 mb-8 shadow-lg">
-                    <div class="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-                        <div class="w-full md:w-1/3">
-                            <h2 class="text-xl font-semibold text-green-700 mb-4">Tạo ảnh thành công!</h2>
-                            <p class="text-gray-700 mb-4">Prompt: {{ successfulJob.prompt }}</p>
-                            <div class="flex space-x-2 mb-2">
-                                <span class="text-sm text-gray-500">{{ successfulJob.width }}x{{ successfulJob.height }}</span>
-                                <span class="text-sm text-gray-500">Seed: {{ successfulJob.seed }}</span>
-                            </div>
-                            <div class="flex space-x-2">
-                                <router-link 
-                                    to="/image-jobs" 
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    Xem tất cả hình ảnh
-                                </router-link>
-                                <button 
-                                    @click="successfulJob = null" 
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                                >
-                                    Đóng
-                                </button>
-                            </div>
-                        </div>
-                        <div class="w-full md:w-2/3 rounded-lg overflow-hidden shadow-lg">
-                            <img 
-                                :src="successfulJob.result_image_url" 
-                                :alt="successfulJob.prompt" 
-                                class="w-full h-auto object-contain max-h-96"
-                            />
-                        </div>
-                    </div>
-                </div>
-                
                 <div class="grid gap-8 mb-8" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
                     <!-- Phần nhập thông tin bên trái -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
@@ -90,7 +55,13 @@
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Preview ảnh khi tạo thành công -->
+                <ImageReview 
+                    :successfulJob="successfulJob" 
+                    @close="handleClosePreview" 
+                />
+                
                 <!-- Phần tiến trình đang xử lý -->
                 <div v-if="activeJobs.length > 0" class="bg-white rounded-xl shadow-lg p-6 mb-8">
                     <h2 class="text-xl font-semibold text-gray-700 mb-4">Tiến trình đang xử lý ({{ activeJobs.length }}/5)</h2>
@@ -147,6 +118,7 @@ import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
 import PromptInput  from '@/components/user/GenImage/PromptInput.vue'
 import ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
 import ButtonBackVue from '../../components/common/ButtonBack.vue'
+import ImageReview from '@/components/user/GenImage/ImageReview.vue'
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
@@ -162,6 +134,7 @@ export default {
         ImageGalleryLayout,
         PromptInput,
         ImageUploader,
+        ImageReview,
         ButtonBackVue
     },
     setup() {
@@ -199,6 +172,8 @@ export default {
         const activeJobs = ref([])
         const checkInterval = ref(null)
         const successfulJob = ref(null)
+        // Set để theo dõi các job đã hiển thị thông báo
+        const notifiedJobIds = ref(new Set())
         
         // Items cho hướng dẫn
         const guideItems = ref([
@@ -230,13 +205,19 @@ export default {
                     // Kiểm tra nếu có job mới hoàn thành (chưa hiển thị)
                     const latestJob = response.data.completed_jobs[0];
                     
-                    // Nếu job này hoàn thành trong vòng 30 giây qua và chưa được hiển thị
+                    // Nếu job này hoàn thành trong vòng 30 giây qua
                     const jobCreatedTime = new Date(latestJob.updated_at).getTime();
                     const currentTime = new Date().getTime();
                     const timeDiff = (currentTime - jobCreatedTime) / 1000; // chuyển đổi sang giây
                     
-                    if (timeDiff < 30 && !successfulJob.value) {
+                    // Hiển thị job mới nhất nếu nó mới hoàn thành (trong vòng 30 giây)
+                    // và chưa hiển thị thông báo
+                    if (timeDiff < 30 && !notifiedJobIds.value.has(latestJob.id)) {
                         successfulJob.value = latestJob;
+                        // Đánh dấu job đã được thông báo
+                        notifiedJobIds.value.add(latestJob.id);
+                        // Hiển thị thông báo toast
+                        toast.success('Đã tạo ảnh thành công!');
                     }
                 }
             } catch (error) {
@@ -316,6 +297,7 @@ export default {
                 
                 if (response.data.success) {
                     toast.success('Tiến trình tạo ảnh đã được khởi tạo');
+                    console.log('Đã tạo job mới:', response.data.job);
                     
                     // Reset form sau khi tạo thành công
                     prompt.value = '';
@@ -365,6 +347,30 @@ export default {
             }
         }
 
+        // Function to handle closing the preview
+        const handleClosePreview = () => {
+            // Lưu ID của job đang hiển thị (nếu có)
+            const currentJobId = successfulJob.value?.id;
+            
+            // Đặt lại giá trị successfulJob
+            successfulJob.value = null;
+            
+            // Nếu có currentJobId, xóa khỏi Set notifiedJobIds để có thể hiển thị lại nếu cần
+            if (currentJobId) {
+                notifiedJobIds.value.delete(currentJobId);
+            }
+        };
+
+        // Function để giới hạn kích thước của Set notifiedJobIds
+        const limitNotifiedJobsSet = () => {
+            // Nếu số lượng ID vượt quá 100, xóa các ID cũ
+            if (notifiedJobIds.value.size > 100) {
+                // Chuyển Set thành Array, lấy 50 phần tử mới nhất, rồi chuyển lại thành Set
+                const idsArray = Array.from(notifiedJobIds.value);
+                notifiedJobIds.value = new Set(idsArray.slice(-50));
+            }
+        };
+
         // Mounted Hook
         onMounted(() => {
             try {
@@ -384,6 +390,7 @@ export default {
             checkInterval.value = setInterval(() => {
                 fetchActiveJobs();
                 checkCompletedJobs();
+                limitNotifiedJobsSet(); // Giới hạn kích thước của Set
             }, 5000);
         });
         
@@ -414,7 +421,8 @@ export default {
             isGenerating,
             activeJobs,
             cancelJob,
-            successfulJob
+            successfulJob,
+            handleClosePreview
         }
     }
 }

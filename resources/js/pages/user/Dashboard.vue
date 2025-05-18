@@ -179,7 +179,6 @@ import { useAuthStore } from '@/stores/auth/authStore'
 import { formatDate } from '@/utils/index'
 import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
-
 import AOS from 'aos'
 
 export default {

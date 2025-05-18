@@ -3,8 +3,6 @@
 namespace App\Services;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Notifications\LikeCommentNotification;
-use App\Notifications\AddCommentNotification;
-use App\Notifications\AddReplyNotification;
 use App\Models\Comment;
 use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;
