@@ -199,7 +199,7 @@ export default {
     
     const testSubMenu = [
       { name: 'Thống kê', path: '/statistics'},
-      { name: 'Tùy chỉnh', path: '/test/1' },
+      { name: 'Tùy chỉnh', path: '/settings' },
       { name: 'Lịch sử hoạt động', path: '/test/2' },
       { name: 'Thanh toán', path: '/test/3' },
       { name: 'Hỗ trợ', path: '/test/4' },

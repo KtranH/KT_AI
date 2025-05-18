@@ -20,6 +20,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Đảm bảo các commands được đăng ký trong Laravel 11
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \App\Console\Commands\StartQueueWorker::class,
+                \App\Console\Commands\MakeSupervisorConfig::class,
+            ]);
+        }
+
         //
         Carbon::setLocale('vi');
     }

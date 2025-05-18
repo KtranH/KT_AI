@@ -6,7 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\TurnstileController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\API\StatisticsController;
 
 /*
@@ -66,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/image-jobs/create', 'App\Http\Controllers\API\ImageJobController@create');
     Route::get('/image-jobs/active', 'App\Http\Controllers\API\ImageJobController@getActiveJobs');
     Route::get('/image-jobs/completed', 'App\Http\Controllers\API\ImageJobController@getCompletedJobs');
+    Route::get('/image-jobs/failed', 'App\Http\Controllers\API\ImageJobController@getFailedJobs');
     Route::get('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@checkJobStatus');
     Route::delete('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@cancelJob');
+    Route::post('/image-jobs/{jobId}/retry', 'App\Http\Controllers\API\ImageJobController@retryJob');
 });

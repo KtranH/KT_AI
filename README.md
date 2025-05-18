@@ -64,3 +64,76 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Hướng dẫn sử dụng Queue
+
+Ứng dụng này sử dụng hệ thống Queue để xử lý các tiến trình tạo ảnh bất đồng bộ. Dưới đây là cách thiết lập và sử dụng:
+
+### Thiết lập Database
+
+Đảm bảo bạn đã chạy migration để tạo bảng jobs:
+
+```bash
+php artisan migrate
+```
+
+### Khởi động Queue Worker
+
+Có 2 cách để khởi động queue worker:
+
+#### 1. Sử dụng lệnh tích hợp
+
+```bash
+php artisan queue:start-worker --daemon
+```
+
+Các tùy chọn:
+- `--conn=database` - Kết nối queue sử dụng (mặc định: database)
+- `--queue=default,image-processing,image-processing-low` - Danh sách queue cần xử lý
+- `--sleep=3` - Số giây nghỉ khi không có job
+- `--tries=3` - Số lần thử lại khi job lỗi
+- `--timeout=60` - Thời gian tối đa cho mỗi job (giây)
+
+#### 2. Sử dụng Supervisor (khuyến nghị cho môi trường production)
+
+Tạo file cấu hình Supervisor:
+
+```bash
+php artisan queue:make-supervisor-config
+```
+
+Các tùy chọn:
+- `--file=laravel-worker` - Tên file cấu hình
+- `--processes=2` - Số lượng worker
+- `--memory=128` - Giới hạn bộ nhớ (MB)
+
+Sau khi tạo file cấu hình, sao chép file này vào thư mục `/etc/supervisor/conf.d/` trên máy chủ production và khởi động Supervisor:
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start laravel-worker:*
+```
+
+### Theo dõi Queue
+
+Kiểm tra trạng thái Queue:
+
+```bash
+php artisan queue:monitor
+php artisan queue:size
+php artisan queue:failed
+```
+
+Dọn dẹp Queue:
+
+```bash
+php artisan queue:prune-batches --hours=48
+php artisan queue:prune-failed --hours=24
+```
+
+### Các Queue được sử dụng
+
+- `default` - Các job thông thường
+- `image-processing` - Các job xử lý hình ảnh ưu tiên cao
+- `image-processing-low` - Các job xử lý hình ảnh ưu tiên thấp (kiểm tra trạng thái)

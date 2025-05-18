@@ -194,7 +194,7 @@ class UserRepository implements UserRepositoryInterface
             if (!empty($newName)) {
                 $user->name = $newName;
             }
-            // Lưu lại hoạt động
+            // Cập nhật hoạt động
             $user->activities = json_encode($activities);
         }
         $user->save();
@@ -219,6 +219,15 @@ class UserRepository implements UserRepositoryInterface
         }
 
         $userModel->is_verified = true;
+
+        // Cập nhật hoạt động
+        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities[] = [
+            'action' => 'Xác thực email thành công',
+            'timestamp' => Carbon::now()->toDateTimeString(),
+        ];
+        $userModel->activities = json_encode($activities);
+
         $userModel->save();
         return $userModel ?? null;
     }
@@ -254,6 +263,15 @@ class UserRepository implements UserRepositoryInterface
         $userModel = User::findOrFail($userId);
 
         $userModel->avatar_url = $path;
+
+        // Cập nhật hoạt động
+        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities[] = [
+            'action' => 'Cập nhật avatar',
+            'timestamp' => Carbon::now()->toDateTimeString(),
+        ];
+        $userModel->activities = json_encode($activities);
+
         $userModel->save();
         return $userModel;
     }
@@ -275,6 +293,15 @@ class UserRepository implements UserRepositoryInterface
         $userModel = User::findOrFail($userId);
 
         $userModel->cover_image_url = $path;
+
+        // Cập nhật hoạt động
+        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities[] = [
+            'action' => 'Cập nhật ảnh bìa',
+            'timestamp' => Carbon::now()->toDateTimeString(),
+        ];
+        $userModel->activities = json_encode($activities);
+
         $userModel->save();
         return $userModel;
     }

@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Schedule;
 |
 */
 
-Schedule::command('image-jobs:check')
-    ->everyMinute()
-    ->description('Kiểm tra và cập nhật trạng thái các tiến trình tạo ảnh'); 
+// Kiểm tra và xóa các jobs đã quá hạn
+Schedule::command('queue:prune-batches --hours=48')
+    ->daily()
+    ->description('Dọn dẹp các queue jobs đã quá hạn');
+
+// Kiểm tra và xóa các jobs thất bại đã quá 24 giờ
+Schedule::command('queue:prune-failed --hours=24')
+    ->daily()
+    ->description('Dọn dẹp các queue jobs thất bại quá 24 giờ'); 

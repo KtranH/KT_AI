@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CheckImageJobStatus;
 use App\Models\ImageJob;
 use App\Services\ComfyUIService;
 use Illuminate\Http\Request;
@@ -82,6 +83,7 @@ class ImageJobController extends Controller
                 'main_image' => $mainImagePath,
                 'secondary_image' => $secondaryImagePath,
                 'status' => 'pending',
+                'progress' => 0,
             ]);
             
             // Gửi yêu cầu đến ComfyUI
@@ -93,6 +95,11 @@ class ImageJobController extends Controller
                     'message' => 'Lỗi khi tạo ảnh với ComfyUI: ' . ($imageJob->error_message ?? 'Lỗi không xác định')
                 ], 500);
             }
+            
+            // Đưa vào queue để kiểm tra tiến trình
+            dispatch(new CheckImageJobStatus($imageJob->id, $promptId))
+                ->onQueue('image-processing')
+                ->delay(now()->addSeconds(15)); // Cho ComfyUI thêm thời gian để bắt đầu xử lý
             
             return response()->json([
                 'success' => true,
@@ -123,20 +130,8 @@ class ImageJobController extends Controller
         try {
             $user = Auth::user();
             
-            // Kiểm tra và cập nhật các tiến trình đang xử lý
-            $updated = $this->comfyuiService->checkAndUpdatePendingJobs();
-            Log::debug("Kết quả cập nhật tiến trình: " . ($updated ? 'thành công' : 'thất bại'));
-            
             // Lấy danh sách các tiến trình đang hoạt động
             $activeJobs = ImageJob::getActiveJobsByUser($user->id);
-            
-            // Nếu không có tiến trình đang hoạt động, thử kiểm tra lại một lần nữa
-            // (đề phòng trường hợp cập nhật trạng thái bị lỗi)
-            if ($activeJobs->isEmpty() && !$updated) {
-                Log::debug("Không có tiến trình đang hoạt động, thử cập nhật lại một lần nữa");
-                $this->comfyuiService->checkAndUpdatePendingJobs();
-                $activeJobs = ImageJob::getActiveJobsByUser($user->id);
-            }
             
             // Accessor result_image_url sẽ tự động được áp dụng cho mỗi job
             
@@ -192,15 +187,24 @@ class ImageJobController extends Controller
             
             $job = ImageJob::where('id', $jobId)
                 ->where('user_id', $user->id)
-                ->firstOrFail();
-            
-            // Nếu tiến trình đang xử lý hoặc đang chờ, kiểm tra với ComfyUI
-            if (($job->status === 'processing' || $job->status === 'pending') && $job->comfy_prompt_id) {
-                // Thử cập nhật tiến trình này
-                $this->comfyuiService->checkAndUpdatePendingJobs();
+                ->first();
                 
-                // Làm mới thông tin job
-                $job->refresh();
+            if (!$job) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy tiến trình'
+                ], 404);
+            }
+            
+            // Nếu tiến trình đang xử lý hoặc đang chờ và có ID prompt, tạo queue job để kiểm tra
+            if (($job->status === 'processing' || $job->status === 'pending') && $job->comfy_prompt_id) {
+                // Tạo queue job để kiểm tra tiến trình, nhưng ưu tiên thấp và delay 5 giây
+                // để tránh trường hợp người dùng spam API này
+                dispatch(new CheckImageJobStatus($job->id, $job->comfy_prompt_id))
+                    ->onQueue('image-processing-low')
+                    ->delay(now()->addSeconds(5));
+                
+                Log::info("Đã thêm job {$job->id} vào queue để kiểm tra trạng thái");
             }
             
             // Accessor result_image_url sẽ tự động được áp dụng 
@@ -210,11 +214,6 @@ class ImageJobController extends Controller
                 'job' => $job
             ]);
             
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy tiến trình'
-            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -259,6 +258,100 @@ class ImageJobController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Không tìm thấy tiến trình hoặc tiến trình không thể hủy'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đã xảy ra lỗi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Lấy danh sách các tiến trình thất bại của người dùng
+     */
+    public function getFailedJobs(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Lấy danh sách các tiến trình thất bại
+            $failedJobs = ImageJob::where('user_id', $user->id)
+                ->where('status', 'failed')
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Accessor result_image_url sẽ tự động được áp dụng cho mỗi job
+            
+            return response()->json([
+                'success' => true,
+                'failed_jobs' => $failedJobs,
+                'count' => count($failedJobs),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đã xảy ra lỗi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Thử lại một tiến trình thất bại
+     */
+    public function retryJob(Request $request, $jobId)
+    {
+        try {
+            $user = Auth::user();
+            
+            $job = ImageJob::where('id', $jobId)
+                ->where('user_id', $user->id)
+                ->where('status', 'failed')
+                ->firstOrFail();
+            
+            // Kiểm tra số lượng tiến trình hiện tại
+            $activeJobsCount = ImageJob::countActiveJobsByUser($user->id);
+            if ($activeJobsCount >= 5) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn đã đạt đến giới hạn 5 tiến trình đang hoạt động. Vui lòng đợi cho đến khi một số tiến trình hoàn thành.'
+                ], 429);
+            }
+            
+            // Cập nhật trạng thái
+            $job->status = 'pending';
+            $job->progress = 0;
+            $job->error_message = null;
+            $job->result_image = null;
+            $job->save();
+            
+            // Gửi yêu cầu đến ComfyUI
+            $promptId = $this->comfyuiService->createImage($job);
+            
+            if (!$promptId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi khi tạo ảnh với ComfyUI: ' . ($job->error_message ?? 'Lỗi không xác định')
+                ], 500);
+            }
+            
+            // Đưa vào queue để kiểm tra tiến trình
+            dispatch(new CheckImageJobStatus($job->id, $promptId))
+                ->onQueue('image-processing')
+                ->delay(now()->addSeconds(15));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Tiến trình đã được khởi động lại',
+                'job_id' => $job->id,
+                'status' => $job->status,
+            ]);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy tiến trình thất bại'
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
