@@ -56,14 +56,14 @@ export default defineComponent({
       default: 'Xem trước & Tải lên ảnh'
     },
     imageValue: {
-      type: String,
+      type: [String, File],
       default: null
     }
   },
   setup(props, { emit }) {
     // Local state
     const isDragging = ref(false);
-    const imagePreview = ref(props.imageValue);
+    const imagePreview = ref(null);
     // Tạo ID duy nhất cho component
     const uniqueId = ref(`upload-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
     
@@ -89,8 +89,10 @@ export default defineComponent({
         if(isImageSizeValid(file)) {
             const reader = new FileReader();
             reader.onload = (e) => {
+                // Lưu URL hình ảnh để xem trước
                 imagePreview.value = e.target.result;
-                emit('update:image', e.target.result);
+                // Gửi đối tượng File về component cha để gửi API
+                emit('update:image', file);
             };
             reader.readAsDataURL(file);
         }
@@ -110,8 +112,20 @@ export default defineComponent({
     
     // Watchers
     watch(() => props.imageValue, (val) => {
-      imagePreview.value = val;
-    });
+      if (val instanceof File) {
+        // Nếu đã có file, tạo lại preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.value = e.target.result;
+        };
+        reader.readAsDataURL(val);
+      } else if (typeof val === 'string') {
+        // Nếu là URL hoặc base64, hiển thị trực tiếp
+        imagePreview.value = val;
+      } else {
+        imagePreview.value = null;
+      }
+    }, { immediate: true });
     
     return {
       isDragging,

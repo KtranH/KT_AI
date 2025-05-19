@@ -36,10 +36,10 @@ class ImageJobController extends Controller
                 'seed' => 'required|numeric',
                 'style' => 'nullable|string',
                 'feature_id' => 'required|exists:ai_features,id',
-                'main_image' => 'nullable|image|max:10240', // max 10MB
-                'secondary_image' => 'nullable|image|max:10240', // max 10MB
+                'main_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'secondary_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
-            
+                        
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,

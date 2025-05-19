@@ -132,7 +132,7 @@ class ComfyUIService
                 
                 // Tìm node image loader trong template và cập nhật
                 foreach ($template as $nodeId => $node) {
-                    if (isset($node['class_type']) && str_contains($node['class_type'], 'Image')) {
+                    if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image First' && str_contains($node['class_type'], 'LoadImage')) {
                         $template[$nodeId]['inputs']['image'] = $mainImageUrl;
                         break;
                     }
@@ -146,7 +146,7 @@ class ComfyUIService
                 // Tìm node thứ hai cho ảnh phụ
                 $foundFirst = false;
                 foreach ($template as $nodeId => $node) {
-                    if (isset($node['class_type']) && str_contains($node['class_type'], 'Image')) {
+                    if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image Second' && str_contains($node['class_type'], 'LoadImage')) {
                         if ($foundFirst) {
                             $template[$nodeId]['inputs']['image'] = $secondaryImageUrl;
                             break;
