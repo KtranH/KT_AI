@@ -124,7 +124,13 @@ export const useAuthStore = () => {
         return response.data
       }
       saveAuthData(response.data.user, response.data.token, response.data.remember)
-      router.push(router.currentRoute.value.query.redirect || '/dashboard')
+      
+      // Sử dụng router.push thay vì window.location để tránh reload trang
+      // và thêm một khoảng thời gian ngắn để đảm bảo dữ liệu đã được lưu
+      setTimeout(() => {
+        router.push(router.currentRoute.value.query.redirect || '/dashboard')
+      }, 100)
+      
       return response.data
     } catch (error) {
       // Lỗi đã được xử lý tự động bởi interceptor, không cần xử lý thêm lỗi CSRF ở đây nữa
@@ -151,7 +157,8 @@ export const useAuthStore = () => {
       // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
       await refreshCsrfToken()
 
-      router.replace({path: '/login'})
+      // Sử dụng router.replace thay vì router.push để tránh lịch sử điều hướng không cần thiết
+      router.replace('/login')
 
     } catch (error) {
       console.error('Logout error:', error)
@@ -164,19 +171,16 @@ export const useAuthStore = () => {
         storeLike.clearLikes()
         clearAuthData()
 
-        // Làm mới trang để cập nhật CSRF token
-        window.location.reload()
-
-        // Chuyển hướng đến trang đăng nhập sau khi làm mới
-        setTimeout(() => {
-          router.push('/login')
-        }, 100)
-
+        // Sử dụng router để điều hướng thay vì window.location.reload
+        router.replace('/login')
         return
       }
 
       // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi khác
       await refreshCsrfToken()
+      
+      // Luôn chuyển hướng về trang đăng nhập sau khi đăng xuất
+      router.replace('/login')
     }
   }
 

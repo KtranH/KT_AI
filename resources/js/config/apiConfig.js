@@ -111,15 +111,20 @@ apiClient.interceptors.response.use(
       if (!originalRequest._retry) {
         originalRequest._retry = true;
         
-        // Lấy CSRF token mới
-        const newToken = await refreshCsrfToken();
-        
-        if (newToken) {
-          // Cập nhật header với token mới
-          originalRequest.headers['X-XSRF-TOKEN'] = newToken;
+        try {
+          // Lấy CSRF token mới
+          const newToken = await refreshCsrfToken();
           
-          // Thử lại request ban đầu với token mới
-          return apiClient(originalRequest);
+          if (newToken) {
+            // Cập nhật header với token mới
+            originalRequest.headers['X-XSRF-TOKEN'] = newToken;
+            
+            // Thử lại request ban đầu với token mới
+            return apiClient(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Lỗi khi làm mới CSRF token:', refreshError);
+          return Promise.reject(error);
         }
       }
     }
@@ -145,22 +150,31 @@ apiClient.interceptors.response.use(
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       console.log('Lỗi xác thực:', error.response.status);
       
-      // Import và sử dụng authStore để xử lý đăng xuất
+      // Xử lý đăng xuất bằng cách xóa dữ liệu người dùng
       try {
-        const authStore = useAuthStore();
-        authStore.clearAuthData();
-      } catch (e) {
-        console.error('Lỗi khi xử lý clearAuthData:', e);
-        
         // Fallback nếu không thể sử dụng authStore
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');
+        
+        // Chỉ thử dùng authStore nếu gọi api bắt buộc đăng nhập
+        if (!error.config.url.includes('notifications') && !error.config.url.includes('/user')) {
+          try {
+            const auth = useAuthStore();
+            if (auth && typeof auth.clearAuthData === 'function') {
+              auth.clearAuthData();
+              console.log('Đã xóa dữ liệu xác thực bằng authStore');
+            }
+          } catch (authError) {
+            console.log('Không thể sử dụng authStore:', authError);
+          }
+        }
+      } catch (e) {
+        console.error('Lỗi khi xử lý clearAuthData:', e);
       }
       
-      // Chuyển hướng đến trang đăng nhập
-      window.location.href = '/login';
+      return Promise.reject(error);
     }
     
     return Promise.reject(error);

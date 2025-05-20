@@ -161,19 +161,31 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
 
     // Thiết lập Echo để lắng nghe sự kiện thông báo
     const setupEchoListeners = () => {
-        if (!window.Echo || !authStore.isAuthenticated || !authStore.user) {
-            console.log('Không thể thiết lập Echo: Echo không tồn tại hoặc người dùng chưa xác thực')
+        if (!window.Echo) {
+            console.log('Không thể thiết lập Echo: Echo không tồn tại')
             return
         }
-
-        // Kiểm tra đảm bảo user ID tồn tại
-        if (!authStore.user.value.id) {
+        
+        if (!authStore.isAuthenticated) {
+            console.log('Không thể thiết lập Echo: người dùng chưa xác thực')
+            return
+        }
+        
+        if (!authStore.user) {
+            console.log('Không thể thiết lập Echo: authStore.user không tồn tại')
+            return
+        }
+        
+        // Check if user is an object with an id property
+        const userId = authStore.user.id || (authStore.user.value && authStore.user.value.id)
+        
+        if (!userId) {
             console.log('Không thể thiết lập Echo: ID người dùng không tồn tại')
             return
         }
 
         try {
-            echo = window.Echo.private(`App.Models.User.${authStore.user.value.id}`)
+            echo = window.Echo.private(`App.Models.User.${userId}`)
                 .notification((notification) => {
                     // Thêm thông báo mới vào đầu danh sách
                     notifications.value.unshift(notification)
@@ -183,7 +195,7 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                     showNotification(notification)
                 })
                 
-            console.log('Đã thiết lập kênh thông báo cho user:', authStore.user.value.id)
+            console.log('Đã thiết lập kênh thông báo cho user:', userId)
         } catch (error) {
             console.error('Lỗi khi thiết lập lắng nghe thông báo:', error)
         }
@@ -259,8 +271,11 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
     }
 
     onMounted(() => {
-        fetchNotifications()
-        setupEchoListeners()
+        // Chỉ fetch notifications và setup Echo khi người dùng đã đăng nhập
+        if (authStore.isAuthenticated) {
+            fetchNotifications()
+            setupEchoListeners()
+        }
         requestNotificationPermission()
     })
 

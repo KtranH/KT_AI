@@ -24,7 +24,7 @@ class UsersSeeder extends Seeder
                 'cover_image_url' => 'https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/cover_image.png',
                 'sum_like' => 0,
                 'sum_img' => 0,
-                'remaining_creadits' => 0,
+                'remaining_credits' => 0,
                 'status_user' => 'active',
             ]
         ];

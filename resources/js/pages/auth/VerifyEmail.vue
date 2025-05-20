@@ -36,7 +36,7 @@
         <div>
           <button 
             type="submit" 
-            :disabled="loading || !isCodeComplete"
+            :disabled="loading || !canSubmit"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
           >
             <span class="absolute left-0 inset-y-0 flex items-center pl-3">
@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { resendCode } from '@/services/verificationService'
 import { useCodeVerification } from '@/composables/auth/useCodeVerification'
@@ -123,6 +123,15 @@ export default {
       resetCode
     } = useCodeVerification(6)
 
+    // Tạo computed property mới để kiểm tra liệu nút có thể submit hay không
+    const canSubmit = computed(() => {
+      // Đếm số ô đã nhập
+      const filledCount = verificationCode.value.filter(digit => digit && digit.trim() !== '').length;
+      
+      // Cho phép submit nếu có ít nhất 4 ô được điền
+      return filledCount >= 4;
+    });
+    
     // Methods
     const startResendTimer = () => {
       resendTimer.value = 60
@@ -155,6 +164,7 @@ export default {
     
     const handleComplete = (code) => {
       // Mã hoàn thành, có thể tự động submit nếu muốn
+      console.log('Code complete event received:', code);
     }
 
     const handleSubmit = async () => {
@@ -168,16 +178,30 @@ export default {
         error.value = null
         success.value = null
         
-        const code = verificationCode.value.join('')
+        // Lọc bỏ các ô trống và nối thành chuỗi
+        const code = verificationCode.value.filter(digit => digit && digit.trim() !== '').join('')
+        console.log('Submitting code:', code);
+        
+        if (code.length < 4) {
+          error.value = 'Mã xác thực cần ít nhất 4 ký tự'
+          loading.value = false
+          return
+        }
+        
         const response = await axios.post('/api/verify-email', {
           email: email.value,
           code
         })
 
         success.value = 'Xác thực email thành công!'
+        
+        // Giữ lại thông báo thành công lâu hơn và thêm thông báo bổ sung
+        success.value = 'Xác thực email thành công! Đang chuyển hướng đến trang đăng nhập...'
+        
+        // Tăng thời gian chờ trước khi chuyển hướng để người dùng thấy thông báo
         setTimeout(() => {
           router.push('/login')
-        }, 2000)
+        }, 3000) // Tăng từ 2000ms lên 3000ms
       } catch (err) {
         error.value = err.response?.data?.message || 'Mã xác thực không đúng'
         incrementAttempts()
@@ -191,8 +215,18 @@ export default {
 
     // Lifecycle hooks
     onMounted(() => {
+      // Chỉ chuyển hướng khi không có email
       if (!email.value) {
-        router.push('/login')
+        error.value = 'Không tìm thấy địa chỉ email. Vui lòng thử lại.'
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
+      }
+      
+      // Kiểm tra xem người dùng có đang đăng nhập hay không
+      // Nếu đang đăng nhập thì không cần xác thực email nữa
+      if (route.query.message) {
+        success.value = route.query.message
       }
     })
 
@@ -203,6 +237,7 @@ export default {
       error,
       success,
       isCodeComplete,
+      canSubmit,
       resendTimer,
       resendCount,
       handleResendCode,

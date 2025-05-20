@@ -8,7 +8,12 @@ export function useCodeVerification(length = 6) {
   
   // Kiểm tra xem mã có đầy đủ không
   const isCodeComplete = computed(() => {
-    return verificationCode.value.every(digit => digit.length === 1)
+    // Đếm số lượng ô đã được điền (không trống)
+    const filledCount = verificationCode.value.filter(digit => digit && digit.trim() !== '').length
+    
+    // Nếu ít nhất có 4 ô được điền (trong trường hợp mã có 5-6 ký tự)
+    // hoặc tất cả các ô đã được điền (nếu mã có ít hơn 5 ký tự)
+    return (length >= 5) ? (filledCount >= 4) : (filledCount === length)
   })
   
   // Lấy chuỗi mã hoàn chỉnh
@@ -20,15 +25,12 @@ export function useCodeVerification(length = 6) {
   const handleInput = (event, index) => {
     const value = event.target.value
     
-    // Chỉ chấp nhận ký tự số
-    if (value && !/^\d*$/.test(value)) {
-      verificationCode.value[index] = ''
-      return
-    }
-    
-    // Nếu nhập giá trị và không phải là index cuối cùng, tự động focus vào ô tiếp theo
-    if (value && index < length - 1) {
-      codeInputs.value[index + 1].focus()
+    // Cho phép cả ký tự chữ và số
+    if (value) {
+      // Nếu nhập giá trị và không phải là index cuối cùng, tự động focus vào ô tiếp theo
+      if (index < length - 1) {
+        codeInputs.value[index + 1].focus()
+      }
     }
   }
   

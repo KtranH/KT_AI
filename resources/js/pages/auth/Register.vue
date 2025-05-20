@@ -152,11 +152,11 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTurnstile } from '@/composables/auth/useTurnstile'
 import axios from 'axios'
 import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
 import AlertMessage from '@/components/auth/AlertMessage.vue'
 import SocialLoginButton from '@/components/auth/SocialLoginButton.vue'
-import { useTurnstile } from '@/composables/auth/useTurnstile'
 
 export default {
   name: 'Register',
@@ -186,9 +186,16 @@ export default {
     const {
       turnstileToken,
       turnstileError,
+      turnstileWidget,
       initTurnstile,
       resetTurnstile
-    } = useTurnstile(null, turnstileContainer)
+    } = useTurnstile(null)
+
+    // Gán container ref cho turnstileWidget để widget hiển thị đúng
+    onMounted(() => {
+      turnstileWidget.value = turnstileContainer.value
+      initTurnstile()
+    })
 
     //Methods
     const togglePassword = () => {
@@ -240,11 +247,6 @@ export default {
         loading.value = false
       }
     }
-
-    // Mounted hooks
-    onMounted(() => {
-      initTurnstile()
-    })
 
     return {
       form,
