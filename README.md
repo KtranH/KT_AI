@@ -1,4 +1,4 @@
-# KT_AI - Ứng dụng tạo ảnh AI hiệu suất cao
+# KT_AI - Ứng dụng tạo ảnh AI
 
 ![Banner KT_AI](https://scontent.fsgn5-8.fna.fbcdn.net/v/t39.30808-6/499546024_713133724434637_2671795591277910537_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=-7V0imz1FWQQ7kNvwEghme2&_nc_oc=Adn49snlvTm4QJwBkTARidT2ggo9euub_fwxf8I-DScYfTP_ycKoXPE2eowKbD5IlkyucwNnTLjZErvmBy5kLCQV&_nc_zt=23&_nc_ht=scontent.fsgn5-8.fna&_nc_gid=TczMluLaitgOBEtqNCXdaw&oh=00_AfLCh4oemYVPee-VsBI8Z_7gLixco1UViSaILZa6CP3QgA&oe=6833B216)
 
@@ -189,7 +189,7 @@ Dưới đây là một số tính năng tạo ảnh được sử dụng trong 
 
 ## Đóng góp
 
-Dự án này được phát triển bởi [Tên của bạn]. Mọi đóng góp và góp ý đều được chào đón.
+Dự án này được phát triển bởi Khôi Trần. Mọi đóng góp và góp ý đều được chào đón.
 
 ## Hướng dẫn sử dụng Queue
 
