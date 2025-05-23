@@ -5,6 +5,9 @@ import { useImageStore } from '@/stores/user/imagesStore'
 import { useLikeStore } from '@/stores/user/likeStore'
 import { refreshCsrfToken } from '../../config/apiConfig'
 
+// Import biến toàn cục từ useNotifications
+import '@/composables/user/useNotifications'
+
 // Reactive state
 const parseUserData = () => {
   try {
@@ -142,6 +145,28 @@ export const useAuthStore = () => {
     try {
       // Lấy CSRF token mới trước khi đăng xuất
       await refreshCsrfToken()
+
+      // Dọn dẹp kết nối Echo trước khi đăng xuất để tránh thông báo không cần thiết
+      if (window.Echo) {
+        // Dọn dẹp biến toàn cục từ useNotifications nếu tồn tại
+        if (typeof globalEchoConnection !== 'undefined' && globalEchoConnection) {
+          globalEchoConnection.stopListening('notification')
+          globalEchoConnection = null
+          
+          if (typeof connectedUserId !== 'undefined') {
+            connectedUserId = null
+          }
+          
+          if (typeof isListeningToNotifications !== 'undefined') {
+            isListeningToNotifications = false
+          }
+          
+          console.log('Đã dọn dẹp kết nối Echo khi đăng xuất')
+        }
+        
+        // Ngắt kết nối tất cả các kênh
+        window.Echo.disconnect()
+      }
 
       const response = await authAPI.logout()
       storeImage.clearImages()

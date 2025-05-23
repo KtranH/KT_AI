@@ -9,8 +9,9 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AddCommentNotification extends Notification implements ShouldBroadcast
+class AddCommentNotification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
     protected $liker;

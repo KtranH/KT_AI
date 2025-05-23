@@ -8,7 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\ImageJob;
 
-class ImageGenerationFailedNotification extends Notification
+class ImageGenerationFailedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

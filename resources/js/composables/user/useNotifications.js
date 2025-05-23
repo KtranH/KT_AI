@@ -3,6 +3,25 @@ import { useAuthStore } from '@/stores/auth/authStore'
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 import { notificationAPI } from '@/services/api'
 
+// Biến toàn cục để theo dõi trạng thái kết nối
+let globalEchoConnection = null
+let isListeningToNotifications = false
+let connectedUserId = null
+
+// Sử dụng Map để theo dõi các thông báo gần đây và tránh bị lặp
+const recentNotifications = new Map()
+const NOTIFICATION_DEBOUNCE_TIME = 5000 // 5 giây
+
+// Hàm debounce
+const debounce = (func, wait) => {
+    let timeout
+    return function(...args) {
+        const context = this
+        clearTimeout(timeout)
+        timeout = setTimeout(() => func.apply(context, args), wait)
+    }
+}
+
 export function useNotifications(loadMore = false) { // Đổi tên tham số để rõ ràng hơn
     const notifications = ref([])
     const unreadCount = ref(0)
@@ -184,21 +203,91 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
             return
         }
 
+        // Kiểm tra xem đã có kết nối cho userId này chưa
+        if (isListeningToNotifications && connectedUserId === userId) {
+            console.log('Kết nối đã tồn tại cho user:', userId)
+            // Sử dụng kết nối đã tồn tại
+            echo = globalEchoConnection
+            return
+        }
+
+        // Nếu đã có kết nối cũ nhưng khác userId, dọn dẹp trước khi tạo kết nối mới
+        if (globalEchoConnection) {
+            globalEchoConnection.stopListening('notification')
+            console.log('Đã dọn dẹp kết nối cũ')
+        }
+
         try {
+            // Tạo kết nối mới
             echo = window.Echo.private(`App.Models.User.${userId}`)
-                .notification((notification) => {
-                    // Thêm thông báo mới vào đầu danh sách
-                    notifications.value.unshift(notification)
-                    unreadCount.value += 1
-                    
-                    // Hiển thị thông báo trên giao diện
-                    showNotification(notification)
-                })
+            
+            // Gán kết nối mới cho biến toàn cục
+            globalEchoConnection = echo
+            connectedUserId = userId
+            
+            // Đăng ký listener mới
+            echo.notification((notification) => {
+                // Tạo key duy nhất cho thông báo dựa vào loại và ID liên quan
+                const notificationKey = getNotificationKey(notification)
                 
-            console.log('Đã thiết lập kênh thông báo cho user:', userId)
+                // Kiểm tra xem thông báo này có bị trùng lặp trong khoảng thời gian ngắn không
+                if (isRecentDuplicate(notificationKey)) {
+                    console.log('Bỏ qua thông báo trùng lặp:', notificationKey)
+                    return
+                }
+                
+                // Thêm vào danh sách thông báo gần đây để tránh lặp lại
+                addToRecentNotifications(notificationKey)
+                
+                // Thêm thông báo mới vào đầu danh sách
+                notifications.value.unshift(notification)
+                unreadCount.value += 1
+                
+                // Hiển thị thông báo trên giao diện
+                showNotification(notification)
+            })
+            
+            // Đánh dấu là đã thiết lập listener
+            isListeningToNotifications = true
+            console.log('Đã thiết lập kênh thông báo mới cho user:', userId)
         } catch (error) {
             console.error('Lỗi khi thiết lập lắng nghe thông báo:', error)
+            isListeningToNotifications = false
+            connectedUserId = null
+            globalEchoConnection = null
         }
+    }
+    
+    // Tạo key duy nhất cho thông báo để phát hiện trùng lặp
+    const getNotificationKey = (notification) => {
+        // Tạo khóa dựa trên loại thông báo và ID liên quan
+        let key = notification.type || ''
+        
+        if (notification.data) {
+            // Thêm các ID liên quan vào key
+            if (notification.data.image_id) key += `-img${notification.data.image_id}`
+            if (notification.data.comment_id) key += `-cmt${notification.data.comment_id}`
+            if (notification.data.type) key += `-${notification.data.type}`
+        }
+        
+        return key
+    }
+    
+    // Kiểm tra xem thông báo có phải là trùng lặp gần đây không
+    const isRecentDuplicate = (key) => {
+        return recentNotifications.has(key) && 
+            (Date.now() - recentNotifications.get(key)) < NOTIFICATION_DEBOUNCE_TIME
+    }
+    
+    // Thêm thông báo vào danh sách thông báo gần đây
+    const addToRecentNotifications = (key) => {
+        // Ghi lại thời gian nhận thông báo
+        recentNotifications.set(key, Date.now())
+        
+        // Tự động xóa khỏi danh sách sau khi hết thời gian debounce
+        setTimeout(() => {
+            recentNotifications.delete(key)
+        }, NOTIFICATION_DEBOUNCE_TIME)
     }
     
     // Hiển thị thông báo (sử dụng Notification API hoặc thay thế)
@@ -239,10 +328,9 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
 
     // Xóa listeners khi component unmounted
     const cleanupEchoListeners = () => {
-        if (echo) {
-            echo.stopListening('notification')
-            echo = null
-        }
+        // Không dọn dẹp echo ở đây vì chúng ta quản lý nó toàn cục
+        // Thay vào đó, chỉ dọn dẹp tham chiếu trong instance này
+        echo = null
     }
 
     // Yêu cầu quyền thông báo từ trình duyệt
