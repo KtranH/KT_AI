@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\ImageJob;
 class ImageJobsRepository
 {
     public function check5Jobs($userId)

@@ -68,7 +68,7 @@ class CheckImageJobStatus implements ShouldQueue
                 
                 // Gửi thông báo lỗi cho người dùng
                 $user = $imageJob->user;
-                if ($user) {
+                if ($user && $imageJob instanceof ImageJob) {
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
@@ -135,7 +135,7 @@ class CheckImageJobStatus implements ShouldQueue
                 
                 // Gửi thông báo lỗi cho người dùng
                 $user = $imageJob->user;
-                if ($user) {
+                if ($user && $imageJob instanceof ImageJob) {
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
@@ -147,7 +147,9 @@ class CheckImageJobStatus implements ShouldQueue
             // Nếu job đã hoàn thành, cập nhật thông tin
             if ($isCompleted) {
                 Log::info("Cập nhật tiến trình {$imageJob->id} sang trạng thái hoàn thành");
-                $comfyuiService->updateCompletedJob($imageJob, $historyData);
+                if ($imageJob instanceof ImageJob) {
+                    $comfyuiService->updateCompletedJob($imageJob, $historyData);
+                }
                 return;
             }
             
@@ -162,7 +164,7 @@ class CheckImageJobStatus implements ShouldQueue
                 
                 // Gửi thông báo lỗi cho người dùng
                 $user = $imageJob->user;
-                if ($user) {
+                if ($user && $imageJob instanceof ImageJob) {
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
@@ -181,7 +183,9 @@ class CheckImageJobStatus implements ShouldQueue
             // Cập nhật trạng thái job
             if ($progressData['status'] === 'completed') {
                 Log::info("Tiến trình {$imageJob->id} đã hoàn thành theo progress API");
-                $comfyuiService->updateCompletedJob($imageJob, $historyData);
+                if ($imageJob instanceof ImageJob) {
+                    $comfyuiService->updateCompletedJob($imageJob, $historyData);
+                }
             } 
             else if ($progressData['status'] === 'processing' && $imageJob->status === 'pending') {
                 $imageJob->status = 'processing';
@@ -210,7 +214,7 @@ class CheckImageJobStatus implements ShouldQueue
                 
                 // Gửi thông báo lỗi cho người dùng
                 $user = $imageJob->user;
-                if ($user) {
+                if ($user && $imageJob instanceof ImageJob) {
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
@@ -229,7 +233,7 @@ class CheckImageJobStatus implements ShouldQueue
                 
                 // Gửi thông báo lỗi cho người dùng
                 $user = $imageJob->user;
-                if ($user) {
+                if ($user && $imageJob instanceof ImageJob) {
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }

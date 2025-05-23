@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ImageJob;
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class ComfyUIService
 {
@@ -132,11 +133,66 @@ class ComfyUIService
     }
     
     /**
-     * Lấy thông tin tiến độ xử lý của một tiến trình
+     * Kiểm tra tiến trình của job
+     * 
+     * @param string $promptId ID của prompt gửi đến ComfyUI
+     * @return array Mảng chứa thông tin về tiến trình (status, progress, error)
      */
-    public function getJobProgress(string $comfyPromptId): array
+    public function checkJobProgress(string $promptId): array
     {
-        return $this->apiService->checkJobProgress($comfyPromptId);
+        try {
+            // Endpoint API để kiểm tra tiến trình
+            $url = $this->comfyuiBaseUrl . "/history/{$promptId}";
+            
+            $response = Http::timeout(30)->get($url);
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Kiểm tra xem đã hoàn thành chưa
+                if (isset($data[$promptId]['status']['completed']) && $data[$promptId]['status']['completed'] === true) {
+                    return [
+                        'status' => 'completed',
+                        'progress' => 100
+                    ];
+                }
+                
+                // Kiểm tra lỗi
+                if (isset($data[$promptId]['status']['status_str']) && $data[$promptId]['status']['status_str'] === 'error') {
+                    return [
+                        'status' => 'error',
+                        'progress' => 0,
+                        'error' => $data[$promptId]['status']['error'] ?? 'Lỗi không xác định'
+                    ];
+                }
+                
+                // Lấy tiến trình nếu có
+                $progress = 0;
+                if (isset($data[$promptId]['status']['progress'])) {
+                    $progress = (float) $data[$promptId]['status']['progress'] * 100;
+                }
+                
+                return [
+                    'status' => 'processing',
+                    'progress' => $progress
+                ];
+            } else {
+                // Xử lý lỗi HTTP
+                Log::error('Lỗi khi kiểm tra tiến trình job: ' . $response->body());
+                return [
+                    'status' => 'failed',
+                    'progress' => 0,
+                    'error' => 'HTTP Error: ' . $response->status()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception khi kiểm tra tiến trình job: ' . $e->getMessage());
+            return [
+                'status' => 'failed',
+                'progress' => 0,
+                'error' => 'Ngoại lệ: ' . $e->getMessage()
+            ];
+        }
     }
     
     /**
@@ -153,5 +209,33 @@ class ComfyUIService
     public function checkAndUpdatePendingJobs()
     {
         return $this->jobService->checkAndUpdatePendingJobs($this->r2Service);
+    }
+
+    /**
+     * Kiểm tra có hình ảnh trong dữ liệu lịch sử không
+     * 
+     * @param array $historyData Dữ liệu lịch sử từ ComfyUI
+     * @return bool Có hình ảnh hay không
+     */
+    public function hasImagesInHistoryData(array $historyData): bool
+    {
+        // Kiểm tra trong mỗi prompt ID
+        foreach ($historyData as $promptId => $data) {
+            // Bỏ qua các khóa không phải là prompt ID
+            if ($promptId === 'error' || !is_array($data)) {
+                continue;
+            }
+            
+            // Kiểm tra trong outputs
+            if (isset($data['outputs'])) {
+                foreach ($data['outputs'] as $nodeOutput) {
+                    if (isset($nodeOutput['images']) && !empty($nodeOutput['images'])) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 }
