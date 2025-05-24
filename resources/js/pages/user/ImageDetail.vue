@@ -1,6 +1,6 @@
 <template>
 <div class="min-h-screen bg-gray-100 pt-24" data-aos = "zoom-out">
-    <div class="max-w-[90%] mx-auto my-4">
+    <div class="max-w-[90%] mx-auto">
         <!-- Container with responsive design -->
         <div class="bg-white md:rounded-lg md:shadow-lg md:overflow-hidden md:max-w-8xl md:mx-auto md:my-8">
             <!-- Instagram-like layout: post image on left, details on right -->

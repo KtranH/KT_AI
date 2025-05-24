@@ -63,7 +63,7 @@ class LikeService
             // Lấy thông tin đầy đủ của người thích
             $liker = User::find(Auth::id());
             if ($liker instanceof User) {
-                $this->userRepository->increaseSumLike($liker);
+                $this->userRepository->increaseSumLike($image->user_id);
 
                 // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
                 if ($image->user_id !== Auth::id()) {
@@ -144,7 +144,7 @@ class LikeService
             // Giảm số lượt thích cho người dùng nếu hiện tại > 0
             $user = User::find(Auth::id());
             if ($user instanceof User && $user->sum_like > 0) {
-                $this->userRepository->decreaseSumLike($user);
+                $this->userRepository->decreaseSumLike($image->user_id);
             }
 
             DB::commit();

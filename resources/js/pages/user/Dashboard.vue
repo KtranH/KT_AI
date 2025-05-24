@@ -80,7 +80,7 @@
             <div class="text-center">
                 <h2 class="text-2xl font-bold text-gray-800">{{ user.name ? user.name : "Người dùng" }}</h2>
                 <p class="text-gray-600">{{ user.email ? user.email : "Email" }}</p>
-                <p class="text-gray-500 mt-2">Số lượt tạo ảnh: {{ user.remaining_creadits ? user.remaining_creadits : 0 }}</p>
+                <p class="text-gray-500 mt-2">Số lượt tạo ảnh: {{ user.remaining_credits ? user.remaining_credits : 0 }}</p>
             </div>
 
             <!-- Stats -->

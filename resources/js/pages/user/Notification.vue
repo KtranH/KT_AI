@@ -158,9 +158,8 @@ export default {
       if (!notification.read_at) {
         await markAsRead(notification.id)
       }
-      
       // Xử lý điều hướng dựa vào loại thông báo
-      if (notification.data && notification.data.type === 'like_image' && notification.data.image_id) {
+      if (notification.data && notification.data.image_id && (notification.data.type === 'like_image' || notification.data.type === 'add_comment')) {
         const convertInt = parseInt(notification.data.image_id)
         goToImageDetail(convertInt)
       }

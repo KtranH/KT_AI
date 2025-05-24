@@ -111,7 +111,9 @@ class CommentRepository implements CommentRepositoryInterface
             'origin_comment' => $data['origin_comment'] ?? null,
             'content' => $data['content'],
             'sum_like' => 0,
-            'list_like' => []
+            'list_like' => [],
+            'updated_at' => now(),
+            'created_at' => now(),
         ]);
 
         $this->incrementImageCommentCount($data['image_id']);
@@ -146,7 +148,9 @@ class CommentRepository implements CommentRepositoryInterface
             'origin_comment' => $originCommentId,
             'content' => $data['content'],
             'sum_like' => 0,
-            'list_like' => []
+            'list_like' => [],
+            'updated_at' => now(),
+            'created_at' => now(),
         ]);
 
         $this->incrementImageCommentCount($comment->image_id);
