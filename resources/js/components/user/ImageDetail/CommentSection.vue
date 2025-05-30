@@ -1,7 +1,7 @@
 <template>
     <div class="md:w-2/5 md:flex md:flex-col md:border-l">
         <!-- Header with profile info -->
-        <HeaderSection />
+        <HeaderSection @navigate-to-user="handleNavigateToUser" />
 
         <!-- Debugging info
         <div class="p-2 bg-gray-200 text-xs">
@@ -37,6 +37,7 @@
             @update="handleUpdateComment"
             @load-more-comments="loadMoreComments"
             @load-more-replies="loadMoreReplies"
+            @navigate-to-user="handleNavigateToUser"
         />
 
         <!-- Post actions (like, comment, share) -->
@@ -58,6 +59,8 @@ import CommentList from './CommentList.vue'
 import LikeSection from './LikeSection.vue'
 import CommentInput from './CommentInput.vue'
 import useComments from '@/composables/user/useComments'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth/authStore'
 
 export default {
     name: 'CommentSection',
@@ -84,7 +87,10 @@ export default {
             default: false
         }
     },
-    setup(props) {
+    emits: ['navigate-to-user'],
+    setup(props, { emit }) {
+        const router = useRouter()
+        const userStore = useAuthStore()
         const {
             comments,
             newComment,
@@ -105,6 +111,31 @@ export default {
             loadMoreReplies,
             hasMoreComments
         } = useComments(props.imageId)
+
+        // Thêm hàm xử lý sự kiện navigate-to-user trực tiếp
+        const handleNavigateToUser = (userId) => {
+            console.log('CommentSection - handleNavigateToUser được gọi với userId:', userId)
+            
+            try {
+                // Kiểm tra xem userId có phải là người dùng hiện tại không
+                if (userId === userStore.user?.id) {
+                    // Nếu là người dùng hiện tại, điều hướng đến trang dashboard cá nhân
+                    console.log('CommentSection - Chuyển đến dashboard cá nhân')
+                    router.push({ name: 'dashboard' })
+                } else {
+                    // Nếu là người dùng khác, điều hướng đến trang dashboard với userId
+                    console.log('CommentSection - Chuyển đến dashboard với userId:', userId)
+                    router.push({ 
+                        name: 'dashboard', 
+                        query: { userId: userId }
+                    })
+                }
+            } catch (error) {
+                console.error('CommentSection - Lỗi khi chuyển hướng:', error)
+                // Vẫn emit sự kiện lên component cha trong trường hợp cần thiết
+                emit('navigate-to-user', userId)
+            }
+        }
 
         onMounted(async () => {
             if (props.imageId) {
@@ -199,7 +230,8 @@ export default {
             loadMoreReplies,
             handleAddComment,
             loadMoreComments,
-            hasMoreComments
+            hasMoreComments,
+            handleNavigateToUser
         }
     }
 }

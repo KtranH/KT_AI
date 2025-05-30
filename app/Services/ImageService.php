@@ -10,6 +10,7 @@ use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ImageService
 {
@@ -34,54 +35,120 @@ class ImageService
      * @param Request $request Request object
      * @param string $typeImage Loại hình ảnh (liked, created, uploaded)
      * @param string $errorType Loại lỗi để ghi log
-     * @return \Illuminate\Http\Resources\Json\JsonResource
+     * @return array
      */
-    public function paginateAndRespond(Request $request, string $typeImage, string $errorType)
+    public function paginateAndRespond(Request $request, string $typeImage, string $errorType, $id = null)
     {
         try {
+            // Debug log
+            \Log::info('ImageService::paginateAndRespond - typeImage: ' . $typeImage . ', id: ' . $id);
+            
             $perPage = (int)$request->input('per_page', 5);
             $page = (int)$request->input('page', 1);
-            $images = $this->getImagesByType($typeImage);
+            $images = $this->getImagesByType($typeImage, $id);
 
-            // Nếu không có ảnh nào
-            if ($images->isEmpty()) {
-                return new PaginateAndRespondResource($images);
+            // Log về số lượng ảnh trả về
+            \Log::info('ImageService::paginateAndRespond - Số lượng ảnh trả về: ' . $images->count());
+            
+            // Xử lý dữ liệu ảnh để đảm bảo image_url được format đúng
+            $formattedImages = $images->map(function($image) {
+                // Nếu image_url là chuỗi JSON, chuyển đổi thành mảng
+                if (is_string($image['image_url'])) {
+                    try {
+                        $image['image_url'] = json_decode($image['image_url'], true);
+                    } catch (\Exception $e) {
+                        // Nếu không thể decode, giữ nguyên
+                    }
+                }
+                return $image;
+            });
+            
+            // Nếu không có ảnh nào, trả về mảng trống với structure chuẩn
+            if ($formattedImages->isEmpty()) {
+                return [
+                    'data' => [],
+                    'pagination' => [
+                        'current_page' => $page,
+                        'last_page' => 1,
+                        'per_page' => $perPage,
+                        'total' => 0
+                    ]
+                ];
             }
 
-            // Phân trang sử dụng LengthAwarePaginator thay vì thủ công
-            $totalItems = $images->count();
+            // Tạo paginator thủ công
             $offset = ($page - 1) * $perPage;
-            $paginatedItems = $images->slice($offset, $perPage)->values();
-
-            // Tạo một LengthAwarePaginator object
-            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-                $paginatedItems,
-                $totalItems,
-                $perPage,
-                $page,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-
-            return new PaginateAndRespondResource($paginator);
-        } catch (\Exception $exception) {
-            \Log::error("Lỗi khi phân trang {$errorType}: " . $exception->getMessage());
-            return new PaginateAndRespondResource(collect([]));
+            $items = $formattedImages->slice($offset, $perPage);
+            $total = $formattedImages->count();
+            $lastPage = ceil($total / $perPage);
+            
+            return [
+                'data' => $items->values()->all(),
+                'pagination' => [
+                    'current_page' => $page,
+                    'last_page' => $lastPage,
+                    'per_page' => $perPage,
+                    'total' => $total
+                ]
+            ];
+        } catch (\Exception $e) {
+            // Ghi log lỗi
+            \Log::error("$errorType: " . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+            throw $e;
         }
     }
     // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db
-    private function getImagesByType(string $typeImage)
+    private function getImagesByType(string $typeImage, $id = null)
     {
+        // Debug log
+        \Log::info('ImageService::getImagesByType - typeImage: ' . $typeImage . ', id: ' . $id);
+        
         if ($typeImage === 'liked') {
-            return $this->imageRepository->getImagesLiked();
+            return $this->imageRepository->getImagesLiked($id);
         }
         if ($typeImage === 'created') {
-            return $this->imageRepository->getImagesCreatedByUser();
+            return $this->imageRepository->getImagesCreatedByUser($id);
         }
         if ($typeImage === 'uploaded') {
-            return $this->imageRepository->getImagesUploaded();
+            return $this->imageRepository->getImagesUploaded($id);
         }
         return collect();
     }
+    
+    /**
+     * Kiểm tra nếu có dữ liệu mới cho user
+     * 
+     * @param int|null $userId ID của người dùng cần kiểm tra
+     * @return bool True nếu có dữ liệu mới, False nếu không
+     */
+    public function checkForNewImages($userId = null)
+    {
+        // Nếu không có userId, sử dụng ID của user hiện tại
+        $userId = $userId ?? Auth::id();
+        
+        if (!$userId) {
+            return false;
+        }
+        
+        // Cache key cho lần kiểm tra cuối cùng
+        $lastCheckCacheKey = "user_{$userId}_last_image_check";
+        
+        // Lấy timestamp lần kiểm tra trước đó
+        $lastCheckTimestamp = Cache::get($lastCheckCacheKey, 0);
+        
+        // Kiểm tra có hình ảnh mới kể từ lần kiểm tra cuối không
+        $hasNewImages = Image::where('user_id', $userId)
+            ->where('created_at', '>', date('Y-m-d H:i:s', $lastCheckTimestamp))
+            ->exists();
+        
+        // Cập nhật timestamp lần kiểm tra hiện tại
+        Cache::put($lastCheckCacheKey, time(), now()->addHours(24));
+        
+        return $hasNewImages;
+    }
+    
     public function storeImage(Request $request, $featureId)
     {
         $storeImageRequest = new StoreImageRequest();

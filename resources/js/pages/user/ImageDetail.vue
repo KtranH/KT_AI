@@ -6,10 +6,10 @@
             <!-- Instagram-like layout: post image on left, details on right -->
             <div class="flex flex-col md:flex-row">
                 <!-- Left column: Image -->
-                <ImageViewer :imageID="imageId" />
+                <ImageViewer :imageID="imageId" @navigate-to-user="navigateToUserDashboard" />
 
                 <!-- Right column: Post header, comments, interactions -->
-                <CommentSection :imageId="imageId" :highlightCommentId="commentId" :shouldHighlight="shouldHighlight" />
+                <CommentSection :imageId="imageId" :highlightCommentId="commentId" :shouldHighlight="shouldHighlight" @navigate-to-user="navigateToUserDashboard" />
             </div>
         </div>
     </div>
@@ -19,8 +19,9 @@
 <script>
 import ImageViewer from '@/components/user/ImageDetail/ImageViewer.vue'
 import CommentSection from '@/components/user/ImageDetail/CommentSection.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { decodedID } from '@/utils'
+import { useAuthStore } from '@/stores/auth/authStore'
 
 export default {
     name: 'Detail',
@@ -30,6 +31,8 @@ export default {
     },
     setup() {
         const route = useRoute()
+        const router = useRouter()
+        const userStore = useAuthStore()
         let imageId = null
         let commentId = null
         let shouldHighlight = false
@@ -51,10 +54,26 @@ export default {
             shouldHighlight = true
         }
 
+        // Hàm điều hướng đến trang dashboard của người dùng
+        const navigateToUserDashboard = (userId) => {
+            // Kiểm tra xem userId có phải là người dùng hiện tại không
+            if (userId === userStore.user?.id) {
+                // Nếu là người dùng hiện tại, điều hướng đến trang dashboard cá nhân
+                router.push({ name: 'dashboard' })
+            } else {
+                // Nếu là người dùng khác, điều hướng đến trang dashboard với userId
+                router.push({ 
+                    name: 'dashboard', 
+                    query: { userId: userId }
+                })
+            }
+        }
+
         return {
             imageId,
             commentId,
-            shouldHighlight
+            shouldHighlight,
+            navigateToUserDashboard
         }
     }
 }

@@ -88,12 +88,54 @@ export const useImageStore = defineStore('image',
             async _fetchImages(apiMethod, targetArray = 'imagesCreatedByUser', page = 1, appendData = false) {
                 this.error_message = null
                 this.isLoading = true
+                
+                // Reset data trước khi fetch nếu không phải append
+                if (!appendData) {
+                    this[targetArray] = []
+                }
+                
                 try {
+                    console.log(`Đang gọi API cho ${targetArray}...`)
                     const response = await apiMethod
+                    console.log(`Kết quả API cho ${targetArray}:`, response.data)
+                    
                     if (response.data && response.data.success) {
+                        // Kiểm tra dữ liệu trong response
+                        let dataToProcess = []
+                        
                         if (Array.isArray(response.data.data)) {
-                            const processedImages = response.data.data.map(item => {
-                                const imageUrls = item.image_url || [];
+                            dataToProcess = response.data.data
+                        } else if (response.data.images && Array.isArray(response.data.images)) {
+                            dataToProcess = response.data.images
+                        } else if (response.data.data && Array.isArray(response.data.data)) {
+                            dataToProcess = response.data.data
+                        } else {
+                            console.warn(`Không tìm thấy mảng dữ liệu trong response cho ${targetArray}`, response.data)
+                            dataToProcess = []
+                        }
+                        
+                        console.log(`Số lượng dữ liệu để xử lý cho ${targetArray}:`, dataToProcess.length)
+                        
+                        if (dataToProcess.length > 0) {
+                            const processedImages = dataToProcess.map(item => {
+                                // Xử lý trường hợp image_url có thể là string (JSON) hoặc array
+                                let imageUrls = []
+                                
+                                if (item.image_url) {
+                                    if (typeof item.image_url === 'string') {
+                                        try {
+                                            // Thử parse JSON
+                                            const parsed = JSON.parse(item.image_url)
+                                            imageUrls = Array.isArray(parsed) ? parsed : [item.image_url]
+                                        } catch (e) {
+                                            // Nếu không parse được, coi như là URL đơn
+                                            imageUrls = [item.image_url]
+                                        }
+                                    } else if (Array.isArray(item.image_url)) {
+                                        imageUrls = item.image_url
+                                    }
+                                }
+                                
                                 return {
                                     id: item.id,
                                     prompt: item.prompt,
@@ -113,10 +155,13 @@ export const useImageStore = defineStore('image',
                             } else {
                                 this[targetArray] = processedImages;
                             }
+                            
+                            console.log(`Đã xử lý và lưu ${processedImages.length} ảnh cho ${targetArray}`)
                         } else {
-                            console.error('Dữ liệu trả về không phải là mảng:', response.data.data);
+                            // Nếu không có dữ liệu, đặt mảng trống
+                            console.log(`Không có dữ liệu cho ${targetArray}, đặt mảng trống`)
                             if (!appendData) {
-                                this[targetArray] = [];
+                                this[targetArray] = []
                             }
                         }
                         
@@ -149,18 +194,27 @@ export const useImageStore = defineStore('image',
             },
             
             // Tải hình ảnh do người dùng tạo
-            async fetchImagesCreatedByUser() {
-                return await this._fetchImages(imageAPI.getImagesCreatedByUser(), 'imagesCreatedByUser');
+            async fetchImagesCreatedByUser(userId) {
+                console.log('Store: Tải ảnh người dùng tạo với userId:', userId)
+                // Reset dữ liệu trước khi fetch
+                this.imagesCreatedByUser = [];
+                return await this._fetchImages(imageAPI.getImagesCreatedByUser(userId), 'imagesCreatedByUser');
             },
             
             // Tải hình ảnh người dùng đã thích
-            async fetchImagesLiked() {
-                return await this._fetchImages(imageAPI.getImagesLiked(), 'imagesLikedByUser');
+            async fetchImagesLiked(userId) {
+                console.log('Store: Tải ảnh người dùng đã thích với userId:', userId)
+                // Reset dữ liệu trước khi fetch
+                this.imagesLikedByUser = [];
+                return await this._fetchImages(imageAPI.getImagesLiked(userId), 'imagesLikedByUser');
             },
             
             // Tải hình ảnh người dùng đã tải lên
-            async fetchImagesUploaded() {
-                return await this._fetchImages(imageAPI.getImagesUploaded(), 'imagesUploadedByUser');
+            async fetchImagesUploaded(userId) {
+                console.log('Store: Tải ảnh người dùng đã tải lên với userId:', userId)
+                // Reset dữ liệu trước khi fetch
+                this.imagesUploadedByUser = [];
+                return await this._fetchImages(imageAPI.getImagesUploaded(userId), 'imagesUploadedByUser');
             },
 
             // Tải thêm hình ảnh người dùng tạo theo trang (phân trang)
@@ -230,6 +284,17 @@ export const useImageStore = defineStore('image',
                         this.data.sum_like--;
                     }
                 }
+            },
+            // Xóa toàn bộ dữ liệu trong store
+            clearAllUserImages() {
+                this.imagesCreatedByUser = [];
+                this.imagesLikedByUser = [];
+                this.imagesUploadedByUser = [];
+                this.error_message = null;
+                this.currentPage = 1;
+                this.lastPage = 1;
+                this.totalImages = 0;
+                console.log('Đã xóa toàn bộ dữ liệu hình ảnh người dùng trong store');
             }
         },
         persist: {

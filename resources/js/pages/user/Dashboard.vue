@@ -15,6 +15,7 @@
             >
             <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <button
+                v-if="!isOtherUserProfile"
                 @click.stop="openUploadModal('cover')"
                 class="px-4 py-2 bg-white bg-opacity-90 rounded-full text-gray-800 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
               >
@@ -34,6 +35,7 @@
               >
               <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <button
+                  v-if="!isOtherUserProfile"
                   @click.stop="openUploadModal('avatar')"
                   class="w-8 h-8 rounded-full bg-white bg-opacity-90 flex items-center justify-center text-gray-800 shadow-lg"
                 >
@@ -78,29 +80,29 @@
         <div class="pt-20 pb-8 px-6">
             <!-- Thông tin user -->
             <div class="text-center">
-                <h2 class="text-2xl font-bold text-gray-800">{{ user.name ? user.name : "Người dùng" }}</h2>
-                <p class="text-gray-600">{{ user.email ? user.email : "Email" }}</p>
-                <p class="text-gray-500 mt-2">Số lượt tạo ảnh: {{ user.remaining_credits ? user.remaining_credits : 0 }}</p>
+                <h2 class="text-2xl font-bold text-gray-800">{{ user?.name ? user.name : "Người dùng" }}</h2>
+                <p class="text-gray-600">{{ user?.email ? user.email : "Email" }}</p>
+                <p class="text-gray-500 mt-2">Số lượt tạo ảnh: {{ user?.remaining_credits ? user.remaining_credits : 0 }}</p>
             </div>
 
             <!-- Stats -->
             <div class="flex justify-center gap-8 mt-6">
                 <div class="text-center">
-                    <div class="text-xl font-bold bg-gradient-text-v2">{{user.sum_like? user.sum_like : 0}}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{user?.sum_like? user.sum_like : 0}}</div>
                     <div class="text-gray-500 text-sm">Lượt thích</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user.sum_img? user.sum_img : 0 }}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user?.sum_img? user.sum_img : 0 }}</div>
                     <div class="text-gray-500 text-sm">Số ảnh</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user.created_at? formatDate(user.created_at): "01/01/2025" }}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user?.created_at? formatDate(user.created_at): "01/01/2025" }}</div>
                     <div class="text-gray-500 text-sm">Tham gia</div>
                 </div>
             </div>
 
-            <!-- Action buttons -->
-            <div class="flex justify-center gap-4 mt-6">
+            <!-- Action buttons - Chỉ hiển thị khi xem profile chính mình -->
+            <div v-if="!isOtherUserProfile" class="flex justify-center gap-4 mt-6">
                 <button
                   @click="openUploadModal('avatar')"
                   class="px-6 py-2 bg-gradient-text text-white rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105"
@@ -135,11 +137,17 @@
         <!-- Xin chào -->
         <div class="bg-gradient-text rounded-lg shadow-md p-6 flex justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-white mb-4">
+            <h1 v-if="!isOtherUserProfile" class="text-2xl font-bold text-white mb-4">
               Xin chào, {{ user?.name || 'Người dùng' }}!
             </h1>
-            <p class="text-gray-100">
+            <h1 v-else class="text-2xl font-bold text-white mb-4">
+              Trang cá nhân của {{ user?.name || 'Người dùng' }}
+            </h1>
+            <p v-if="!isOtherUserProfile" class="text-gray-100">
               Chào mừng bạn đến với bảng điều khiển của KT_AI. Tại đây bạn có thể quản lý tài khoản và sử dụng các tính năng tạo ảnh AI.
+            </p>
+            <p v-else class="text-gray-100">
+              Đây là trang cá nhân của {{ user?.name || 'Người dùng' }}. Bạn có thể xem ảnh và các thông tin công khai.
             </p>
           </div>
           <img :src="logo_fun" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
@@ -164,7 +172,21 @@
       </div>
       <!-- Danh sách ảnh -->
       <div data-aos="zoom-in-down" data-aos-delay="200">
-        <ImageListVue :filter="activeTab" />
+        <div v-if="!isInitialized" class="text-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p class="text-gray-700">Đang tải dữ liệu...</p>
+        </div>
+        <template v-else>
+          <ImageListVue 
+            :filter="activeTab" 
+            :user-id="otherUserId" 
+            v-if="otherUserId !== undefined"
+          />
+          <ImageListVue 
+            :filter="activeTab" 
+            v-else
+          />
+        </template>
       </div>
     </div>
   </div>
@@ -173,9 +195,10 @@
 <script>
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { useImageStore } from '@/stores/user/imagesStore'
 import { formatDate } from '@/utils/index'
 import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
@@ -190,23 +213,73 @@ export default {
   setup() {
     //State
     const router = useRouter()
+    const route = useRoute()
     const auth = useAuthStore()
-    const user = auth.user.value
+    const imageStore = useImageStore()
+    const user = ref(auth.user.value) // Chuyển sang ref để có thể cập nhật
+    
+    // Lấy userId từ cả route.params và route.query
+    const otherUserId = ref(route.params.id || route.query.userId)
+    console.log('Dashboard - Other user ID (raw):', otherUserId.value)
+    
+    // Chuyển đổi sang số nếu có thể
+    if (otherUserId.value) {
+      const parsedId = parseInt(otherUserId.value)
+      if (!isNaN(parsedId)) {
+        otherUserId.value = parsedId
+        console.log('Dashboard - Other user ID (parsed):', otherUserId.value, 'type:', typeof otherUserId.value)
+      }
+    }
+    
+    const isOtherUserProfile = ref(false) // Flag để biết đang xem profile người khác hay không
     const active = ref([])
-    const avatar = ref(user.avatar_url)
-    const coverImage = ref(user.cover_image_url)
+    const avatar = ref(user.value.avatar_url)
+    const coverImage = ref(user.value.cover_image_url)
     const logo_fun = ref("/img/humanoid.png")
 
     // Preview state
     const previewVisible = ref(false)
     const currentPreviewImage = ref("")
     const previewType = ref("")
-    const activeTab = ref('uploaded') // Default active tab
+    const activeTab = ref('uploaded') // Mặc định là 'uploaded'
+    
+    // Thêm state để kiểm soát việc render ImageListVue
+    const isInitialized = ref(false)
 
     // Upload modal state
     const isUploadModalVisible = ref(false)
     const uploadImageType = ref('avatar')
     const isLoading = ref(false) // Trạng thái loading khi đang tải lên ảnh
+
+    // Hàm xử lý khi refresh trang (F5) hoặc đóng trang
+    const handleBeforeUnload = () => {
+      imageStore.clearAllUserImages()
+      console.log('Page refreshed or closed, clearing image store data')
+    }
+
+    // Tải thông tin người dùng theo ID
+    const loadUserProfile = async (userId) => {
+      try {
+        isLoading.value = true
+        const response = await profileAPI.getUserById(userId)
+        if (response.data && response.data.success) {
+          // Cập nhật thông tin người dùng từ API
+          user.value = response.data.data
+          avatar.value = response.data.data.avatar_url
+          coverImage.value = response.data.data.cover_image_url
+          isOtherUserProfile.value = true
+        } else {
+          toast.error('Không thể tải thông tin người dùng')
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải thông tin người dùng:', error)
+        toast.error('Có lỗi xảy ra khi tải thông tin người dùng')
+        // Chuyển về dashboard của người dùng hiện tại
+        router.push({ name: 'dashboard' })
+      } finally {
+        isLoading.value = false
+      }
+    }
 
     // Fetch data
     const tabs = [
@@ -296,12 +369,42 @@ export default {
     };
 
     // Mounted hook
-    onMounted(() => {
-      console.log(user.sum_like)
-      auth.checkAuth()
+    onMounted(async () => {
+      console.log('Dashboard mounted, current user:', auth.user.value.id)
+      await auth.checkAuth()      
+      // Kiểm tra nếu có userId trong params hoặc query parameter
+      if (otherUserId.value && otherUserId.value !== auth.user.value.id.toString()) {
+        console.log('Loading profile for user ID:', otherUserId.value)
+        await loadUserProfile(otherUserId.value)
+      } else {
+        // Nếu không có userId hoặc userId là người dùng hiện tại
+        console.log('Loading current user profile')
+        user.value = auth.user.value
+        avatar.value = user.value.avatar_url
+        coverImage.value = user.value.cover_image_url
+      }
+      
+      // Đánh dấu đã khởi tạo xong để render ImageListVue
+      isInitialized.value = true
+      console.log('Dashboard initialization completed, activeTab:', activeTab.value)
+      
       setTimeout(() => {
         AOS.refresh()
       }, 100)
+
+      // Thêm sự kiện khi refresh trang (F5)
+      window.addEventListener('beforeunload', handleBeforeUnload)
+    })
+
+    // Before unmount hook
+    onBeforeUnmount(() => {
+      // Xóa dữ liệu trong store khi component bị hủy
+      imageStore.clearAllUserImages()
+      
+      // Xóa event listener
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      
+      console.log('Dashboard component unmounted, clearing image store data')
     })
 
     return {
@@ -324,7 +427,10 @@ export default {
       openUploadModal,
       closeUploadModal,
       handleImageUploadSuccess,
-      isLoading
+      isLoading,
+      isOtherUserProfile,
+      otherUserId,
+      isInitialized
     }
   }
 }

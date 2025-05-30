@@ -16,7 +16,7 @@
           Tạo hình ảnh tuyệt đẹp, chỉnh sửa với các công cụ mạnh mẽ, và chia sẻ tác phẩm của bạn với thế giới — tất cả trong một nền tảng.
         </p>
         <div class="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-up" data-aos-delay="200">
-          <router-link to="/create" class="px-8 py-3 bg-gradient-text text-white font-medium rounded-lg hover:bg-indigo-700 transition-all transform hover:scale-105 shadow-lg cursor-pointer whitespace-nowrap">
+          <router-link to="/dashboard" class="px-8 py-3 bg-gradient-text text-white font-medium rounded-lg hover:bg-indigo-700 transition-all transform hover:scale-105 shadow-lg cursor-pointer whitespace-nowrap">
             Bắt Đầu Sáng Tạo Ngay
           </router-link>
           <button class="px-8 py-3 bg-white text-indigo-600 font-medium rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg cursor-pointer whitespace-nowrap">

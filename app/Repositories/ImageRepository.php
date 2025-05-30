@@ -84,12 +84,32 @@ class ImageRepository implements ImageRepositoryInterface
      *
      * @return Collection
      */
-    public function getImagesCreatedByUser(): Collection
+    public function getImagesCreatedByUser($id = null): Collection
     {
-        $images = Image::with('user')
-            ->where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // Debug log
+        \Log::info('ImageRepository::getImagesCreatedByUser - id: ' . ($id ?? 'null') . ', type: ' . gettype($id) . ', Auth ID: ' . (Auth::id() ?? 'null'));
+        
+        // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
+        $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
+        
+        if ($idIsValid) {
+            // Đảm bảo $id là số
+            $userId = is_numeric($id) ? (int)$id : $id;
+            
+            $images = Image::with('user')
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            \Log::info('Lấy ảnh cho user ID cụ thể: ' . $userId . ', số lượng: ' . $images->count());
+        } else {
+            $images = Image::with('user')
+                ->where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            \Log::info('Lấy ảnh cho user hiện tại: ' . Auth::id() . ', số lượng: ' . $images->count());
+        }
 
         return $this->transformImages($images);
     }
@@ -99,22 +119,44 @@ class ImageRepository implements ImageRepositoryInterface
      *
      * @return Collection
      */
-    public function getImagesUploaded(): Collection
+    public function getImagesUploaded($id = null): Collection
     {
+        // Debug log
+        \Log::info('ImageRepository::getImagesUploaded - id: ' . ($id ?? 'null') . ', Auth ID: ' . (Auth::id() ?? 'null'));
+        
         // Trong trường hợp này, getImagesCreatedByUser và getImagesUploaded có cùng logic
         // Nếu sau này cần phân biệt, có thể thêm điều kiện khác
-        return $this->getImagesCreatedByUser();
+        return $this->getImagesCreatedByUser($id);
     }
     /**
      * Lấy danh sách hình ảnh đã thích
      *
      * @return Collection
      */
-    public function getImagesLiked(): Collection
+    public function getImagesLiked($id = null): Collection
     {
-        $list_images_liked = Interaction::where('user_id', Auth::id())
-            ->where('type_interaction', 'like')
-            ->pluck('image_id');
+        // Debug log
+        \Log::info('ImageRepository::getImagesLiked - id: ' . ($id ?? 'null') . ', type: ' . gettype($id) . ', Auth ID: ' . (Auth::id() ?? 'null'));
+        
+        // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
+        $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
+        
+        if ($idIsValid) {
+            // Đảm bảo $id là số
+            $userId = is_numeric($id) ? (int)$id : $id;
+            
+            $list_images_liked = Interaction::where('user_id', $userId)
+                ->where('type_interaction', 'like')
+                ->pluck('image_id');
+                
+            \Log::info('Lấy ảnh đã thích cho user ID cụ thể: ' . $userId . ', số lượng: ' . $list_images_liked->count());
+        } else {
+            $list_images_liked = Interaction::where('user_id', Auth::id())
+                ->where('type_interaction', 'like')
+                ->pluck('image_id');
+                
+            \Log::info('Lấy ảnh đã thích cho user hiện tại: ' . Auth::id() . ', số lượng: ' . $list_images_liked->count());
+        }
 
         $images = Image::with('user')
             ->whereIn('id', $list_images_liked)

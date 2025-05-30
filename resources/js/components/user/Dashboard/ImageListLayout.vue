@@ -39,7 +39,7 @@
             <!-- Image display -->
             <div class="h-full w-full">
               <img 
-                v-if="imageGroup && imageGroup.images && imageGroup.images.length > 0 && imageGroup.images[imageGroup.currentIndex]"
+                v-if="hasValidImage(imageGroup)"
                 :src="imageGroup.images[imageGroup.currentIndex].url" 
                 class="object-cover w-full h-full cursor-pointer"
                 loading="lazy"
@@ -55,7 +55,7 @@
             <div class="absolute inset-0 flex items-center justify-between">
               <!-- Previous button -->
               <button
-                v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1 && imageGroup.currentIndex > 0"
+                v-if="canNavigatePrev(imageGroup)"
                 @click.stop="prevImage(index)"
                 class="h-full flex items-center px-1 z-30"
               >
@@ -71,7 +71,7 @@
               
               <!-- Next button -->
               <button
-                v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1 && imageGroup.currentIndex < imageGroup.images.length - 1"
+                v-if="canNavigateNext(imageGroup)"
                 @click.stop="nextImage(index)"
                 class="h-full flex items-center px-1 z-30"
               >
@@ -85,7 +85,7 @@
             
             <!-- Indicator dots -->
             <div 
-              v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1" 
+              v-if="hasMultipleImages(imageGroup)" 
               class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2 z-20"
             >
               <button
@@ -100,13 +100,13 @@
             <!-- Image count badge -->
             <div class="flex items-center justify-between">
               <div 
-                v-if="imageGroup && imageGroup.images && imageGroup.images.length > 1" 
+                v-if="hasMultipleImages(imageGroup)" 
                 class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20"
               >
                 {{ imageGroup.currentIndex + 1 }}/{{ imageGroup.images.length }}
               </div>
               <button 
-                v-if="imageGroup && imageGroup.images && imageGroup.images.length > 0 && imageGroup.images[imageGroup.currentIndex]"
+                v-if="hasValidImage(imageGroup)"
                 class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-20 cursor-pointer hover:bg-black/30 transition" 
                 @click="goToImageDetail(imageGroup.images[imageGroup.currentIndex].id)"
               >
@@ -132,10 +132,12 @@
 </template>
 
 <script>
-import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
+import { onMounted, ref, watch, nextTick, onUnmounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import ImageGalleryLayout from '../GenImage/ImageGalleryLayout.vue'
 import useImage from '@/composables/user/useImage'
 import useMasonry from '@/composables/user/useMasonry'
+import { useImageStore } from '@/stores/user/imagesStore'
 
 export default {
   name: 'ImageList',
@@ -145,21 +147,38 @@ export default {
   props: {
     filter: {
       type: String,
-      default: 'created'
+      default: 'uploaded'
+    },
+    userId: {
+      type: [String, Number],
+      default: null
     }
   },
   setup(props) {
     const imageGroups = ref([])
+    const route = useRoute()
     const { masonryContainer, initMasonry, onImageLoaded } = useMasonry()
     const isLoadingMore = ref(false)
     const currentPage = ref(1)
     const hasMoreImages = ref(false)
     const refreshInterval = ref(null)
+    const imageStore = useImageStore()
 
-    // Sử dụng composable cải tiến
+    // Lấy userId từ props hoặc route
+    const userId = computed(() => {
+      if (props.userId) {
+        return parseInt(props.userId) || null;
+      }
+      
+      const routeUserId = route.params.id || route.query.userId;
+      return routeUserId ? (parseInt(routeUserId) || null) : null;
+    });
+    
+    // Sử dụng composable
     const { 
       imagesCreatedByUser, 
       imagesLikedByUser,
+      imagesUploadedByUser,
       isLoading,
       hasError,
       fetchImagesCreatedByUser,
@@ -168,19 +187,43 @@ export default {
       loadMoreUserImages,
       loadMoreLikedImages,
       loadMoreCreatedImages,
+      loadMoreUploadedImages,
       goToImageDetail,
       hasMoreUserImages,
       hasMoreLikedImages,
       hasMoreCreatedImages,
-      lastPage,
+      hasMoreUploadedImages,
       showRefreshButton,
       checkNeedRefreshUserImages: importedCheckNeedRefresh,
     } = useImage()
     
-    // Tạo hàm check refresh giả lập nếu không được cung cấp từ composable
+    // Helper để kiểm tra refresh
     const checkNeedRefreshUserImages = typeof importedCheckNeedRefresh === 'function' 
       ? importedCheckNeedRefresh 
-      : () => console.log('Tính năng tự động làm mới không khả dụng')
+      : () => {}
+    
+    // Helper functions for image navigation and validation
+    const hasValidImage = (imageGroup) => {
+      return imageGroup && 
+             imageGroup.images && 
+             imageGroup.images.length > 0 && 
+             imageGroup.images[imageGroup.currentIndex];
+    }
+    
+    const hasMultipleImages = (imageGroup) => {
+      return imageGroup && 
+             imageGroup.images && 
+             imageGroup.images.length > 1;
+    }
+    
+    const canNavigatePrev = (imageGroup) => {
+      return hasMultipleImages(imageGroup) && imageGroup.currentIndex > 0;
+    }
+    
+    const canNavigateNext = (imageGroup) => {
+      return hasMultipleImages(imageGroup) && 
+             imageGroup.currentIndex < imageGroup.images.length - 1;
+    }
     
     // Thay đổi currentIndex cho một nhóm hình ảnh
     const setCurrentIndex = (groupIndex, newIndex) => {
@@ -190,28 +233,20 @@ export default {
     }
     
     const nextImage = (groupIndex) => {
-      if (!imageGroups.value[groupIndex]) return
-      
-      const group = imageGroups.value[groupIndex]
-      if (!group.images) return
-      
-      if (group.currentIndex < group.images.length - 1) {
-        group.currentIndex++
+      const group = imageGroups.value[groupIndex];
+      if (group?.images && group.currentIndex < group.images.length - 1) {
+        group.currentIndex++;
       }
     }
     
     const prevImage = (groupIndex) => {
-      if (!imageGroups.value[groupIndex]) return
-      
-      const group = imageGroups.value[groupIndex]
-      if (!group.images) return
-      
-      if (group.currentIndex > 0) {
-        group.currentIndex--
+      const group = imageGroups.value[groupIndex];
+      if (group?.images && group.currentIndex > 0) {
+        group.currentIndex--;
       }
     }
     
-    // Hàm chung để xử lý và nhóm hình ảnh
+    // Xử lý và nhóm hình ảnh
     const processAndGroupImages = (images) => {
       if (!images || !Array.isArray(images) || images.length === 0) {
         return []
@@ -225,7 +260,19 @@ export default {
         if (!imageUrls) return []
         
         // Đảm bảo url là mảng
-        const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls]
+        let urls = []
+        
+        if (Array.isArray(imageUrls)) {
+          urls = imageUrls
+        } else if (typeof imageUrls === 'string') {
+          try {
+            const parsed = JSON.parse(imageUrls)
+            urls = Array.isArray(parsed) ? parsed : [imageUrls]
+          } catch (e) {
+            urls = [imageUrls]
+          }
+        }
+        
         return urls.filter(Boolean).map(url => ({ url, id: item.id }))
       }).filter(item => item && item.url && item.id)
       
@@ -247,131 +294,119 @@ export default {
       return Object.values(groupedImages)
     }
     
-    // Hàm chung để lấy dữ liệu hình ảnh theo filter
-    const fetchImagesByFilter = async (filter) => {
+    // Lấy dữ liệu hình ảnh theo filter
+    const fetchImagesByFilter = async (filter, targetUserId) => {
       try {
-        let images = []
+        const userId = parseInt(targetUserId) || null;
         
+        let images = [];
         switch(filter) {
           case 'uploaded':
-            await fetchImagesUploaded()
-            if (imagesCreatedByUser && typeof imagesCreatedByUser === 'object' && imagesCreatedByUser.value) {
-              images = imagesCreatedByUser.value
-            }
+            await fetchImagesUploaded(userId)
+            images = imagesUploadedByUser?.value || []
             break
           case 'created':
-            await fetchImagesCreatedByUser()
-            if (imagesCreatedByUser && typeof imagesCreatedByUser === 'object' && imagesCreatedByUser.value) {
-              images = imagesCreatedByUser.value
-            }
+            await fetchImagesCreatedByUser(userId)
+            images = imagesCreatedByUser?.value || []
             break
           case 'liked':
-            await fetchImagesLiked()
-            if (imagesLikedByUser && typeof imagesLikedByUser === 'object' && imagesLikedByUser.value) {
-              images = imagesLikedByUser.value
-            }
-            
-            // Log để debug
-            console.log('Dữ liệu ảnh đã thích:', images)
+            await fetchImagesLiked(userId)
+            images = imagesLikedByUser?.value || []
             break
         }
         
-        return images || []
+        return images
       } catch (error) {
-        console.error(`Lỗi khi lấy dữ liệu cho filter "${filter}":`, error)
         return []
       }
     }
     
-    // Hàm chung để tải thêm hình ảnh theo filter
+    // Tải thêm hình ảnh theo filter
     const loadMoreImagesByFilter = async (filter, page) => {
-      switch(filter) {
-        case 'uploaded':
-          return await loadMoreUserImages(page)
-        case 'created':
-          return await loadMoreUserImages(page)
-        case 'liked':
-          // Kiểm tra xem loadMoreLikedImages có tồn tại không
-          if (typeof loadMoreLikedImages === 'function') {
-            return await loadMoreLikedImages(page)
-          } else {
-            console.error('loadMoreLikedImages không khả dụng')
-            return false
-          }
-        default:
-          return false
-      }
-    }
-    
-    // Kiểm tra xem có thêm hình ảnh để tải không theo filter
-    const checkHasMoreImages = (filter) => {
       try {
         switch(filter) {
           case 'uploaded':
-            return hasMoreUserImages && typeof hasMoreUserImages === 'object' && hasMoreUserImages.value
+            return await loadMoreUploadedImages(userId.value, page)
           case 'created':
-            return hasMoreCreatedImages && typeof hasMoreCreatedImages === 'object' && hasMoreCreatedImages.value
+            return await loadMoreCreatedImages(userId.value, page)
           case 'liked':
-            return hasMoreLikedImages && typeof hasMoreLikedImages === 'object' && hasMoreLikedImages.value
+            return typeof loadMoreLikedImages === 'function' 
+              ? await loadMoreLikedImages(userId.value, page)
+              : false
           default:
             return false
         }
-      } catch (error) {
-        console.error(`Lỗi khi kiểm tra có thêm hình ảnh cho filter "${filter}":`, error)
+      } catch {
         return false
       }
     }
     
-    // Lấy và nhóm hình ảnh theo bộ lọc và ID
-    const fetchAndGroupImages = async (isLoadMore = false, forceRefresh = false) => {
+    // Kiểm tra có thêm hình ảnh không
+    const checkHasMoreImages = (filter) => {
       try {
-        // Nếu không phải tải thêm, thiết lập lại trang hiện tại
+        switch(filter) {
+          case 'uploaded':
+            return hasMoreUploadedImages?.value || false
+          case 'created':
+            return hasMoreCreatedImages?.value || false
+          case 'liked':
+            return hasMoreLikedImages?.value || false
+          default:
+            return false
+        }
+      } catch {
+        return false
+      }
+    }
+    
+    // Lấy và nhóm hình ảnh
+    const fetchAndGroupImages = async (isLoadMore = false, forceRefresh = false, refreshUserId = null) => {
+      try {
+        const targetUserId = refreshUserId !== undefined ? refreshUserId : userId.value;
+        
         if (!isLoadMore) {
           currentPage.value = 1
           
-          // Tải dữ liệu ban đầu theo filter
-          const images = await fetchImagesByFilter(props.filter)
+          if (forceRefresh) {
+            imageGroups.value = []
+          }
           
-          // Xử lý và nhóm hình ảnh
-          imageGroups.value = processAndGroupImages(images)
+          const images = await fetchImagesByFilter(props.filter, targetUserId)
+          const newGroups = processAndGroupImages(images);
+          
+          if (newGroups.length > 0 || imageGroups.value.length === 0) {
+            imageGroups.value = newGroups;
+          }
         } else {
-          // Khi tải thêm, KHÔNG fetch lại tất cả dữ liệu
-          // Mà sử dụng kết quả mới từ API trực tiếp
-          
-          // Kiểm tra xem có biến nào phù hợp với filter để lấy dữ liệu mới tải
           let newImagesData = []
           
           switch(props.filter) {
             case 'created':
-            case 'uploaded':
-              if (imagesCreatedByUser && imagesCreatedByUser.value) {
-                // Lấy ảnh mới từ mảng dữ liệu từ store
+              if (imagesCreatedByUser?.value) {
                 const currentIds = new Set(imageGroups.value.map(group => group.id))
                 newImagesData = imagesCreatedByUser.value.filter(img => !currentIds.has(img.id))
               }
               break
+            case 'uploaded':
+              if (imagesUploadedByUser?.value) {
+                const currentIds = new Set(imageGroups.value.map(group => group.id))
+                newImagesData = imagesUploadedByUser.value.filter(img => !currentIds.has(img.id))
+              }
+              break
             case 'liked':
-              if (imagesLikedByUser && imagesLikedByUser.value) {
-                // Lấy ảnh mới từ mảng dữ liệu từ store
+              if (imagesLikedByUser?.value) {
                 const currentIds = new Set(imageGroups.value.map(group => group.id))
                 newImagesData = imagesLikedByUser.value.filter(img => !currentIds.has(img.id))
               }
               break
           }
           
-          // Xử lý và nhóm các hình ảnh mới
           const newGroups = processAndGroupImages(newImagesData)
-          
-          // Thêm vào danh sách hiện có
           imageGroups.value = [...imageGroups.value, ...newGroups]
-          
-          console.log(`Đã thêm ${newGroups.length} nhóm ảnh mới`)
         }
         
-        // Cập nhật trạng thái còn hình ảnh để tải không
         hasMoreImages.value = checkHasMoreImages(props.filter)
       } catch (error) {
-        console.error('Lỗi khi tải dữ liệu:', error)
         hasError.value = true
       }
       
@@ -381,77 +416,93 @@ export default {
     
     // Làm mới dữ liệu
     const refreshData = async () => {
-      await fetchAndGroupImages(false, true)
+      imageStore.clearAllUserImages()
+      imageGroups.value = []
+      await fetchAndGroupImages(false, true, userId.value)
     }
     
-    // Tải thêm ảnh khi người dùng nhấn nút "Tải thêm"
+    // Tải thêm ảnh
     const loadMore = async () => {
       if (isLoadingMore.value || !hasMoreImages.value) return
       isLoadingMore.value = true
       
       try {
-        // Tăng số trang
         currentPage.value++
-        
-        console.log(`Đang tải thêm ảnh trang ${currentPage.value} cho filter ${props.filter}...`)
-        
-        // Gọi API tải thêm theo filter
         const success = await loadMoreImagesByFilter(props.filter, currentPage.value)
         
         if (success) {
-          // Cập nhật giao diện với dữ liệu mới
-          await fetchAndGroupImages(true)
+          await fetchAndGroupImages(true, false, userId.value)
         } else {
-          console.error('Không thể tải thêm ảnh')
-          // Nếu thất bại, giảm lại trang về trạng thái cũ
           currentPage.value--
         }
-      } catch (error) {
-        console.error('Lỗi khi tải thêm ảnh:', error)
+      } catch {
         currentPage.value--
       } finally {
         isLoadingMore.value = false
       }
     }
     
-    // Thiết lập công việc định kỳ để kiểm tra cập nhật
+    // Thiết lập kiểm tra định kỳ
     const setupPeriodicCheck = () => {
-      // Kiểm tra mỗi phút
       refreshInterval.value = setInterval(() => {
-        // Lúc này checkNeedRefreshUserImages luôn là hàm hợp lệ
-        checkNeedRefreshUserImages()
-      }, 60000)
+        if (userId.value) {
+          checkNeedRefreshUserImages(userId.value);
+        }
+      }, 60000);
     }
-
+    
+    // Tải dữ liệu ban đầu
+    const loadInitialData = async () => {
+      imageStore.clearAllUserImages();
+      await fetchAndGroupImages(false, true, userId.value);
+    };
+    
+    // Watchers
     watch(() => props.filter, () => {
-      fetchAndGroupImages()
-    }, { immediate: true })
+      fetchAndGroupImages(false, true, userId.value);
+    }, { immediate: true });
     
-    // Theo dõi sự thay đổi của imageGroups để khởi tạo lại Masonry
-    watch(() => imageGroups.value, () => {
-      nextTick(() => {
-        initMasonry()
-      })
-    }, { deep: true })
-    
-    // Theo dõi số lượng nhóm hình ảnh
-    watch(() => imageGroups.value.length, () => {
-      nextTick(() => {
-        initMasonry()
-      })
-    })
-    
-    onMounted(() => {
-      fetchAndGroupImages()
-      setupPeriodicCheck()
-    })
-    
-    onUnmounted(() => {
-      // Dọn dẹp interval khi component bị hủy
-      if (refreshInterval.value) {
-        clearInterval(refreshInterval.value)
+    watch(() => userId.value, (newVal, oldVal) => {
+      if (newVal !== oldVal) {
+        imageStore.clearAllUserImages();
+        imageGroups.value = [];
+        fetchAndGroupImages(false, true, newVal);
       }
-    })
+    });
+    
+    watch(() => imageGroups.value, () => {
+      nextTick(() => initMasonry());
+    }, { deep: true });
+    
+    watch(() => imageGroups.value.length, () => {
+      nextTick(() => initMasonry());
+    });
+    
+    // Lifecycle hooks
+    onMounted(() => {
+      loadInitialData();
+      setupPeriodicCheck();
+
+      // Thêm event listener cho sự kiện refresh trang (F5)
+      const handleBeforeUnload = () => {
+        imageStore.clearAllUserImages();
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Cleanup khi unmount
+      onUnmounted(() => {
+        if (refreshInterval.value) {
+          clearInterval(refreshInterval.value);
+        }
+        
+        // Xóa event listener khi unmount
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        
+        // Xóa dữ liệu khi component bị hủy
+        imageStore.clearAllUserImages();
+      });
+    });
     
     return {
       imageGroups,
@@ -467,7 +518,11 @@ export default {
       isLoadingMore,
       hasMoreImages,
       showRefreshButton,
-      refreshData
+      refreshData,
+      hasValidImage,
+      hasMultipleImages,
+      canNavigatePrev,
+      canNavigateNext
     }
   }
 }

@@ -56,6 +56,9 @@ Route::prefix('api')->group(function () {
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
+        // User Routes
+        Route::get('/user/{id}', [UserController::class, 'getUserById']);
+        // Auth Routes
         Route::post('/logout', [AuthController::class, 'logout']);
         // Like Routes
         Route::get('/check_liked/{id}', [LikeController::class, 'checkLiked']);
@@ -75,6 +78,7 @@ Route::prefix('api')->group(function () {
         Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
         Route::get('/get_images_uploaded', [ImageController::class, 'getImagesUploaded']);
         Route::get('/get_images_liked', [ImageController::class, 'getImagesLiked']);
+        Route::get('/check_new_images', [ImageController::class, 'checkNewImages']);
         Route::delete('/images/{image}', [ImageController::class, 'destroy']);
         Route::put('/images/{image}', [ImageController::class, 'update']);
         // Profile Routes

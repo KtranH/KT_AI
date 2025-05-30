@@ -49,10 +49,28 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    public function paginateAndRespond(Request $request, string $typeImage, string $errorType)
+    public function paginateAndRespond(Request $request, string $typeImage, string $errorType, $userId = null)
     {
         try {
-            return $this->imageService->paginateAndRespond($request, $typeImage, $errorType);
+            // Ưu tiên user_id từ request nếu có
+            $userId = $request->query('user_id', $userId);
+            
+            // Log để debug
+            \Log::info('paginateAndRespond được gọi với typeImage: ' . $typeImage . ', user_id: ' . $userId);
+            
+            $result = $this->imageService->paginateAndRespond($request, $typeImage, $errorType, $userId);
+            
+            // Kiểm tra xem result có phải là JSON resource không
+            if ($result instanceof \Illuminate\Http\Resources\Json\JsonResource) {
+                return $result;
+            }
+            
+            // Đảm bảo response có cấu trúc nhất quán
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'] ?? [],
+                'pagination' => $result['pagination'] ?? null
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -63,16 +81,57 @@ class ImageController extends Controller
     }
     public function getImagesCreatedByUser(Request $request)
     {
-        return $this->paginateAndRespond($request, 'created', 'Get Images Created By User Error');
+        // Lấy user_id từ request query
+        $userId = $request->query('user_id');
+        
+        // Log để debug
+        \Log::info('getImagesCreatedByUser được gọi với user_id: ' . $userId);
+        
+        return $this->paginateAndRespond($request, 'created', 'Get Images Created By User Error', $userId);
     }
     public function getImagesLiked(Request $request)
     {
-        return $this->paginateAndRespond($request, 'liked', 'Get Images Liked Error');
+        // Lấy user_id từ request query
+        $userId = $request->query('user_id');
+        
+        // Log để debug
+        \Log::info('getImagesLiked được gọi với user_id: ' . $userId);
+        
+        return $this->paginateAndRespond($request, 'liked', 'Get Images Liked Error', $userId);
     }
     public function getImagesUploaded(Request $request)
     {
-        return $this->paginateAndRespond($request, 'uploaded', 'Get Images Uploaded Error');
+        // Ưu tiên id từ path, nếu không có thì lấy từ query
+        $userId = $request->query('user_id');
+        
+        // Log để debug
+        \Log::info('getImagesUploaded được gọi với user_id: ' . $userId);
+        
+        return $this->paginateAndRespond($request, 'uploaded', 'Get Images Uploaded Error', $userId);
     }
+    
+    /**
+     * Kiểm tra nếu có hình ảnh mới cho user
+     */
+    public function checkNewImages(Request $request)
+    {
+        try {
+            $userId = $request->query('user_id');
+            $hasNewData = $this->imageService->checkForNewImages($userId);
+            
+            return response()->json([
+                'success' => true,
+                'has_new_data' => $hasNewData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể kiểm tra dữ liệu mới',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
     public function store(Request $request, $featureId)
     {
         try {

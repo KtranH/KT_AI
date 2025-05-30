@@ -23,6 +23,7 @@
                 @delete="handleDelete"
                 @update="handleUpdate"
                 @load-more-replies="handleLoadMoreReplies"
+                @navigate-to-user="handleNavigateToUser"
             />
 
             <!-- Nút xem thêm bình luận -->
@@ -88,7 +89,8 @@ export default {
         'delete',
         'update',
         'load-more-comments',
-        'load-more-replies'
+        'load-more-replies',
+        'navigate-to-user'
     ],
     setup(props, { emit }) {
         const handleReply = (index, username, replyId = null, originCommentId = null) => {
@@ -125,6 +127,11 @@ export default {
             }
         }
 
+        const handleNavigateToUser = (userId) => {
+            console.log('CommentList - handleNavigateToUser được gọi với userId:', userId)
+            emit('navigate-to-user', userId)
+        }
+
         return {
             handleReply,
             handleCancelReply,
@@ -132,7 +139,8 @@ export default {
             handleDelete,
             handleUpdate,
             handleLoadMoreComments,
-            handleLoadMoreReplies
+            handleLoadMoreReplies,
+            handleNavigateToUser
         }
     }
 }

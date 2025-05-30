@@ -71,6 +71,12 @@ const routes = [
     meta: { requiresAuth: true, title: 'KT_AI - Trang chủ' }
   },
   {
+    path: '/dashboard/:id',
+    name: 'dashboard-user',
+    component: Dashboard,
+    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ người dùng' }
+  },
+  {
     path: '/features',
     name: 'features',
     component: Features,

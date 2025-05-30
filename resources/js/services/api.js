@@ -25,7 +25,8 @@ export const profileAPI = {
   forgotPassword: (formData) => apiClient.post('/forgot-password', formData),
   verifyResetCode: (formData) => apiClient.post('/verify-reset-code', formData),
   resetPassword: (formData) => apiClient.post('/reset-password', formData),
-
+  getUserProfile: () => apiClient.get('/user-profile'),
+  getUserById: (userId) => apiClient.get(`/user/${userId}`),
 }
 
 // Gọi API Notifications
@@ -51,16 +52,35 @@ export const verificationAPI = {
 // Các gọi API thông tin hình ảnh
 export const imageAPI = {
   getImages: (id) => apiClient.get(`/get_images_information/${id}`),
-  getImagesCreatedByUser: () => apiClient.get('/get_images_created_by_user'),
-  getImagesUploaded: () => apiClient.get('/get_images_uploaded'),
-  getImagesLiked: () => apiClient.get('/get_images_liked'),
+  getImagesCreatedByUser: (userId) => {
+    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+    console.log('API getImagesCreatedByUser được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
+    return apiClient.get('/get_images_created_by_user', { params });
+  },
+  getImagesUploaded: (userId) => {
+    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+    console.log('API getImagesUploaded được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
+    return apiClient.get('/get_images_uploaded', { params });
+  },
+  getImagesLiked: (userId) => {
+    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+    console.log('API getImagesLiked được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
+    return apiClient.get('/get_images_liked', { params });
+  },
   getImagesCreatedByUserPage: (url) => apiClient.get(url),
+  getImagesLikedPage: (url) => apiClient.get(url),
+  getImagesUploadedPage: (url) => apiClient.get(url),
   getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
   getLikes: (id) => apiClient.get(`/get_likes_information/${id}`),
   likePost: (id) => apiClient.post(`/like_post/${id}`),
   unlikePost: (id) => apiClient.post(`/unlike_post/${id}`),
   delete: (id) => apiClient.delete(`/images/${id}`),
-  update: (id, data) => apiClient.put(`/images/${id}`, data)
+  update: (id, data) => apiClient.put(`/images/${id}`, data),
+  checkForNewImages: (userId) => {
+    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+    console.log('API checkForNewImages được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
+    return apiClient.get('/check_new_images', { params });
+  }
 }
 
 // Gọi API tải lên hình ảnh

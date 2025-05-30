@@ -5,9 +5,12 @@
         <img :src="currentUserImage && currentUserImage.avatar_url ? currentUserImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
-                <router-link to="#" class="font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out">
+                <span 
+                    class="font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out"
+                    @click="navigateToUserDashboard(currentUserImage?.id)"
+                >
                     {{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}
-                </router-link>
+                </span>
                 <div class="flex items-center ml-1">
                     <img :src="icon_title" class="w-4 h-4" alt="Icon" />
                 </div>
@@ -77,6 +80,7 @@ import { toast } from 'vue-sonner'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
     name: 'HeaderSection',
@@ -104,10 +108,12 @@ export default {
             default: 'Lỗi 404'
         }
     },
-    setup() {
+    emits: ['navigate-to-user'],
+    setup(props, { emit }) {
         dayjs.extend(relativeTime);
         dayjs.locale('vi');
 
+        const router = useRouter()
         const isDropdownOpen = ref(false)
         const isEditing = ref(false)
         const { dataImage, deleteImage } = useImage()
@@ -141,64 +147,73 @@ export default {
             console.log('Auth user changed:', newUser)
         })
 
-        watch(() => imageStore.currentUser, (newUser) => {
-            console.log('Current image user changed:', newUser)
-        })
+        // Thêm hàm để điều hướng đến trang dashboard của người dùng
+        const navigateToUserDashboard = (userId) => {
+            if (!userId) return
+            
+            // Emit sự kiện để gọi hàm ở component cha
+            emit('navigate-to-user', userId)
+        }
 
-        const formatTime = (time) => {
-            if (!time) return 'vừa xong';
-            return dayjs(time).fromNow()
+        const formatTime = (timestamp) => {
+            return dayjs(timestamp).fromNow();
         }
 
         const toggleDropdown = () => {
             isDropdownOpen.value = !isDropdownOpen.value
         }
 
-        const handleEdit = () => {
-            isDropdownOpen.value = false
-            isEditing.value = true
-            console.log('Edit post clicked')
-        }
-
-        const handleUpdateSuccess = () => {
-            isEditing.value = false
-            toast.success('Cập nhật bài viết thành công!')
-        }
-
-        const handleReport = () => {
-            isDropdownOpen.value = false
-            reportRef.value.showAlert()
-            console.log('Report post clicked')
-        }
-
-        const handleDelete = async () => {
-            isDropdownOpen.value = false
-
-            // Hiển thị hộp thoại xác nhận
-            const result = await deleteRef.value.showAlert()
-
-            // Nếu người dùng xác nhận xóa
-            if (result.isConfirmed) {
-                console.log('Xóa bài viết có ID:', dataImage.value.id)
-                await deleteImage(dataImage.value.id)
-            }
-        }
-
-        // Xử lý đóng dropdown khi click bên ngoài
         const handleClickOutside = (event) => {
-            if (isDropdownOpen.value && !event.target.closest('.ml-auto')) {
+            if (isDropdownOpen.value && !event.target.closest('.dropdown-container')) {
                 isDropdownOpen.value = false
             }
         }
 
-        onMounted(() => {
-            auth.initializeAuth()
-            document.addEventListener('click', handleClickOutside)
-        })
-
         onUnmounted(() => {
             document.removeEventListener('click', handleClickOutside)
         })
+
+        const handleDelete = () => {
+            if (deleteRef.value) {
+                deleteRef.value.openModal({
+                    title: 'Xóa bài viết',
+                    message: 'Bạn có chắc chắn muốn xóa bài viết này?',
+                    confirmText: 'Xóa',
+                    cancelText: 'Hủy',
+                    onConfirm: async () => {
+                        await deleteImage(dataImage.value.id)
+                        router.go(-1)
+                    }
+                })
+            }
+            isDropdownOpen.value = false
+        }
+
+        const handleReport = () => {
+            if (reportRef.value) {
+                reportRef.value.openModal({
+                    title: 'Báo cáo bài viết',
+                    message: 'Vui lòng cho chúng tôi biết lý do bạn báo cáo bài viết này',
+                    confirmText: 'Báo cáo',
+                    cancelText: 'Hủy',
+                    onConfirm: () => {
+                        toast.success('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét bài viết này sớm nhất có thể.')
+                        isDropdownOpen.value = false
+                    }
+                })
+            }
+            isDropdownOpen.value = false
+        }
+
+        const handleEdit = () => {
+            isEditing.value = true
+            isDropdownOpen.value = false
+        }
+
+        const handleUpdateSuccess = () => {
+            isEditing.value = false
+            toast.success('Đã cập nhật bài viết thành công!')
+        }
 
         return {
             dataImage,
@@ -215,6 +230,7 @@ export default {
             user,
             deleteRef,
             reportRef,
+            navigateToUserDashboard
         }
     }
 }
