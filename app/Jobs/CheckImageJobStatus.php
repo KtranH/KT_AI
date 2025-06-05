@@ -57,7 +57,7 @@ class CheckImageJobStatus implements ShouldQueue
             // Kiểm tra trạng thái từ ComfyUI
             $historyData = $comfyuiService->checkJobStatus($this->comfyPromptId);
             
-            // Kiểm tra xem có lỗi trong history data không
+            // Kiểm tra xem có lỗi trong history data không.
             if (isset($historyData[$this->comfyPromptId]['status']['status_str']) && 
                 $historyData[$this->comfyPromptId]['status']['status_str'] === 'error') {
                 $errorMessage = $historyData[$this->comfyPromptId]['status']['error'] ?? 'Lỗi không xác định';

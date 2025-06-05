@@ -38,6 +38,20 @@ class UserRepository implements UserRepositoryInterface
         }
     }
     /**
+     * Kiểm tra credits còn lại
+     */
+    public function checkCredits(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            return response()->json([
+                'remaining_credits' => $user->remaining_credits
+            ]);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+    /**
      * Tăng số lượng ảnh khi người dùng tải lên
      *
      * @param int $id ID của người dùng

@@ -6,11 +6,13 @@
             <div class="container mx-auto p-6">
                 <!-- Nút quay lại -->
                 <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full"/>
-                <div class="flex items-center justify-left mt-8 mb-8">
+                <div class="flex items-center justify-left mt-8 mb-2">
                     <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2">{{ feature.title }}</h1>
                     <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
                     <img :src="icon_title" loading="lazy" class="w-12 h-12 ml-2" alt="">
                 </div>
+
+                <i v-if="user" class="ml-2 text-gray-400 mb-2">Lượt tạo ảnh còn lại: {{ user.remaining_credits }}</i>
                 
                 <div class="grid gap-8 mb-8" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
                     <!-- Phần nhập thông tin bên trái -->
@@ -112,6 +114,7 @@
 </div>
 </template>
 <script>
+import axios from 'axios'
 import GuideSection  from '@/components/user/GenImage/GuideSection.vue'
 import ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
 import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
@@ -125,8 +128,9 @@ import { usefeaturesStore } from '@/stores/user/featuresStore'
 import { generateRandomSeed } from '@/utils/index'
 import { decodedID } from '@/utils'
 import { toast } from 'vue-sonner'
-import axios from 'axios'
- 
+import { profileAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/auth/authStore'
+
 export default {
     components: {
         GuideSection,
@@ -139,6 +143,9 @@ export default {
     },
     setup() {
         // State
+        const authStore = useAuthStore()
+        const user = ref(authStore.user.value)
+        const remainingCredits = ref(0)
         const randomSeed = ref(generateRandomSeed())
         const icon_title = ref("/img/ai.png")
         const featureStore = usefeaturesStore()
@@ -188,141 +195,162 @@ export default {
         // Lấy danh sách tiến trình đang hoạt động
         const fetchActiveJobs = async () => {
             try {
-                const response = await axios.get('/api/image-jobs/active');
-                if (response.data.success) {
-                    activeJobs.value = response.data.active_jobs;
+                const response = await axios.get('/api/image-jobs/active')
+                if (response.data.success)
+                {
+                    activeJobs.value = response.data.active_jobs
                 }
             } catch (error) {
-                console.error('Lỗi khi lấy tiến trình:', error);
+                console.error('Lỗi khi lấy tiến trình:', error)
             }
-        };
+        }
 
         // Kiểm tra tiến trình đã hoàn thành
         const checkCompletedJobs = async () => {
             try {
-                const response = await axios.get('/api/image-jobs/completed');
+                const response = await axios.get('/api/image-jobs/completed')
                 if (response.data.success && response.data.completed_jobs.length > 0) {
                     // Kiểm tra nếu có job mới hoàn thành (chưa hiển thị)
-                    const latestJob = response.data.completed_jobs[0];
+                    const latestJob = response.data.completed_jobs[0]
                     
                     // Nếu job này hoàn thành trong vòng 30 giây qua
-                    const jobCreatedTime = new Date(latestJob.updated_at).getTime();
-                    const currentTime = new Date().getTime();
-                    const timeDiff = (currentTime - jobCreatedTime) / 1000; // chuyển đổi sang giây
+                    const jobCreatedTime = new Date(latestJob.updated_at).getTime()
+                    const currentTime = new Date().getTime()
+                    const timeDiff = (currentTime - jobCreatedTime) / 1000 // chuyển đổi sang giây
                     
                     // Hiển thị job mới nhất nếu nó mới hoàn thành (trong vòng 30 giây)
                     // và chưa hiển thị thông báo
                     if (timeDiff < 30 && !notifiedJobIds.value.has(latestJob.id)) {
-                        successfulJob.value = latestJob;
+                        successfulJob.value = latestJob
                         // Đánh dấu job đã được thông báo
-                        notifiedJobIds.value.add(latestJob.id);
+                        notifiedJobIds.value.add(latestJob.id)
                         // Hiển thị thông báo toast
-                        toast.success('Đã tạo ảnh thành công!');
+                        toast.success('Đã tạo ảnh thành công!')
                     }
                 }
             } catch (error) {
-                console.error('Lỗi khi kiểm tra tiến trình hoàn thành:', error);
+                console.error('Lỗi khi kiểm tra tiến trình hoàn thành:', error)
             }
-        };
+        }
 
         // Hủy tiến trình
         const cancelJob = async (jobId) => {
             try {
-                const response = await axios.delete(`/api/image-jobs/${jobId}`);
+                const response = await axios.delete(`/api/image-jobs/${jobId}`)
                 if (response.data.success) {
-                    toast.success('Đã hủy tiến trình thành công');
-                    fetchActiveJobs(); // Cập nhật lại danh sách
+                    toast.success('Đã hủy tiến trình thành công')
+                    fetchActiveJobs()
                 }
             } catch (error) {
-                toast.error('Lỗi khi hủy tiến trình');
-                console.error('Lỗi khi hủy tiến trình:', error);
+                toast.error('Lỗi khi hủy tiến trình')
+                console.error('Lỗi khi hủy tiến trình:', error)
             }
-        };
+        }
+
+        // Kiểm tra credits
+        const checkCredits = async () => {
+            try {
+                const response = await profileAPI.checkCredits()
+                if (response.data.success)
+                {
+                    remainingCredits.value = response.data.remaining_credits
+                }
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra credits:', error)
+            }
+        }
 
         // Tạo ảnh
         const generateImage = async () => {
+            // Kiểm tra credits
+            await checkCredits()
+            if (remainingCredits.value < 1) {
+                toast.error('Bạn không có đủ credits để tạo ảnh')
+                return
+            }
             // Kiểm tra các điều kiện
             if (!prompt.value) {
-                error_message.value = "Vui lòng nhập mô tả để tạo ảnh";
-                toast.error("Vui lòng nhập mô tả để tạo ảnh");
-                return;
+                error_message.value = "Vui lòng nhập mô tả để tạo ảnh"
+                toast.error("Vui lòng nhập mô tả để tạo ảnh")
+                return
             }
             
             if (feature.value?.input_requirements && !mainImage.value) {
-                error_message.value = "Vui lòng tải lên ảnh chính";
-                toast.error("Vui lòng tải lên ảnh chính");
-                return;
+                error_message.value = "Vui lòng tải lên ảnh chính"
+                toast.error("Vui lòng tải lên ảnh chính")
+                return
             }
             
             if (feature.value?.input_requirements === 2 && !secondaryImage.value) {
-                error_message.value = "Vui lòng tải lên ảnh phụ";
-                toast.error("Vui lòng tải lên ảnh phụ");
-                return;
+                error_message.value = "Vui lòng tải lên ảnh phụ"
+                toast.error("Vui lòng tải lên ảnh phụ")
+                return
             }
             
             // Kiểm tra số lượng tiến trình
             if (activeJobs.value.length >= 5) {
-                error_message.value = "Bạn đã đạt đến giới hạn 5 tiến trình cùng lúc. Vui lòng đợi cho đến khi một số tiến trình hoàn thành.";
-                toast.error("Đã đạt giới hạn tiến trình");
-                return;
+                error_message.value = "Bạn đã đạt đến giới hạn 5 tiến trình cùng lúc. Vui lòng đợi cho đến khi một số tiến trình hoàn thành."
+                toast.error("Đã đạt giới hạn tiến trình")
+                return
             }
 
             try {
                 // Đánh dấu đang tạo ảnh
-                isGenerating.value = true;
-                error_message.value = null;
+                isGenerating.value = true
+                error_message.value = null
                 
                 // Gửi API tới server
-                const formData = new FormData();
-                formData.append('prompt', prompt.value);
-                formData.append('width', width.value);
-                formData.append('height', height.value);
-                formData.append('seed', randomSeed.value);
-                formData.append('style', selectedOption.value);
-                formData.append('feature_id', featureId.value);
+                const formData = new FormData()
+                formData.append('prompt', prompt.value)
+                formData.append('width', width.value)
+                formData.append('height', height.value)
+                formData.append('seed', randomSeed.value)
+                formData.append('style', selectedOption.value)
+                formData.append('feature_id', featureId.value)
                 
                 if (mainImage.value) {
-                    formData.append('main_image', mainImage.value);
+                    formData.append('main_image', mainImage.value)
                 }
                 
                 if (secondaryImage.value) {
-                    formData.append('secondary_image', secondaryImage.value);
+                    formData.append('secondary_image', secondaryImage.value)
                 }
                 
                 const response = await axios.post('/api/image-jobs/create', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
-                });
+                })
                 
                 if (response.data.success) {
-                    toast.success('Tiến trình tạo ảnh đã được khởi tạo');
-                    console.log('Đã tạo job mới:', response.data.job);
+                    toast.success('Tiến trình tạo ảnh đã được khởi tạo')
+                    console.log('Đã tạo job mới:', response.data.job)
                     
                     // Reset form sau khi tạo thành công
-                    prompt.value = '';
-                    randomSeed.value = generateRandomSeed();
-                    mainImage.value = null;
-                    secondaryImage.value = null;
+                    prompt.value = ''
+                    randomSeed.value = generateRandomSeed()
+                    mainImage.value = null
+                    secondaryImage.value = null
                     
                     // Cập nhật danh sách tiến trình
-                    fetchActiveJobs();
+                    fetchActiveJobs()
                 } else {
-                    toast.error(response.data.message || 'Lỗi khi tạo ảnh');
+                    toast.error(response.data.message || 'Lỗi khi tạo ảnh')
                 }
             } catch (error) {
-                console.error('Lỗi khi tạo ảnh:', error);
+                console.error('Lỗi khi tạo ảnh:', error)
                 
                 // Hiển thị lỗi từ server nếu có
-                if (error.response && error.response.data && error.response.data.message) {
-                    error_message.value = error.response.data.message;
-                    toast.error(error.response.data.message);
+                if (error.response && error.response.data && error.response.data.message)
+                {
+                    error_message.value = error.response.data.message
+                    toast.error(error.response.data.message)
                 } else {
-                    error_message.value = 'Lỗi khi gửi yêu cầu tạo ảnh';
-                    toast.error('Lỗi khi gửi yêu cầu tạo ảnh');
+                    error_message.value = 'Lỗi khi gửi yêu cầu tạo ảnh'
+                    toast.error('Lỗi khi gửi yêu cầu tạo ảnh')
                 }
             } finally {
-                isGenerating.value = false;
+                isGenerating.value = false
             }
         }
 
@@ -330,20 +358,20 @@ export default {
         const get_feature = async () => {
             try {
                 if (decoded_value.value) {
-                    await featureStore.fetchFeatureDetail(decoded_value.value);
-                    featureId.value = Number(decoded_value.value);
+                    await featureStore.fetchFeatureDetail(decoded_value.value)
+                    featureId.value = Number(decoded_value.value)
                 } else {
                     if (lastId) {
-                        featureId.value = Number(lastId);
-                        await featureStore.fetchFeatureDetail(lastId);
+                        featureId.value = Number(lastId)
+                        await featureStore.fetchFeatureDetail(lastId)
                     } else {
-                        error_message.value = 'Không tìm thấy thông tin feature';
+                        error_message.value = 'Không tìm thấy thông tin feature'
                     }
                 }
-                featureName.value = feature.value.title;
+                featureName.value = feature.value.title
             } catch (error) {
-                error_message.value = 'Không thể kết nối đến máy chủ';
-                console.error('Error fetching feature:', error);
+                error_message.value = 'Không thể kết nối đến máy chủ'
+                console.error('Error fetching feature:', error)
             }
         }
 
@@ -366,40 +394,43 @@ export default {
             // Nếu số lượng ID vượt quá 100, xóa các ID cũ
             if (notifiedJobIds.value.size > 100) {
                 // Chuyển Set thành Array, lấy 50 phần tử mới nhất, rồi chuyển lại thành Set
-                const idsArray = Array.from(notifiedJobIds.value);
-                notifiedJobIds.value = new Set(idsArray.slice(-50));
+                const idsArray = Array.from(notifiedJobIds.value)
+                notifiedJobIds.value = new Set(idsArray.slice(-50))
             }
         };
 
         // Mounted Hook
         onMounted(() => {
+
+            console.log("Kiểm tra", authStore.user)
+
             try {
-                const encodedID = route.params.encodedID;
+                const encodedID = route.params.encodedID
                 if (encodedID) {
-                    decoded_value.value = Number(decodedID(encodedID));
+                    decoded_value.value = Number(decodedID(encodedID))
                 }
             } catch (error) {
-                console.error('Error decoding ID:', error);
+                console.error('Error decoding ID:', error)
             }
             
-            get_feature();
-            fetchActiveJobs();
-            checkCompletedJobs(); // Kiểm tra ngay khi tải trang
+            get_feature()
+            fetchActiveJobs()
+            checkCompletedJobs() // Kiểm tra ngay khi tải trang
             
             // Thiết lập interval kiểm tra trạng thái các tiến trình
             checkInterval.value = setInterval(() => {
-                fetchActiveJobs();
-                checkCompletedJobs();
-                limitNotifiedJobsSet(); // Giới hạn kích thước của Set
-            }, 5000);
-        });
-        
+                fetchActiveJobs()
+                checkCompletedJobs()
+                limitNotifiedJobsSet() // Giới hạn kích thước của Set
+            }, 5000)
+        })
+    
         // Xóa interval khi component bị hủy
         onBeforeUnmount(() => {
             if (checkInterval.value) {
-                clearInterval(checkInterval.value);
+                clearInterval(checkInterval.value)
             }
-        });
+        })
         
         return {
             randomSeed,
@@ -422,7 +453,8 @@ export default {
             activeJobs,
             cancelJob,
             successfulJob,
-            handleClosePreview
+            handleClosePreview,
+            user
         }
     }
 }

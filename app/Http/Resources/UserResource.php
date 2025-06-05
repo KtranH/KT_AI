@@ -21,6 +21,7 @@ class UserResource extends JsonResource
             'email' => $this->when($this->showEmail(), $this->email),
             'avatar' => $this->avatar ?? config('app.default_avatar'),
             'role' => $this->role,
+            'remaining_credits' => $this->remaining_credits,
             'stats' => [
                 'likes' => $this->sum_like,
                 'images' => $this->sum_img,

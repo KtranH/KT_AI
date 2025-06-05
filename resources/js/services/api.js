@@ -22,6 +22,7 @@ export const profileAPI = {
   updateName: (formData) => apiClient.post('/update-name', formData),
   updatePassword: (formData) => apiClient.post('/update-password', formData),
   checkPassword: (formData) => apiClient.post('/check-password', formData),
+  checkCredits: () => apiClient.get('/check-credits'),
   forgotPassword: (formData) => apiClient.post('/forgot-password', formData),
   verifyResetCode: (formData) => apiClient.post('/verify-reset-code', formData),
   resetPassword: (formData) => apiClient.post('/reset-password', formData),

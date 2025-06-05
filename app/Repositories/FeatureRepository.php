@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Interfaces\FeatureRepositoryInterface;
 use App\Models\AIFeature;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class FeatureRepository implements FeatureRepositoryInterface
 {
@@ -14,7 +16,12 @@ class FeatureRepository implements FeatureRepositoryInterface
      */
     public function getFeatures(): \Illuminate\Support\Collection
     {
-        return AIFeature::where('status_feature', 'active')->get();
+        Log::info("Bắt đầu gọi getFeatures");
+        $features = Cache::remember('features', 60 * 60, function () {
+            return AIFeature::where('status_feature', 'active')->get();
+        });
+        Log::info("Kết quả sau khi cache" . Cache::get('features'));
+        return $features;
     }
 
     /**

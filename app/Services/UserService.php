@@ -34,6 +34,10 @@ class UserService
     {
         return $this->userRepository->getUserByEmail($email);
     }
+    public function checkCredits()
+    {
+        return $this->userRepository->checkCredits();
+    }
     public function checkPassword(Request $request)
     {
         try {

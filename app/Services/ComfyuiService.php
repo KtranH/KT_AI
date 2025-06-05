@@ -7,6 +7,7 @@ use App\Services\R2StorageService;
 use App\Services\ComfyUITemplateService;
 use App\Services\ComfyUIApiService;
 use App\Services\ComfyUIJobService;
+use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,7 @@ class ComfyUIService
     public $max_time = 3000;
     public $imageJobsRepository;
     public $r2Service;
+    public UserRepositoryInterface $userRepository;
     protected ComfyUITemplateService $templateService;
     protected ComfyUIApiService $apiService;
     protected ComfyUIJobService $jobService;
@@ -29,9 +31,11 @@ class ComfyUIService
         R2StorageService $r2Service,
         ComfyUITemplateService $templateService,
         ComfyUIApiService $apiService,
-        ComfyUIJobService $jobService
+        ComfyUIJobService $jobService,
+        UserRepositoryInterface $userRepository
     )
     {
+        $this->userRepository = $userRepository;
         $this->imageJobsRepository = $imageJobsRepository;
         $this->r2Service = $r2Service;
         $this->templateService = $templateService;

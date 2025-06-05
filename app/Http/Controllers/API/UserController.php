@@ -201,6 +201,25 @@ class UserController extends Controller
         }
     }
 
+    public function checkCredits() {
+        try {
+            // Kiểm tra xác thực người dùng
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Người dùng chưa đăng nhập'
+                ], 401);
+            }
+            $result = $this->userService->checkCredits();
+            return $result;
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi kiểm tra credits'
+            ], 500);
+        }
+    }
+
     public function checkPassword(Request $request) {
         try {
             // Xác thực dữ liệu đầu vào

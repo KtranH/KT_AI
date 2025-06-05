@@ -10,6 +10,9 @@ interface UserRepositoryInterface
     // Kiểm tra trạng thái đăng nhập
     public function checkStatus(): JsonResponse;
 
+    // Kiểm tra credits còn lại
+    public function checkCredits(): JsonResponse;
+
     // Kiểm tra email
     public function checkEmail($email): ?User;
 

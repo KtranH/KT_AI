@@ -88,6 +88,7 @@ Route::prefix('api')->group(function () {
         Route::post('/send-password-change-verification', [MailController::class, 'sendPasswordChangeVerification']);
         Route::post('/update-password', [UserController::class, 'updatePassword']);
         Route::post('/check-password', [UserController::class, 'checkPassword']);
+        Route::get('/check-credits', [UserController::class, 'checkCredits']);
         // Routes Notification
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
