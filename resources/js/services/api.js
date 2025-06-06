@@ -170,6 +170,15 @@ export const genericAPI = {
 
 // API ComfyUI
 export const comfyuiAPI = {
+  createJob: (formData) => apiClient.post('/image-jobs/create', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
   generateImage: (formData) => apiClient.post('/generate-image', formData),
-  cancelGenerateImage: () => apiClient.post('/cancel-generate-image')
+  getActiveJobs: () => apiClient.get('/image-jobs/active'),
+  getCompletedJobs: () => apiClient.get('/image-jobs/completed'),
+  cancelJob: (jobId) => apiClient.delete(`/image-jobs/${jobId}`),
+  cancelGenerateImage: () => apiClient.post('/cancel-generate-image'),
+  retryJob: (jobId) => apiClient.post(`/image-jobs/${jobId}/retry`),
 }

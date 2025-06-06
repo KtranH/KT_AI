@@ -38,7 +38,7 @@
                               @update:prompt="prompt = $event"
                               @update:seed="randomSeed = $event"
                               @update:style="selectedOption = $event"
-                              @generate="generateImage"
+                              @generate="handleGenerateImage"
                             />
                         </div>
                     </div>
@@ -86,7 +86,7 @@
                                     </p>
                                 </div>
                                 <button 
-                                    @click="cancelJob(job.id)" 
+                                    @click="handleCancelJob(job.id)" 
                                     class="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition"
                                 >
                                     Hủy
@@ -114,7 +114,6 @@
 </div>
 </template>
 <script>
-import axios from 'axios'
 import GuideSection  from '@/components/user/GenImage/GuideSection.vue'
 import ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
 import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
@@ -122,6 +121,7 @@ import PromptInput  from '@/components/user/GenImage/PromptInput.vue'
 import ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
 import ButtonBackVue from '../../components/common/ButtonBack.vue'
 import ImageReview from '@/components/user/GenImage/ImageReview.vue'
+import { useImageGen } from '@/composables/user/useImageGen'
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
@@ -130,6 +130,7 @@ import { decodedID } from '@/utils'
 import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { comfyuiAPI } from '@/services/api'
 
 export default {
     components: {
@@ -144,8 +145,7 @@ export default {
     setup() {
         // State
         const authStore = useAuthStore()
-        const user = ref(authStore.user.value)
-        const remainingCredits = ref(0)
+        const user = ref(authStore.user)
         const randomSeed = ref(generateRandomSeed())
         const icon_title = ref("/img/ai.png")
         const featureStore = usefeaturesStore()
@@ -191,167 +191,32 @@ export default {
             "❌ Vui lòng không bỏ trống ô thông tin đầu vào cũng như tải ảnh đầy đủ vào các ô tải ảnh lên.",
             "🚻 Không được nhập các từ ngữ nhạy cảm để tạo ảnh."
         ])
-
-        // Lấy danh sách tiến trình đang hoạt động
-        const fetchActiveJobs = async () => {
-            try {
-                const response = await axios.get('/api/image-jobs/active')
-                if (response.data.success)
-                {
-                    activeJobs.value = response.data.active_jobs
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy tiến trình:', error)
-            }
+        
+        // Composables
+        const { fetchActiveJobs, checkCompletedJobs, checkCredits, generateImage, cancelJob } = useImageGen()
+        
+        // Function để hủy job
+        const handleCancelJob = async (jobId) => {
+            await cancelJob(jobId, activeJobs)
         }
-
-        // Kiểm tra tiến trình đã hoàn thành
-        const checkCompletedJobs = async () => {
-            try {
-                const response = await axios.get('/api/image-jobs/completed')
-                if (response.data.success && response.data.completed_jobs.length > 0) {
-                    // Kiểm tra nếu có job mới hoàn thành (chưa hiển thị)
-                    const latestJob = response.data.completed_jobs[0]
-                    
-                    // Nếu job này hoàn thành trong vòng 30 giây qua
-                    const jobCreatedTime = new Date(latestJob.updated_at).getTime()
-                    const currentTime = new Date().getTime()
-                    const timeDiff = (currentTime - jobCreatedTime) / 1000 // chuyển đổi sang giây
-                    
-                    // Hiển thị job mới nhất nếu nó mới hoàn thành (trong vòng 30 giây)
-                    // và chưa hiển thị thông báo
-                    if (timeDiff < 30 && !notifiedJobIds.value.has(latestJob.id)) {
-                        successfulJob.value = latestJob
-                        // Đánh dấu job đã được thông báo
-                        notifiedJobIds.value.add(latestJob.id)
-                        // Hiển thị thông báo toast
-                        toast.success('Đã tạo ảnh thành công!')
-                    }
-                }
-            } catch (error) {
-                console.error('Lỗi khi kiểm tra tiến trình hoàn thành:', error)
-            }
-        }
-
-        // Hủy tiến trình
-        const cancelJob = async (jobId) => {
-            try {
-                const response = await axios.delete(`/api/image-jobs/${jobId}`)
-                if (response.data.success) {
-                    toast.success('Đã hủy tiến trình thành công')
-                    fetchActiveJobs()
-                }
-            } catch (error) {
-                toast.error('Lỗi khi hủy tiến trình')
-                console.error('Lỗi khi hủy tiến trình:', error)
-            }
-        }
-
-        // Kiểm tra credits
-        const checkCredits = async () => {
-            try {
-                const response = await profileAPI.checkCredits()
-                if (response.data.success)
-                {
-                    remainingCredits.value = response.data.remaining_credits
-                }
-            } catch (error) {
-                console.error('Lỗi khi kiểm tra credits:', error)
-            }
-        }
-
-        // Tạo ảnh
-        const generateImage = async () => {
-            // Kiểm tra credits
-            await checkCredits()
-            if (remainingCredits.value < 1) {
-                toast.error('Bạn không có đủ credits để tạo ảnh')
-                return
-            }
-            // Kiểm tra các điều kiện
-            if (!prompt.value) {
-                error_message.value = "Vui lòng nhập mô tả để tạo ảnh"
-                toast.error("Vui lòng nhập mô tả để tạo ảnh")
-                return
-            }
-            
-            if (feature.value?.input_requirements && !mainImage.value) {
-                error_message.value = "Vui lòng tải lên ảnh chính"
-                toast.error("Vui lòng tải lên ảnh chính")
-                return
-            }
-            
-            if (feature.value?.input_requirements === 2 && !secondaryImage.value) {
-                error_message.value = "Vui lòng tải lên ảnh phụ"
-                toast.error("Vui lòng tải lên ảnh phụ")
-                return
-            }
-            
-            // Kiểm tra số lượng tiến trình
-            if (activeJobs.value.length >= 5) {
-                error_message.value = "Bạn đã đạt đến giới hạn 5 tiến trình cùng lúc. Vui lòng đợi cho đến khi một số tiến trình hoàn thành."
-                toast.error("Đã đạt giới hạn tiến trình")
-                return
-            }
-
-            try {
-                // Đánh dấu đang tạo ảnh
-                isGenerating.value = true
-                error_message.value = null
-                
-                // Gửi API tới server
-                const formData = new FormData()
-                formData.append('prompt', prompt.value)
-                formData.append('width', width.value)
-                formData.append('height', height.value)
-                formData.append('seed', randomSeed.value)
-                formData.append('style', selectedOption.value)
-                formData.append('feature_id', featureId.value)
-                
-                if (mainImage.value) {
-                    formData.append('main_image', mainImage.value)
-                }
-                
-                if (secondaryImage.value) {
-                    formData.append('secondary_image', secondaryImage.value)
-                }
-                
-                const response = await axios.post('/api/image-jobs/create', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                })
-                
-                if (response.data.success) {
-                    toast.success('Tiến trình tạo ảnh đã được khởi tạo')
-                    console.log('Đã tạo job mới:', response.data.job)
-                    
-                    // Reset form sau khi tạo thành công
-                    prompt.value = ''
-                    randomSeed.value = generateRandomSeed()
-                    mainImage.value = null
-                    secondaryImage.value = null
-                    
-                    // Cập nhật danh sách tiến trình
-                    fetchActiveJobs()
-                } else {
-                    toast.error(response.data.message || 'Lỗi khi tạo ảnh')
-                }
-            } catch (error) {
-                console.error('Lỗi khi tạo ảnh:', error)
-                
-                // Hiển thị lỗi từ server nếu có
-                if (error.response && error.response.data && error.response.data.message)
-                {
-                    error_message.value = error.response.data.message
-                    toast.error(error.response.data.message)
-                } else {
-                    error_message.value = 'Lỗi khi gửi yêu cầu tạo ảnh'
-                    toast.error('Lỗi khi gửi yêu cầu tạo ảnh')
-                }
-            } finally {
-                isGenerating.value = false
-            }
+        
+        // Function để tạo ảnh
+        const handleGenerateImage = async () => {
+            await generateImage({
+                user,
+                prompt,
+                randomSeed,
+                mainImage,
+                secondaryImage,
+                width,
+                height,
+                selectedOption,
+                featureId,
+                error_message,
+                isGenerating,
+                feature,
+                activeJobs
+            })
         }
 
         // Gọi API lấy thông tin
@@ -361,12 +226,7 @@ export default {
                     await featureStore.fetchFeatureDetail(decoded_value.value)
                     featureId.value = Number(decoded_value.value)
                 } else {
-                    if (lastId) {
-                        featureId.value = Number(lastId)
-                        await featureStore.fetchFeatureDetail(lastId)
-                    } else {
-                        error_message.value = 'Không tìm thấy thông tin feature'
-                    }
+                    error_message.value = 'Không tìm thấy thông tin feature'
                 }
                 featureName.value = feature.value.title
             } catch (error) {
@@ -400,8 +260,7 @@ export default {
         };
 
         // Mounted Hook
-        onMounted(() => {
-
+        onMounted(async () => {
             console.log("Kiểm tra", authStore.user)
 
             try {
@@ -413,14 +272,15 @@ export default {
                 console.error('Error decoding ID:', error)
             }
             
-            get_feature()
-            fetchActiveJobs()
-            checkCompletedJobs() // Kiểm tra ngay khi tải trang
+            await get_feature()
+            await fetchActiveJobs(activeJobs)
+            await checkCompletedJobs(successfulJob, notifiedJobIds) // Kiểm tra ngay khi tải trang
+            await checkCredits(user) // Kiểm tra credits khi load trang
             
             // Thiết lập interval kiểm tra trạng thái các tiến trình
-            checkInterval.value = setInterval(() => {
-                fetchActiveJobs()
-                checkCompletedJobs()
+            checkInterval.value = setInterval(async () => {
+                await fetchActiveJobs(activeJobs)
+                await checkCompletedJobs(successfulJob, notifiedJobIds)
                 limitNotifiedJobsSet() // Giới hạn kích thước của Set
             }, 5000)
         })
@@ -446,12 +306,12 @@ export default {
             decoded_value,
             icon_title,
             guideItems,
-            generateImage,
+            handleGenerateImage,
             featureId,
             featureName,
             isGenerating,
             activeJobs,
-            cancelJob,
+            handleCancelJob,
             successfulJob,
             handleClosePreview,
             user
