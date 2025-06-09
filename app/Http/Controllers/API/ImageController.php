@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ImageResource;
 use App\Models\Image;
+use App\Http\Requests\Image\UpdateImageRequest;
+use App\Http\Requests\Image\StoreImageRequest;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 
@@ -132,7 +134,7 @@ class ImageController extends Controller
         }
     }
     
-    public function store(Request $request, $featureId)
+    public function store(StoreImageRequest $request, $featureId)
     {
         try {
             // Kiểm tra xem có file được gửi lên không
@@ -142,7 +144,7 @@ class ImageController extends Controller
                     'message' => 'Vui lòng tải lên ít nhất một ảnh.'
                 ], 422);
             }
-            $result = $this->imageService->storeImage($request, $featureId);
+            $result = $this->imageService->storeImage($request->validated(), $featureId);
             if ($result) {
                 return response()->json([
                     'success' => true,
@@ -161,10 +163,10 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    public function update(Request $request, Image $image)
+    public function update(UpdateImageRequest $request, Image $image)
     {
         try {
-            $result = $this->imageService->updateImage($request, $image);
+            $result = $this->imageService->updateImage($request->validated(), $image);
             if ($result) {
                 return response()->json([
                     'success' => true,

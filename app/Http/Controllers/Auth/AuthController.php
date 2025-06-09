@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\SignUpRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -29,14 +28,14 @@ class AuthController extends Controller
         }
     }
 
-    public function register(Request $request)
+    public function register(SignUpRequest $request)
     {
-        return $this->authService->register($request);
+        return $this->authService->register($request->validated());
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        return $this->authService->login($request);
+        return $this->authService->login($request->validated());
     }
 
     public function logout(Request $request)

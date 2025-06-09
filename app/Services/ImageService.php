@@ -2,10 +2,8 @@
 
 namespace App\Services;
 use App\Interfaces\ImageRepositoryInterface;
-use App\Http\Requests\Image\StoreImageRequest;
 use App\Services\R2StorageService;
 use App\Http\Resources\PaginateAndRespondResource;
-use App\Http\Requests\Image\UpdateImageRequest;
 use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -149,11 +147,9 @@ class ImageService
         return $hasNewImages;
     }
     
-    public function storeImage(Request $request, $featureId)
+    public function storeImage(array $request, $featureId)
     {
-        $storeImageRequest = new StoreImageRequest();
-        $request->validate($storeImageRequest->rules());
-        $files = $request->file('images');
+        $files = $request['images'];
         // Duyệt qua từng file ảnh
         $uploadedPaths = [];
         foreach ($files as $file) {
@@ -165,26 +161,18 @@ class ImageService
         }
         // Lưu trữ vào database
         $data = [
-            'title' => $request->title,
-            'description' => $request->description,
+            'title' => $request['title'],
+            'description' => $request['description'],
             'feature_id' => $featureId
         ];
         return $this->imageRepository->storeImage($uploadedPaths, Auth::user(), $data);
     }
-    public function updateImage(Request $request, Image $image)
+    public function updateImage(array $request, Image $image)
     {
-        if(Gate::denies('update', $image)) {
-            return false;
-        }
-        $updateImageRequest = new UpdateImageRequest();
-        $request->validate($updateImageRequest->rules());
-        return $this->imageRepository->updateImage($image, $request->title, $request->prompt);
+        return $this->imageRepository->updateImage($image, $request['title'], $request['prompt']);
     }
     public function deleteImage(Image $image): bool
     {
-        if(Gate::denies('delete', $image)) {
-            return false;
-        }
         return $this->imageRepository->deleteImage($image);
     }
 }

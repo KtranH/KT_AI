@@ -6,9 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use App\Repositories\UserRepository;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Services\TurnStileService;
-use App\Http\Requests\Auth\SignUpRequest;
 use App\Services\MailService;
 
 
@@ -26,13 +24,10 @@ class AuthService
     {
         return $this->userRepository->checkStatus();
     }
-    public function register(Request $request)
+    public function register(array $request)
     {
-        $signUpRequest = new SignUpRequest();
-        $request->validate($signUpRequest->rules());
-
         // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        $turnstileResponse = $this->turnStileService->verifyTurnstile($request['cf-turnstile-response'], $request['ip']);
 
         if (!$turnstileResponse['success']) {
             return response()->json([
@@ -53,13 +48,10 @@ class AuthService
             'message' => 'Đã gửi mã xác thực'],
             200);
     }
-    public function login(Request $request)
+    public function login(array $request)
     {
-        $loginRequest = new LoginRequest();
-        $request->validate($loginRequest->rules());
-
         // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        $turnstileResponse = $this->turnStileService->verifyTurnstile($request['cf-turnstile-response'], $request['ip']);
 
         if (!$turnstileResponse['success']) {
             throw ValidationException::withMessages([

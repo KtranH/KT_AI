@@ -193,6 +193,7 @@
 </template>
 
 <script>
+import AOS from 'aos'
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
@@ -202,7 +203,6 @@ import { useImageStore } from '@/stores/user/imagesStore'
 import { formatDate } from '@/utils/index'
 import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
-import AOS from 'aos'
 
 export default {
   name: 'Dashboard',

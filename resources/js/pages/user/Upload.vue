@@ -66,7 +66,8 @@ import ImageUploader from "@/components/user/Upload/ImageUploader.vue";
 import ImageInfoForm from "@/components/user/Upload/ImageInfoForm.vue";
 import { computed, provide } from "vue";
 import { useImageUpload } from "@/composables/user/useImageUpload";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+
 export default {
   components: {
     ImageUploader,

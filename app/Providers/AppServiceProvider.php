@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use App\Services\ComfyUITemplateService;
 use App\Services\ComfyUIApiService;
 use App\Services\ComfyUIJobService;
+use App\Interfaces\ImageJobRepositoryInterface;
+use App\Repositories\ImageJobsRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(ComfyUIApiService::class)
             );
         });
+
+        // Đăng ký binding cho ImageJob
+        $this->app->bind(ImageJobRepositoryInterface::class, ImageJobsRepository::class);
     }
 
     /**
