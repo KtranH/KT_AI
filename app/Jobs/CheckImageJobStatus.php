@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\ImageJob;
 use App\Services\ComfyUIService;
+use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,14 +26,16 @@ class CheckImageJobStatus implements ShouldQueue
     protected $attempts = 0;
     protected $maxAttempts = 10; // Tối đa 10 lần kiểm tra
     
+    protected UserRepositoryInterface $userRepository;
     /**
      * Create a new job instance.
      */
-    public function __construct(int $imageJobId, string $comfyPromptId, int $attempts = 0)
+    public function __construct(int $imageJobId, string $comfyPromptId, int $attempts = 0, UserRepositoryInterface $userRepository)
     {
         $this->imageJobId = $imageJobId;
         $this->comfyPromptId = $comfyPromptId;
         $this->attempts = $attempts;
+        $this->userRepository = $userRepository;
         $this->onQueue('image-processing');
     }
 
@@ -73,6 +76,9 @@ class CheckImageJobStatus implements ShouldQueue
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
                 
+                // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+                $this->userRepository->increaseCredits($user->id);          
+
                 Log::error("Tiến trình {$imageJob->id} thất bại với lỗi: " . $errorMessage);
                 return;
             }
@@ -126,6 +132,8 @@ class CheckImageJobStatus implements ShouldQueue
                     $isCompleted = true;
                     Log::info("Tiến trình {$imageJob->id} đã hoàn thành (hasImagesInHistoryData)");
                 }
+                // Giảm số lượng credits khi người dùng tạo ảnh thành công
+                $this->userRepository->decreaseCredits($user->id);          
             }
             // Kiểm tra nếu có lỗi trong history
             else if (isset($historyData['error'])) {
@@ -140,6 +148,9 @@ class CheckImageJobStatus implements ShouldQueue
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
                 
+                // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+                $this->userRepository->increaseCredits($user->id);          
+
                 Log::error("Tiến trình {$imageJob->id} thất bại với lỗi: " . $historyData['error']);
                 return;
             }
@@ -169,6 +180,9 @@ class CheckImageJobStatus implements ShouldQueue
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
                 
+                // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+                $this->userRepository->increaseCredits($user->id);          
+
                 Log::error("Tiến trình {$imageJob->id} thất bại với lỗi: " . $imageJob->error_message);
                 return;
             }
@@ -219,6 +233,9 @@ class CheckImageJobStatus implements ShouldQueue
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
                 
+                // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+                $this->userRepository->increaseCredits($user->id);          
+
                 Log::warning("Tiến trình {$imageJob->id} đã bị hủy do quá thời gian xử lý (sau {$this->attempts} lần thử)");
             }
             
@@ -237,6 +254,9 @@ class CheckImageJobStatus implements ShouldQueue
                     $user->notify(new \App\Notifications\ImageGenerationFailedNotification($imageJob));
                     Log::debug("Đã gửi thông báo thất bại cho người dùng {$user->id}");
                 }
+
+                // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+                $this->userRepository->increaseCredits($user->id);          
                 
                 Log::warning("Tiến trình {$imageJob->id} đã bị đánh dấu thất bại do lỗi sau {$this->attempts} lần thử");
             } else {

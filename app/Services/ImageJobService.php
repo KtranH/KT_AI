@@ -21,7 +21,7 @@ class ImageJobService
 
     public function __construct(
         ImageJobRepositoryInterface $imageJobRepository,
-        ComfyUIService $comfyUIService
+        ComfyUIService $comfyUIService,
     ) {
         $this->imageJobRepository = $imageJobRepository;
         $this->comfyUIService = $comfyUIService;
@@ -72,7 +72,7 @@ class ImageJobService
         dispatch(new CheckImageJobStatus($imageJob->id, $promptId))
             ->onQueue('image-processing')
             ->delay(now()->addSeconds(15));
-
+            
         return [
             'success' => true,
             'message' => 'Tiến trình tạo ảnh đã được khởi tạo',

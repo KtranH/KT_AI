@@ -82,6 +82,42 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
+     * Tăng số lượng credis khi người dùng tạo ảnh thất bại
+     * 
+     * @param int $id ID của người dùng
+     * @return User|null
+     */
+    public function increaseCredits($id): ?User
+    {
+        /** @var User|null $user */
+        $user = User::find($id);
+        if ($user) {
+            $user->remaining_credits++;
+            $user->save();
+            return $user;
+        }
+        return null;
+    }
+
+    /**
+     * Giảm số lượng credits khi người dùng tạo ảnh
+     *
+     * @param int $id ID của người dùng
+     * @return User|null
+     */
+    public function decreaseCredits($id): ?User
+    {
+        /** @var User|null $user */
+        $user = User::find($id);
+        if ($user && $user->remaining_credits > 0) {
+            $user->remaining_credits--;
+            $user->save();
+            return $user;
+        }
+        return null;
+    }
+
+    /**
      * Giảm số lượng ảnh khi người dùng xóa
      *
      * @param int $id ID của người dùng
