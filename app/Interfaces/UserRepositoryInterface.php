@@ -28,6 +28,9 @@ interface UserRepositoryInterface
     // Tăng số lượng lượt thích khi người dùng thích
     public function increaseSumLike(User $user): void;
 
+    // Tăng số lượng credits khi người dùng tạo ảnh thất bại
+    public function increaseCredits($id): ?User;
+
     // Giảm số lượng credits khi người dùng tạo ảnh
     public function decreaseCredits($id): ?User;
 
