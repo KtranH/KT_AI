@@ -88,7 +88,7 @@ class ImageController extends Controller
         
         // Log để debug
         \Log::info('getImagesCreatedByUser được gọi với user_id: ' . $userId);
-        
+
         return $this->paginateAndRespond($request, 'created', 'Get Images Created By User Error', $userId);
     }
     public function getImagesLiked(Request $request)

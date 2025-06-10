@@ -8,6 +8,7 @@ use App\Http\Requests\Image\JobImageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ImageJobController extends Controller
 {
