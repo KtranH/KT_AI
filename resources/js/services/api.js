@@ -178,7 +178,13 @@ export const comfyuiAPI = {
   generateImage: (formData) => apiClient.post('/generate-image', formData),
   getActiveJobs: () => apiClient.get('/image-jobs/active'),
   getCompletedJobs: () => apiClient.get('/image-jobs/completed'),
+  getFailedJobs: () => apiClient.get('/image-jobs/failed'),
   cancelJob: (jobId) => apiClient.delete(`/image-jobs/${jobId}`),
   cancelGenerateImage: () => apiClient.post('/cancel-generate-image'),
   retryJob: (jobId) => apiClient.post(`/image-jobs/${jobId}/retry`),
+}
+
+// API Proxy
+export const proxyAPI = {
+  getR2Image: (url) => apiClient.get(`/proxy/r2-image?url=${encodeURIComponent(url)}`),
 }

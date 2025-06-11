@@ -344,16 +344,15 @@ export default {
     // Kiểm tra có thêm hình ảnh không
     const checkHasMoreImages = (filter) => {
       try {
-        switch(filter) {
-          case 'uploaded':
-            return hasMoreUploadedImages?.value || false
-          case 'created':
-            return hasMoreCreatedImages?.value || false
-          case 'liked':
-            return hasMoreLikedImages?.value || false
-          default:
-            return false
-        }
+        // Sử dụng pagination từ store
+        const canLoadMore = (imageStore.currentPage || 1) < (imageStore.lastPage || 1)
+        console.log('Kiểm tra có thể tải thêm:', {
+          filter,
+          currentPage: imageStore.currentPage,
+          lastPage: imageStore.lastPage,
+          canLoadMore
+        })
+        return canLoadMore
       } catch {
         return false
       }
@@ -365,7 +364,10 @@ export default {
         const targetUserId = refreshUserId !== undefined ? refreshUserId : userId.value;
         
         if (!isLoadMore) {
-          currentPage.value = 1
+          // Reset store pagination khi không phải load more
+          imageStore.currentPage = 1
+          imageStore.lastPage = 1
+          imageStore.totalImages = 0
           
           if (forceRefresh) {
             imageGroups.value = []
@@ -427,16 +429,17 @@ export default {
       isLoadingMore.value = true
       
       try {
-        currentPage.value++
-        const success = await loadMoreImagesByFilter(props.filter, currentPage.value)
+        // Sử dụng currentPage từ store thay vì currentPage cục bộ
+        const nextPage = (imageStore.currentPage || 1) + 1
+        console.log('Tải thêm trang:', nextPage, 'từ trang hiện tại:', imageStore.currentPage)
+        
+        const success = await loadMoreImagesByFilter(props.filter, nextPage)
         
         if (success) {
           await fetchAndGroupImages(true, false, userId.value)
-        } else {
-          currentPage.value--
         }
-      } catch {
-        currentPage.value--
+      } catch (error) {
+        console.error('Lỗi khi tải thêm:', error)
       } finally {
         isLoadingMore.value = false
       }

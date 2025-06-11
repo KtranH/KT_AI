@@ -76,36 +76,8 @@ class ComfyUIService
             $template = $this->templateService->loadJsonTemplate($job->feature_id);
             $template = $this->templateService->updateJsonTemplate($template, $job);
             
-            // Xử lý tải ảnh lên nếu cần
-            if ($job->main_image) {
-                // Tải ảnh lên ComfyUI
-                $mainImageUrl = $this->apiService->uploadImageToComfyUI($job->main_image);
-                
-                // Tìm node image loader trong template và cập nhật
-                foreach ($template as $nodeId => $node) {
-                    if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image First' && str_contains($node['class_type'], 'LoadImage')) {
-                        $template[$nodeId]['inputs']['image'] = $mainImageUrl;
-                        break;
-                    }
-                }
-            }
-            
-            if ($job->secondary_image) {
-                // Tương tự với ảnh phụ
-                $secondaryImageUrl = $this->apiService->uploadImageToComfyUI($job->secondary_image);
-                
-                // Tìm node thứ hai cho ảnh phụ
-                $foundFirst = false;
-                foreach ($template as $nodeId => $node) {
-                    if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image Second' && str_contains($node['class_type'], 'LoadImage')) {
-                        if ($foundFirst) {
-                            $template[$nodeId]['inputs']['image'] = $secondaryImageUrl;
-                            break;
-                        }
-                        $foundFirst = true;
-                    }
-                }
-            }
+            // Tải JSON template với ảnh tải lên
+            $template = $this->templateService->updateJsonTemplateWithImage($template, $job);
             
             // Gửi template đến ComfyUI để tạo ảnh
             $responseData = $this->apiService->sendPrompt($template);

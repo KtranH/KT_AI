@@ -9,6 +9,12 @@ use App\Services\ComfyUIApiService;
 use App\Services\ComfyUIJobService;
 use App\Interfaces\ImageJobRepositoryInterface;
 use App\Repositories\ImageJobsRepository;
+use App\Models\Image;
+use App\Models\Comment;
+use App\Models\Interaction;
+use App\Observers\ImageObserver;
+use App\Observers\CommentObserver;
+use App\Observers\InteractionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +25,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Đăng ký các service cho ComfyUI
         $this->app->singleton(ComfyUITemplateService::class, function ($app) {
-            return new ComfyUITemplateService();
+            return new ComfyUITemplateService(
+                $app->make(ComfyUIApiService::class)
+            );
         });
         
         $this->app->singleton(ComfyUIApiService::class, function ($app) {
@@ -51,5 +59,14 @@ class AppServiceProvider extends ServiceProvider
 
         //
         Carbon::setLocale('vi');
+
+        // Đăng ký Observer cho Image
+        Image::observe(ImageObserver::class);
+        
+        // Đăng ký Observer cho Comment
+        Comment::observe(CommentObserver::class);
+        
+        // Đăng ký Observer cho Interaction
+        Interaction::observe(InteractionObserver::class);
     }
 }

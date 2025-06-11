@@ -19,26 +19,31 @@
             <span v-if="dataImage && dataImage.updated_at !== dataImage.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
         </div>
          <!-- Setting post button with dropdown -->
-        <div class="ml-auto relative">
-            <button @click="toggleDropdown" class="focus:outline-none">
+        <div class="ml-auto relative dropdown-container">
+            <button @click="toggleDropdown" class="focus:outline-none p-2 hover:bg-gray-100 rounded-full transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
             </button>
+            <!-- Debug indicator -->
+            <div v-if="isDropdownOpen" class="absolute right-0 mt-1 text-xs text-red-500 z-50">
+                DEBUG: Menu mở
+            </div>
+            
             <!-- Dropdown menu -->
-            <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10">
-                <div class="py-1" v-if="user.value.id === currentUserImage.id">
-                    <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fa-solid fa-pen-to-square"></i> Sửa bài viết
+            <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
+                <div class="py-1" v-if="isOwner">
+                    <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i> Sửa bài viết
                     </button>
-                    <button @click="handleDelete" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fa-solid fa-trash"></i> Xóa bài viết
+                    <button @click="handleDelete" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                        <i class="fa-solid fa-trash mr-2"></i> Xóa bài viết
                     </button>
                     <ConfirmDelete ref="deleteRef" />
                 </div>
                 <div class="py-1" v-else>
-                    <button @click="handleReport" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fa-solid fa-bell"></i> Báo cáo
+                    <button @click="handleReport" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                        <i class="fa-solid fa-bell mr-2"></i> Báo cáo
                     </button>
                     <ConfirmReport ref="reportRef" />
                 </div>
@@ -127,9 +132,13 @@ export default {
                 // Kiểm tra xác thực
                 await auth.checkAuth()
                 // In ra console để debug
-                console.log('Thông tin người dùng sau khi kiểm tra xác thực:', auth.user)
-                console.log('Thông tin chủ bài viết:', imageStore.currentUser)
-                console.log('Thông tin bài viết:', dataImage.value)
+                console.log('=== HEADER SECTION DEBUG ===')
+                console.log('Auth user:', auth.user)
+                console.log('Current user image:', imageStore.currentUser)
+                console.log('Data image:', dataImage.value)
+                console.log('User computed:', user.value)
+                console.log('CurrentUserImage computed:', currentUserImage.value)
+                console.log('============================')
             } catch (error) {
                 console.error('Lỗi khi kiểm tra xác thực:', error)
             }
@@ -141,6 +150,33 @@ export default {
         const reportRef = ref(null)
 
         const currentUserImage = computed(() => imageStore.currentUser)
+        
+        // Computed để kiểm tra xem user hiện tại có phải chủ bài viết không
+        const isOwner = computed(() => {
+            const currentUser = auth.user.value
+            const postOwner = currentUserImage.value
+            
+            if (!currentUser || !postOwner) {
+                console.log('isOwner: Missing data', { currentUser, postOwner })
+                return false
+            }
+            
+            // Chuyển về cùng kiểu dữ liệu để so sánh
+            const currentUserId = String(currentUser.id)
+            const postOwnerId = String(postOwner.id)
+            
+            const isMatch = currentUserId === postOwnerId
+            
+            console.log('isOwner check:', {
+                currentUserId,
+                postOwnerId,
+                isMatch,
+                currentUser,
+                postOwner
+            })
+            
+            return isMatch
+        })
 
         // Thêm console.log để debug
         watch(() => auth.user, (newUser) => {
@@ -161,6 +197,12 @@ export default {
 
         const toggleDropdown = () => {
             isDropdownOpen.value = !isDropdownOpen.value
+            console.log('=== DROPDOWN TOGGLE ===')
+            console.log('Dropdown open:', isDropdownOpen.value)
+            console.log('Is owner:', isOwner.value)
+            console.log('Current user:', user?.value)
+            console.log('Post owner:', currentUserImage?.value)
+            console.log('======================')
         }
 
         const handleClickOutside = (event) => {
@@ -173,34 +215,29 @@ export default {
             document.removeEventListener('click', handleClickOutside)
         })
 
-        const handleDelete = () => {
+        const handleDelete = async () => {
             if (deleteRef.value) {
-                deleteRef.value.openModal({
-                    title: 'Xóa bài viết',
-                    message: 'Bạn có chắc chắn muốn xóa bài viết này?',
-                    confirmText: 'Xóa',
-                    cancelText: 'Hủy',
-                    onConfirm: async () => {
+                const result = await deleteRef.value.showAlert()
+                if (result.isConfirmed) {
+                    try {
                         await deleteImage(dataImage.value.id)
+                        toast.success('Đã xóa bài viết thành công!')
                         router.go(-1)
+                    } catch (error) {
+                        console.error('Lỗi khi xóa bài viết:', error)
+                        toast.error('Có lỗi xảy ra khi xóa bài viết')
                     }
-                })
+                }
             }
             isDropdownOpen.value = false
         }
 
-        const handleReport = () => {
+        const handleReport = async () => {
             if (reportRef.value) {
-                reportRef.value.openModal({
-                    title: 'Báo cáo bài viết',
-                    message: 'Vui lòng cho chúng tôi biết lý do bạn báo cáo bài viết này',
-                    confirmText: 'Báo cáo',
-                    cancelText: 'Hủy',
-                    onConfirm: () => {
-                        toast.success('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét bài viết này sớm nhất có thể.')
-                        isDropdownOpen.value = false
-                    }
-                })
+                const result = await reportRef.value.showAlert()
+                if (result.isConfirmed) {
+                    toast.success('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét bài viết này sớm nhất có thể.')
+                }
             }
             isDropdownOpen.value = false
         }
@@ -230,7 +267,8 @@ export default {
             user,
             deleteRef,
             reportRef,
-            navigateToUserDashboard
+            navigateToUserDashboard,
+            isOwner
         }
     }
 }

@@ -30,12 +30,12 @@ class AuthController extends Controller
 
     public function register(SignUpRequest $request)
     {
-        return $this->authService->register($request->validated());
+        return $this->authService->register($request);
     }
 
     public function login(LoginRequest $request)
     {
-        return $this->authService->login($request->validated());
+        return $this->authService->login($request);
     }
 
     public function logout(Request $request)

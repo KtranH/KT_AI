@@ -70,4 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@checkJobStatus');
     Route::delete('/image-jobs/{jobId}', 'App\Http\Controllers\API\ImageJobController@cancelJob');
     Route::post('/image-jobs/{jobId}/retry', 'App\Http\Controllers\API\ImageJobController@retryJob');
+
+    // Proxy route cho hình ảnh
+    Route::get('/proxy/r2-image', 'App\Http\Controllers\API\ProxyController@proxyR2Image');
 });

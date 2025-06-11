@@ -3,11 +3,18 @@
 namespace App\Services;
 
 use App\Models\ImageJob;
+use App\Services\ComfyUIApiService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class ComfyUITemplateService
 {
+    protected ComfyUIApiService $apiService;
+
+    public function __construct(ComfyUIApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
     /**
      * Tải file JSON template dựa vào feature_id
      */
@@ -26,6 +33,44 @@ class ComfyUITemplateService
             throw new Exception("File JSON không hợp lệ: " . json_last_error_msg());
         }
         
+        return $template;
+    }
+
+    /**
+     * Cập nhật template JSON với ảnh tải lên
+     */
+    public function updateJsonTemplateWithImage(array $template, ImageJob $job): array
+    {
+        // Xử lý tải ảnh lên nếu cần
+        if ($job->main_image) {
+            // Tải ảnh lên ComfyUI
+            $mainImageUrl = $this->apiService->uploadImageToComfyUI($job->main_image);
+            
+            // Tìm node image loader trong template và cập nhật
+            foreach ($template as $nodeId => $node) {
+                if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image First' && str_contains($node['class_type'], 'LoadImage')) {
+                    $template[$nodeId]['inputs']['image'] = $mainImageUrl;
+                    break;
+                }
+            }
+        }
+        
+        if ($job->secondary_image) {
+            // Tương tự với ảnh phụ
+            $secondaryImageUrl = $this->apiService->uploadImageToComfyUI($job->secondary_image);
+            
+            // Tìm node thứ hai cho ảnh phụ
+            $foundFirst = false;
+            foreach ($template as $nodeId => $node) {
+                if (isset($node['class_type']) && $node['_meta']['title'] == 'Load Image Second' && str_contains($node['class_type'], 'LoadImage')) {
+                    if ($foundFirst) {
+                        $template[$nodeId]['inputs']['image'] = $secondaryImageUrl;
+                        break;
+                    }
+                    $foundFirst = true;
+                }
+            }
+        }
         return $template;
     }
     

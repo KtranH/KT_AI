@@ -144,7 +144,11 @@ class ImageController extends Controller
                     'message' => 'Vui lòng tải lên ít nhất một ảnh.'
                 ], 422);
             }
-            $result = $this->imageService->storeImage($request->validated(), $featureId);
+            
+            // Lấy dữ liệu đã validate và gán files vào
+            $data = $request->validated();
+            
+            $result = $this->imageService->storeImage($data, $featureId);
             if ($result) {
                 return response()->json([
                     'success' => true,

@@ -324,11 +324,12 @@
 
 <script>
 import ButtonBackVue from '../../components/common/ButtonBack.vue'
-import axios from 'axios';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { toast } from 'vue-sonner';
+import { proxyAPI, comfyuiAPI } from '@/services/api';
+
 export default {
   name: 'ImageJobsManager',
   components: {
@@ -346,7 +347,7 @@ export default {
     // Fetch active jobs
     const fetchActiveJobs = async () => {
       try {
-        const response = await axios.get('/api/image-jobs/active');
+        const response = await comfyuiAPI.getActiveJobs();
         if (response.data.success) {
           activeJobs.value = response.data.active_jobs;
         }
@@ -359,7 +360,7 @@ export default {
     // Fetch completed jobs
     const fetchCompletedJobs = async () => {
       try {
-        const response = await axios.get('/api/image-jobs/completed');
+        const response = await comfyuiAPI.getCompletedJobs();
         if (response.data.success) {
           completedJobs.value = response.data.completed_jobs;
         }
@@ -374,7 +375,7 @@ export default {
     // Fetch failed jobs
     const fetchFailedJobs = async () => {
       try {
-        const response = await axios.get('/api/image-jobs/failed');
+        const response = await comfyuiAPI.getFailedJobs();
         if (response.data.success) {
           failedJobs.value = response.data.failed_jobs;
         }
@@ -394,7 +395,7 @@ export default {
     // Cancel a job
     const cancelJob = async (jobId) => {
       try {
-        const response = await axios.delete(`/api/image-jobs/${jobId}`);
+        const response = await comfyuiAPI.cancelJob(jobId);
         if (response.data.success) {
           toast.success('Đã hủy tiến trình thành công');
           await fetchActiveJobs();
@@ -408,7 +409,7 @@ export default {
     // Retry a job
     const retryJob = async (jobId) => {
       try {
-        const response = await axios.post(`/api/image-jobs/${jobId}/retry`);
+        const response = await comfyuiAPI.retryJob(jobId);
         if (response.data.success) {
           toast.success('Đã thử lại tiến trình thành công');
           await fetchFailedJobs();
@@ -435,8 +436,16 @@ export default {
     
     // Download image
     const downloadImage = (url, filename) => {
-      fetch(url)
-        .then(response => response.blob())
+      // Sử dụng API proxy để tránh vấn đề CORS
+      const proxyUrl = proxyAPI.getR2Image(url);
+      
+      fetch(proxyUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Không thể tải xuống hình ảnh');
+          }
+          return response.blob();
+        })
         .then(blob => {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);

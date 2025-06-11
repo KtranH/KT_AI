@@ -9,13 +9,13 @@ export default
     setup() {
         const showAlert = async () => {
             const result = await Swal.fire({
-                title: 'Xác nhận',
-                text: "Bạn có chắc chắn muốn xóa không?",
+                title: 'Xóa bài viết',
+                text: "Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Có, tôi chắc chắn',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
                 cancelButtonText: 'Hủy',
             })
             return result

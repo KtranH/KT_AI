@@ -166,8 +166,13 @@ export default function useImage() {
             hasError.value = false;
 
             try {
-                // Tạo URL API với tham số phân trang và userId
-                const apiUrl = `/get_images_created_by_user?page=${page}&user_id=${userId}`;
+                // Tạo URL API với tham số phân trang và userId (chỉ thêm user_id nếu có giá trị hợp lệ)
+                let apiUrl = `/get_images_created_by_user?page=${page}`;
+                if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
+                    apiUrl += `&user_id=${userId}`;
+                }
+                console.log('API URL cho created images:', apiUrl);
+                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesCreatedByUserPage(apiUrl, page);
                 return true;
@@ -189,8 +194,13 @@ export default function useImage() {
             hasError.value = false;
 
             try {
-                // Tạo URL API với tham số phân trang và userId
-                const apiUrl = `/get_images_liked?page=${page}&user_id=${userId}`;
+                // Tạo URL API với tham số phân trang và userId (chỉ thêm user_id nếu có giá trị hợp lệ)
+                let apiUrl = `/get_images_liked?page=${page}`;
+                if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
+                    apiUrl += `&user_id=${userId}`;
+                }
+                console.log('API URL cho liked images:', apiUrl);
+                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesLikedPage(apiUrl, page);
                 return true;
@@ -212,8 +222,13 @@ export default function useImage() {
             hasError.value = false;
 
             try {
-                // Tạo URL API với tham số phân trang và userId
-                const apiUrl = `/get_images_created_by_user?page=${page}&user_id=${userId}`;
+                // Tạo URL API với tham số phân trang và userId (chỉ thêm user_id nếu có giá trị hợp lệ)
+                let apiUrl = `/get_images_created_by_user?page=${page}`;
+                if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
+                    apiUrl += `&user_id=${userId}`;
+                }
+                console.log('API URL cho created images (loadMoreCreatedImages):', apiUrl);
+                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesCreatedByUserPage(apiUrl, page);
                 return true;
@@ -235,8 +250,13 @@ export default function useImage() {
             hasError.value = false;
 
             try {
-                // Tạo URL API với tham số phân trang và userId
-                const apiUrl = `/get_images_uploaded?page=${page}&user_id=${userId}`;
+                // Tạo URL API với tham số phân trang và userId (chỉ thêm user_id nếu có giá trị hợp lệ)
+                let apiUrl = `/get_images_uploaded?page=${page}`;
+                if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
+                    apiUrl += `&user_id=${userId}`;
+                }
+                console.log('API URL cho uploaded images:', apiUrl);
+                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesUploadedPage(apiUrl, page);
                 return true;

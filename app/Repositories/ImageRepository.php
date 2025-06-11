@@ -165,6 +165,122 @@ class ImageRepository implements ImageRepositoryInterface
 
         return $this->transformImages($images);
     }
+
+    /**
+     * Lấy danh sách hình ảnh đã thích với phân trang
+     *
+     * @param int|null $id User ID
+     * @param int $perPage Số item mỗi trang
+     * @param int $page Trang hiện tại
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getImagesLikedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        // Debug log
+        \Log::info('ImageRepository::getImagesLikedPaginated - id: ' . ($id ?? 'null') . ' (type: ' . gettype($id) . '), page: ' . $page);
+        
+        // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
+        $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
+        
+        \Log::info('ID validation for liked - id: ' . var_export($id, true) . ', idIsValid: ' . ($idIsValid ? 'true' : 'false') . ', Auth::id(): ' . Auth::id());
+        
+        if ($idIsValid) {
+            $userId = is_numeric($id) ? (int)$id : $id;
+            $list_images_liked = Interaction::where('user_id', $userId)
+                ->where('type_interaction', 'like')
+                ->pluck('image_id');
+        } else {
+            $list_images_liked = Interaction::where('user_id', Auth::id())
+                ->where('type_interaction', 'like')
+                ->pluck('image_id');
+        }
+
+        // Kiểm tra nếu danh sách rỗng
+        if ($list_images_liked->isEmpty()) {
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]),
+                0,
+                $perPage,
+                $page,
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+        }
+
+        return Image::with('user')
+            ->whereIn('id', $list_images_liked)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Lấy danh sách hình ảnh do người dùng tạo với phân trang
+     *
+     * @param int|null $id User ID
+     * @param int $perPage Số item mỗi trang
+     * @param int $page Trang hiện tại
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        // Debug log
+        \Log::info('ImageRepository::getImagesCreatedByUserPaginated - id: ' . ($id ?? 'null') . ' (type: ' . gettype($id) . '), page: ' . $page);
+        
+        // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
+        $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
+        
+        \Log::info('ID validation - id: ' . var_export($id, true) . ', idIsValid: ' . ($idIsValid ? 'true' : 'false') . ', Auth::id(): ' . Auth::id());
+        
+        if ($idIsValid) {
+            $userId = is_numeric($id) ? (int)$id : $id;
+            
+            // Debug: Đếm tổng số ảnh trước khi phân trang
+            $totalCount = Image::where('user_id', $userId)->count();
+            \Log::info('Total images for user ' . $userId . ': ' . $totalCount);
+            
+            $result = Image::with('user')
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+                
+            \Log::info('Paginated result for user ' . $userId . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
+            
+            return $result;
+        } else {
+            // Debug: Đếm tổng số ảnh trước khi phân trang
+            $totalCount = Image::where('user_id', Auth::id())->count();
+            \Log::info('Total images for current user ' . Auth::id() . ': ' . $totalCount);
+            
+            $result = Image::with('user')
+                ->where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+                
+            \Log::info('Paginated result for current user ' . Auth::id() . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
+            
+            return $result;
+        }
+    }
+
+    /**
+     * Lấy danh sách hình ảnh do người dùng tải lên với phân trang
+     *
+     * @param int|null $id User ID
+     * @param int $perPage Số item mỗi trang
+     * @param int $page Trang hiện tại
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        // Debug log
+        \Log::info('ImageRepository::getImagesUploadedPaginated - id: ' . ($id ?? 'null') . ', page: ' . $page);
+        
+        // Trong trường hợp này, getImagesCreatedByUser và getImagesUploaded có cùng logic
+        return $this->getImagesCreatedByUserPaginated($id, $perPage, $page);
+    }
+
     /**
      * Lưu trữ hình ảnh tải lên
      */

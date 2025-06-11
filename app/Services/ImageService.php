@@ -43,17 +43,19 @@ class ImageService
             
             $perPage = (int)$request->input('per_page', 5);
             $page = (int)$request->input('page', 1);
-            $images = $this->getImagesByType($typeImage, $id);
-
+            
+            // Sử dụng phân trang database thay vì collection
+            $paginatedImages = $this->getImagesByTypePaginated($typeImage, $id, $perPage, $page);
+            
             // Log về số lượng ảnh trả về
-            \Log::info('ImageService::paginateAndRespond - Số lượng ảnh trả về: ' . $images->count());
+            \Log::info('ImageService::paginateAndRespond - Trang: ' . $page . ', Số lượng ảnh: ' . $paginatedImages->count() . ', Tổng: ' . $paginatedImages->total());
             
             // Xử lý dữ liệu ảnh để đảm bảo image_url được format đúng
-            $formattedImages = $images->map(function($image) {
+            $formattedItems = $paginatedImages->getCollection()->map(function($image) {
                 // Nếu image_url là chuỗi JSON, chuyển đổi thành mảng
-                if (is_string($image['image_url'])) {
+                if (is_string($image->image_url)) {
                     try {
-                        $image['image_url'] = json_decode($image['image_url'], true);
+                        $image->image_url = json_decode($image->image_url, true);
                     } catch (\Exception $e) {
                         // Nếu không thể decode, giữ nguyên
                     }
@@ -61,32 +63,13 @@ class ImageService
                 return $image;
             });
             
-            // Nếu không có ảnh nào, trả về mảng trống với structure chuẩn
-            if ($formattedImages->isEmpty()) {
-                return [
-                    'data' => [],
-                    'pagination' => [
-                        'current_page' => $page,
-                        'last_page' => 1,
-                        'per_page' => $perPage,
-                        'total' => 0
-                    ]
-                ];
-            }
-
-            // Tạo paginator thủ công
-            $offset = ($page - 1) * $perPage;
-            $items = $formattedImages->slice($offset, $perPage);
-            $total = $formattedImages->count();
-            $lastPage = ceil($total / $perPage);
-            
             return [
-                'data' => $items->values()->all(),
+                'data' => $formattedItems->values()->all(),
                 'pagination' => [
-                    'current_page' => $page,
-                    'last_page' => $lastPage,
-                    'per_page' => $perPage,
-                    'total' => $total
+                    'current_page' => $paginatedImages->currentPage(),
+                    'last_page' => $paginatedImages->lastPage(),
+                    'per_page' => $paginatedImages->perPage(),
+                    'total' => $paginatedImages->total()
                 ]
             ];
         } catch (\Exception $e) {
@@ -97,7 +80,48 @@ class ImageService
             throw $e;
         }
     }
-    // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db
+    
+    // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
+    private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 5, $page = 1)
+    {
+        // Debug log
+        \Log::info('ImageService::getImagesByTypePaginated - typeImage: ' . $typeImage . ', id: ' . $id . ', page: ' . $page);
+        
+        try {
+            if ($typeImage === 'liked') {
+                $result = $this->imageRepository->getImagesLikedPaginated($id, $perPage, $page);
+                \Log::info('getImagesLikedPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
+                return $result;
+            }
+            if ($typeImage === 'created') {
+                $result = $this->imageRepository->getImagesCreatedByUserPaginated($id, $perPage, $page);
+                \Log::info('getImagesCreatedByUserPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
+                return $result;
+            }
+            if ($typeImage === 'uploaded') {
+                $result = $this->imageRepository->getImagesUploadedPaginated($id, $perPage, $page);
+                \Log::info('getImagesUploadedPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
+                return $result;
+            }
+            
+            // Trả về paginator rỗng nếu không có loại nào phù hợp
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]),
+                0,
+                $perPage,
+                $page,
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::error('Error in getImagesByTypePaginated: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    // Giữ lại method cũ cho backward compatibility
     private function getImagesByType(string $typeImage, $id = null)
     {
         // Debug log
@@ -149,6 +173,11 @@ class ImageService
     
     public function storeImage(array $request, $featureId)
     {
+        // Kiểm tra nếu không tìm thấy key 'images'
+        if (!isset($request['images'])) {
+            throw new \InvalidArgumentException("Thiếu trường 'images' trong request");
+        }
+        
         $files = $request['images'];
         // Duyệt qua từng file ảnh
         $uploadedPaths = [];
@@ -161,8 +190,8 @@ class ImageService
         }
         // Lưu trữ vào database
         $data = [
-            'title' => $request['title'],
-            'description' => $request['description'],
+            'title' => $request['title'] ?? '',
+            'description' => $request['description'] ?? '',
             'feature_id' => $featureId
         ];
         return $this->imageRepository->storeImage($uploadedPaths, Auth::user(), $data);

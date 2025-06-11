@@ -24,10 +24,13 @@ class AuthService
     {
         return $this->userRepository->checkStatus();
     }
-    public function register(array $request)
+    public function register(Request $request)
     {
         // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile($request['cf-turnstile-response'], $request['ip']);
+        $turnstileResponse = $this->turnStileService->verifyTurnstile(
+            $request->input('cf-turnstile-response'), 
+            $request->ip()
+        );
 
         if (!$turnstileResponse['success']) {
             return response()->json([
@@ -36,7 +39,7 @@ class AuthService
             ], 400);
         }
 
-        $user = $this->userRepository->store($request);
+        $user = $this->userRepository->store($request->all());
         if (!$this->mailService->sendMail($user)) {
             return response()->json([
                 'success' => false,
@@ -48,10 +51,13 @@ class AuthService
             'message' => 'Đã gửi mã xác thực'],
             200);
     }
-    public function login(array $request)
+    public function login(Request $request)
     {
         // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile($request['cf-turnstile-response'], $request['ip']);
+        $turnstileResponse = $this->turnStileService->verifyTurnstile(
+            $request->input('cf-turnstile-response'), 
+            $request->ip()
+        );
 
         if (!$turnstileResponse['success']) {
             throw ValidationException::withMessages([
