@@ -3,8 +3,7 @@
 namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-
-
+use Illuminate\Support\Facades\File;
 
 class R2StorageService
 {
@@ -101,5 +100,26 @@ class R2StorageService
         $path = ltrim($path, '/');
 
         return $this->disk->delete($path);
+    }
+
+    /**
+     * Tải file từ R2
+     *
+     * @param string $path Đường dẫn đầy đủ hoặc tương đối của file
+     * @return string Đường dẫn đầy đủ của file
+     */
+
+    public function download(string $path): string
+    {
+        // Nếu path chứa URL đầy đủ, loại bỏ phần URL cơ sở
+        $baseUrl = rtrim($this->urlR2, '/');
+        if (strpos($path, $baseUrl) === 0) {
+            $path = substr($path, strlen($baseUrl));
+        }
+
+        // Đảm bảo path không bắt đầu bằng dấu /
+        $path = ltrim($path, '/');
+
+        return $this->disk->get($path);
     }
 }

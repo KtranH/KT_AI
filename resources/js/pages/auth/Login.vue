@@ -154,7 +154,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
@@ -185,7 +185,8 @@ export default {
       turnstileError, 
       turnstileSiteKey,
       turnstileToken,
-      resetTurnstile
+      resetTurnstile,
+      initTurnstile
     } = useTurnstile()
 
     // Methods
@@ -196,18 +197,15 @@ export default {
       turnstileToken: ''
     })
 
-    // Watch for turnstile token changes
-    onMounted(() => {
-      // Synchronize the token with our form
-      const originalCallback = window.handleTurnstileCallback
-      window.handleTurnstileCallback = (token) => {
-        // Call original callback if exists
-        if (originalCallback) {
-          originalCallback(token)
-        }
-        
-        // Update our form
-        form.turnstileToken = token
+    // Watch for turnstile token changes và đồng bộ với form
+    watch(turnstileToken, (newToken) => {
+      form.turnstileToken = newToken
+    })
+
+    onMounted(async () => {
+      // Đảm bảo DOM ref đã được thiết lập
+      if (turnstileWidget.value) {
+        await initTurnstile()
       }
     })
 
@@ -250,9 +248,7 @@ export default {
       } catch (err) {
         error.value = "Thông tin đăng nhập không đúng"
         console.log(err)
-        if (window.turnstile) {
-          window.turnstile.reset()
-        }
+        resetTurnstile()
       } finally {
         loading.value = false
       }

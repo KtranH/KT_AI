@@ -434,30 +434,21 @@ export default {
       previewImage.value = job;
     };
     
-    // Download image
+    // Download image using R2StorageService's download method
     const downloadImage = (url, filename) => {
-      // Sử dụng API proxy để tránh vấn đề CORS
-      const proxyUrl = proxyAPI.getR2Image(url);
+      toast.info('Đang tải xuống ảnh...');
       
-      fetch(proxyUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Không thể tải xuống hình ảnh');
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${filename}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        })
-        .catch(error => {
-          console.error('Lỗi khi tải xuống hình ảnh:', error);
-          toast.error('Không thể tải xuống hình ảnh');
-        });
+      // Sử dụng phương thức mới từ R2StorageService thông qua API
+      const baseUrl = window.location.origin;
+      const downloadUrl = `${baseUrl}/api/r2-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+      
+      // Mở URL trong tab mới để khởi động quá trình tải xuống
+      window.open(downloadUrl, '_self');
+      
+      // Đặt timeout để hiển thị thông báo thành công sau khi quá trình tải xuống bắt đầu
+      setTimeout(() => {
+        toast.success('Đã tải xuống ảnh thành công!');
+      }, 1000);
     };
     
     onMounted(() => {

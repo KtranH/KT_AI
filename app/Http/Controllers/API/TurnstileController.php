@@ -15,8 +15,9 @@ class TurnstileController extends Controller
      */
     public function getConfig()
     {
+        $siteKey = env('TURNSTILE_SITE_KEY');
         return response()->json([
-            'siteKey' => env('TURNSTILE_SITE_KEY')
+            'siteKey' => $siteKey
         ]);
     }
 } 

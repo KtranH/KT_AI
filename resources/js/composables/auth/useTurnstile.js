@@ -1,5 +1,4 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import axios from 'axios'
 import { turnstileAPI } from '@/services/api'
 
 export function useTurnstile(siteKeyParam = null) {
@@ -12,13 +11,14 @@ export function useTurnstile(siteKeyParam = null) {
   const handleTurnstileCallback = (token) => {
     turnstileToken.value = token
     turnstileError.value = null
+    console.log('Turnstile token received:', token)
   }
 
   // Hàm callback xử lý lỗi cho Turnstile
   const handleTurnstileError = (error) => {
     console.error('Turnstile error:', error)
     turnstileError.value = 'Đã xảy ra lỗi khi xác thực. Vui lòng thử lại.'
-    resetTurnstile()
+    turnstileToken.value = ''
   }
 
   // Đưa callback ra toàn cục
@@ -34,6 +34,7 @@ export function useTurnstile(siteKeyParam = null) {
     try {
       const response = await turnstileAPI.getConfig()
       turnstileSiteKey.value = response.data.siteKey
+      console.log('Turnstile siteKey loaded:', turnstileSiteKey.value)
     } catch (error) {
       console.error('Failed to fetch Turnstile siteKey:', error)
       turnstileError.value = 'Không thể lấy cấu hình bảo mật. Vui lòng làm mới trang.'
@@ -45,28 +46,41 @@ export function useTurnstile(siteKeyParam = null) {
     // Đảm bảo có siteKey trước
     await fetchSiteKey()
     if (!turnstileSiteKey.value) {
-      return // Không thể tải nếu không có siteKey
+      turnstileError.value = 'Không thể lấy site key cho Turnstile'
+      return
     }
     
     // Nếu script đã được tải, hiển thị widget trực tiếp
     if (window.turnstile) {
+      console.log('Turnstile already loaded, rendering widget')
       renderTurnstileWidget()
       return
     }
     
     // Nếu thẻ script tồn tại nhưng widget chưa được hiển thị
-    if (document.querySelector('script[src*="turnstile.js"]')) {
+    if (document.querySelector('script[src*="turnstile"]')) {
+      console.log('Turnstile script exists, waiting for load...')
       // Đợi script tải xong
       const checkTurnstile = setInterval(() => {
         if (window.turnstile) {
           clearInterval(checkTurnstile)
+          console.log('Turnstile loaded from existing script')
           renderTurnstileWidget()
         }
       }, 100)
+      
+      // Timeout sau 10 giây
+      setTimeout(() => {
+        clearInterval(checkTurnstile)
+        if (!window.turnstile) {
+          turnstileError.value = 'Timeout khi tải Turnstile'
+        }
+      }, 10000)
       return
     }
     
     // Tạo và tải script
+    console.log('Loading Turnstile script...')
     const script = document.createElement('script')
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback'
     script.async = true
@@ -74,12 +88,12 @@ export function useTurnstile(siteKeyParam = null) {
     
     // Định nghĩa hàm callback khi script tải xong
     window.onloadTurnstileCallback = () => {
+      console.log('Turnstile script callback executed')
       renderTurnstileWidget()
     }
     
     script.onload = () => {
-      // Script đã tải xong, nhưng chờ callback để hiển thị widget
-      console.log('Turnstile script loaded')
+      console.log('Turnstile script element loaded')
     }
     
     script.onerror = (error) => {
@@ -92,8 +106,16 @@ export function useTurnstile(siteKeyParam = null) {
   
   // Hiển thị widget Turnstile
   const renderTurnstileWidget = () => {
+    console.log('Attempting to render Turnstile widget...')
+    console.log('Widget element:', turnstileWidget.value)
+    console.log('Turnstile object:', window.turnstile)
+    console.log('Site key:', turnstileSiteKey.value)
+    
     // Đảm bảo phần tử DOM và đối tượng turnstile có sẵn
-    if (!turnstileWidget.value || !window.turnstile || !turnstileSiteKey.value) return
+    if (!turnstileWidget.value || !window.turnstile || !turnstileSiteKey.value) {
+      console.warn('Missing requirements for Turnstile widget')
+      return
+    }
     
     try {
       // Xóa widget hiện có trước
@@ -102,19 +124,19 @@ export function useTurnstile(siteKeyParam = null) {
       }
       
       // Hiển thị widget mới
+      console.log('Rendering Turnstile widget with sitekey:', turnstileSiteKey.value)
       window.turnstile.render(turnstileWidget.value, {
         sitekey: turnstileSiteKey.value,
         callback: function(token) {
-          if (window.handleTurnstileCallback) {
-            window.handleTurnstileCallback(token)
-          }
+          console.log('Turnstile callback with token:', token)
+          handleTurnstileCallback(token)
         },
         'error-callback': function(error) {
-          if (window.handleTurnstileError) {
-            window.handleTurnstileError(error)
-          }
+          console.error('Turnstile error callback:', error)
+          handleTurnstileError(error)
         }
       })
+      console.log('Turnstile widget rendered successfully')
     } catch (err) {
       console.error('Failed to render Turnstile widget:', err)
       turnstileError.value = 'Không thể khởi tạo Cloudflare Turnstile. Vui lòng thử lại sau.'
@@ -127,6 +149,7 @@ export function useTurnstile(siteKeyParam = null) {
     
     try {
       window.turnstile.reset(turnstileWidget.value)
+      console.log('Turnstile widget reset')
     } catch (err) {
       console.error('Error resetting Turnstile:', err)
       
@@ -139,6 +162,7 @@ export function useTurnstile(siteKeyParam = null) {
 
   // Khởi tạo Turnstile
   const initTurnstile = async () => {
+    console.log('Initializing Turnstile...')
     setupGlobalCallback()
     await loadTurnstileScript()
   }
@@ -152,11 +176,15 @@ export function useTurnstile(siteKeyParam = null) {
     if (window.handleTurnstileError) {
       window.handleTurnstileError = undefined
     }
+    if (window.onloadTurnstileCallback) {
+      window.onloadTurnstileCallback = undefined
+    }
   })
 
-  onMounted(async () => {
-    await initTurnstile()
-  })
+  // Không tự động khởi tạo trong onMounted, để component tự quyết định
+  // onMounted(async () => {
+  //   await initTurnstile()
+  // })
 
   return {
     turnstileWidget,

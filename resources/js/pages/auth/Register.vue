@@ -70,7 +70,7 @@
 
         <!-- Turnstile CAPTCHA container -->
         <div class="flex justify-center">
-          <div ref="turnstileContainer" class="cf-turnstile"></div>
+          <div ref="turnstileWidget" class="cf-turnstile"></div>
         </div>
         <div v-if="turnstileError" class="text-red-500 text-sm text-center">
           {{ turnstileError }}
@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTurnstile } from '@/composables/auth/useTurnstile'
 import axios from 'axios'
@@ -182,19 +182,19 @@ export default {
     })
 
     // Sử dụng composable cho Turnstile
-    const turnstileContainer = ref(null)
     const {
+      turnstileWidget,
       turnstileToken,
       turnstileError,
-      turnstileWidget,
       initTurnstile,
       resetTurnstile
-    } = useTurnstile(null)
+    } = useTurnstile()
 
-    // Gán container ref cho turnstileWidget để widget hiển thị đúng
-    onMounted(() => {
-      turnstileWidget.value = turnstileContainer.value
-      initTurnstile()
+    // Khởi tạo Turnstile khi component được mount
+    onMounted(async () => {
+      if (turnstileWidget.value) {
+        await initTurnstile()
+      }
     })
 
     //Methods
@@ -255,7 +255,7 @@ export default {
       handleSubmit,
       showPassword,
       togglePassword,
-      turnstileContainer,
+      turnstileWidget,
       turnstileToken,
       turnstileError
     }
