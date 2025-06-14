@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Collection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class UserRepository
@@ -237,16 +238,8 @@ class UserRepository implements UserRepositoryInterface
      */
     public function updateName($activities, $user): User
     {
-        // Cập nhật tên người dùng (nếu có trong activities)
-        if (isset($activities[0]['action']) && strpos($activities[0]['action'], 'Cập nhật tên tài khoản thành') === 0) {
-            // Lấy tên mới từ chuỗi action
-            $newName = trim(str_replace('Cập nhật tên tài khoản thành', '', $activities[0]['action']));
-            if (!empty($newName)) {
-                $user->name = $newName;
-            }
-            // Cập nhật hoạt động
-            $user->activities = json_encode($activities);
-        }
+        // Cập nhật hoạt động
+        $user->activities = json_encode($activities);
         $user->save();
         return $user;
     }

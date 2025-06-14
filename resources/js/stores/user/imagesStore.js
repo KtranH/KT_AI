@@ -10,7 +10,6 @@ export const useImageStore = defineStore('image',
             user: null,
             lastUser: null,
             error_message: null,
-            imagesCreatedByUser: [],
             imagesLikedByUser: [],
             imagesUploadedByUser: [],
             imagesByFeature: [],
@@ -215,11 +214,6 @@ export const useImageStore = defineStore('image',
                 // Reset dữ liệu trước khi fetch
                 this.imagesUploadedByUser = [];
                 return await this._fetchImages(imageAPI.getImagesUploaded(userId), 'imagesUploadedByUser');
-            },
-
-            // Tải thêm hình ảnh người dùng tạo theo trang (phân trang)
-            async fetchImagesCreatedByUserPage(url, page) {
-                return await this._fetchImages(imageAPI.getImagesCreatedByUserPage(url), 'imagesCreatedByUser', page, page > 1);
             },
 
             // Tải thêm hình ảnh người dùng đã thích theo trang (phân trang)

@@ -81,16 +81,6 @@ class ImageController extends Controller
             ], 500);
         }
     }
-    public function getImagesCreatedByUser(Request $request)
-    {
-        // Lấy user_id từ request query
-        $userId = $request->query('user_id');
-        
-        // Log để debug
-        \Log::info('getImagesCreatedByUser được gọi với user_id: ' . $userId);
-
-        return $this->paginateAndRespond($request, 'created', 'Get Images Created By User Error', $userId);
-    }
     public function getImagesLiked(Request $request)
     {
         // Lấy user_id từ request query

@@ -99,14 +99,18 @@ class UserService
                 ], 422);
             }
 
+            // Cập nhật tên trực tiếp
             $user->name = $name;
+            
+            // Cập nhật hoạt động
             $activities = json_decode($user->activities, true) ?? [];
             $activities[] = [
-                'action' => "Cập nhật tên tài khoản thành {$user->name}",
+                'action' => "Cập nhật tên tài khoản thành {$name}",
                 'timestamp' => now()
             ];
+            $user->activities = json_encode($activities);
 
-            // Sửa lại cách gọi phương thức để phù hợp với triển khai trong repository
+            // Sử dụng repository để lưu
             $updatedUser = $this->userRepository->updateName($activities, $user);
 
             return response()->json([
@@ -200,7 +204,7 @@ class UserService
             if (!$request->hasFile('image')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Không tìm thấy file hình ảnh'
+                    'message' => 'Vui lòng chọn file hình ảnh'
                 ], 422);
             }
 
@@ -212,15 +216,33 @@ class UserService
                 ], 422);
             }
 
-            $path = "avatars/user/" . $user->email . '/' . $file->getClientOriginalName();
+            // Validate file type
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!in_array($file->getMimeType(), $allowedTypes)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)'
+                ], 422);
+            }
+
+            // Validate file size (max 2MB)
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kích thước file không được vượt quá 2MB'
+                ], 422);
+            }
+
+            // Tạo tên file duy nhất
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = "avatars/user/" . $user->email . '/' . $fileName;
+            
+            // Upload file lên R2
             $this->r2StorageService->upload($path, $file);
 
             // Lưu URL mới vào database
             $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
             $user = $this->userRepository->updateAvatar($fullPath);
-
-            // Có thể xóa avatar cũ nếu cần
-            // $this->r2StorageService->delete($user->avatar_url);
 
             return response()->json([
                 'success' => true,

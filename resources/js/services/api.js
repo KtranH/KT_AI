@@ -11,16 +11,18 @@ export const authAPI = {
 export const profileAPI = {
   updateAvatar: (formData) => apiClient.post('/update-avatar', formData, {
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      'Content-Type': 'multipart/form-data',
+      'Accept': 'application/json'
+    },
+    transformRequest: [(data) => data] // Prevent axios from transforming FormData
   }),
   updateCoverImage: (formData) => apiClient.post('/update-cover-image', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   }),
-  updateName: (formData) => apiClient.post('/update-name', formData),
-  updatePassword: (formData) => apiClient.post('/update-password', formData),
+  updateName: (formData) => apiClient.patch('/update-name', formData),
+  updatePassword: (formData) => apiClient.patch('/update-password', formData),
   checkPassword: (formData) => apiClient.post('/check-password', formData),
   checkCredits: () => apiClient.get('/check-credits'),
   forgotPassword: (formData) => apiClient.post('/forgot-password', formData),
@@ -53,11 +55,6 @@ export const verificationAPI = {
 // Các gọi API thông tin hình ảnh
 export const imageAPI = {
   getImages: (id) => apiClient.get(`/get_images_information/${id}`),
-  getImagesCreatedByUser: (userId) => {
-    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
-    console.log('API getImagesCreatedByUser được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
-    return apiClient.get('/get_images_created_by_user', { params });
-  },
   getImagesUploaded: (userId) => {
     const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
     console.log('API getImagesUploaded được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
@@ -68,7 +65,6 @@ export const imageAPI = {
     console.log('API getImagesLiked được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
     return apiClient.get('/get_images_liked', { params });
   },
-  getImagesCreatedByUserPage: (url) => apiClient.get(url),
   getImagesLikedPage: (url) => apiClient.get(url),
   getImagesUploadedPage: (url) => apiClient.get(url),
   getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
@@ -76,7 +72,7 @@ export const imageAPI = {
   likePost: (id) => apiClient.post(`/like_post/${id}`),
   unlikePost: (id) => apiClient.post(`/unlike_post/${id}`),
   delete: (id) => apiClient.delete(`/images/${id}`),
-  update: (id, data) => apiClient.put(`/images/${id}`, data),
+  update: (id, data) => apiClient.patch(`/images/${id}`, data),
   checkForNewImages: (userId) => {
     const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
     console.log('API checkForNewImages được gọi với params:', params, 'userId:', userId, 'type:', typeof userId);
@@ -155,7 +151,7 @@ export const commentAPI = {
   },
   createComment: (commentData) => apiClient.post('/comments', commentData),
   createReply: (commentId, replyData) => apiClient.post(`/comments/${commentId}/reply`, replyData),
-  updateComment: (commentId, content) => apiClient.put(`/comments/${commentId}`, { content }),
+  updateComment: (commentId, content) => apiClient.patch(`/comments/${commentId}`, { content }),
   deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),
   toggleLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)
 }
@@ -165,6 +161,7 @@ export const genericAPI = {
   get: (endpoint, config) => apiClient.get(endpoint, config),
   post: (endpoint, data, config) => apiClient.post(endpoint, data, config),
   put: (endpoint, data, config) => apiClient.put(endpoint, data, config),
+  patch: (endpoint, data, config) => apiClient.patch(endpoint, data, config),
   delete: (endpoint, config) => apiClient.delete(endpoint, config)
 }
 

@@ -180,7 +180,7 @@ export default {
         return
       }
       
-      // Validate file size (5MB max)
+      // Validate file size (2MB max)
       if (!isImageSizeValid(file)) {
         errorMessage.value = 'Kích thước file không được vượt quá 2MB'
         return
@@ -222,6 +222,11 @@ export default {
       isUploading.value = true
       
       try {
+        // Debug log
+        console.log('Selected file:', selectedFile.value)
+        console.log('File type:', selectedFile.value.type)
+        console.log('File size:', selectedFile.value.size)
+        
         // Emit success event with the file data
         emit('upload-success', {
           type: props.type,

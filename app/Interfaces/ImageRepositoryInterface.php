@@ -15,18 +15,12 @@ interface ImageRepositoryInterface
     
     // Lấy danh sách hình ảnh theo feature
     public function getImagesByFeature(int $featureId, int $perPage = 5): array;
-    
-    // Lấy danh sách hình ảnh của người dùng
-    public function getImagesCreatedByUser(): Collection;
-    
+        
     // Lấy danh sách hình ảnh đã thích
     public function getImagesLiked(): Collection;
 
     //Lấy danh sách hình ảnh đã tải lên
     public function getImagesUploaded(): Collection;
-
-    // Phân trang các hình ảnh của người dùng 
-    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 5, int $page = 1): LengthAwarePaginator;
     
     // Phân trang các hình ảnh đã thích
     public function getImagesLikedPaginated($id = null, int $perPage = 5, int $page = 1): LengthAwarePaginator;

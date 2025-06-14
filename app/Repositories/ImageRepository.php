@@ -80,15 +80,14 @@ class ImageRepository implements ImageRepositoryInterface
     }
 
     /**
-     * Lấy danh sách hình ảnh do người dùng tạo
+     * Lấy danh sách hình ảnh do người dùng tải lên
      *
      * @return Collection
      */
-    public function getImagesCreatedByUser($id = null): Collection
+    public function getImagesUploaded($id = null): Collection
     {
         // Debug log
-        \Log::info('ImageRepository::getImagesCreatedByUser - id: ' . ($id ?? 'null') . ', type: ' . gettype($id) . ', Auth ID: ' . (Auth::id() ?? 'null'));
-        
+        \Log::info('ImageRepository::getImagesUploaded - id: ' . ($id ?? 'null') . ', Auth ID: ' . (Auth::id() ?? 'null'));
         // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
         $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
         
@@ -112,21 +111,6 @@ class ImageRepository implements ImageRepositoryInterface
         }
 
         return $this->transformImages($images);
-    }
-
-    /**
-     * Lấy danh sách hình ảnh do người dùng tải lên
-     *
-     * @return Collection
-     */
-    public function getImagesUploaded($id = null): Collection
-    {
-        // Debug log
-        \Log::info('ImageRepository::getImagesUploaded - id: ' . ($id ?? 'null') . ', Auth ID: ' . (Auth::id() ?? 'null'));
-        
-        // Trong trường hợp này, getImagesCreatedByUser và getImagesUploaded có cùng logic
-        // Nếu sau này cần phân biệt, có thể thêm điều kiện khác
-        return $this->getImagesCreatedByUser($id);
     }
     /**
      * Lấy danh sách hình ảnh đã thích
@@ -208,25 +192,30 @@ class ImageRepository implements ImageRepositoryInterface
                 ]
             );
         }
-
-        return Image::with('user')
+        
+        $result = Image::with('user')
             ->whereIn('id', $list_images_liked)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
+
+        // Debug log
+        \Log::info('Paginated result for user ' . $userId . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
+        
+        return $result;
     }
 
     /**
-     * Lấy danh sách hình ảnh do người dùng tạo với phân trang
+     * Lấy danh sách hình ảnh do người dùng tải lên với phân trang
      *
      * @param int|null $id User ID
      * @param int $perPage Số item mỗi trang
      * @param int $page Trang hiện tại
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
     {
         // Debug log
-        \Log::info('ImageRepository::getImagesCreatedByUserPaginated - id: ' . ($id ?? 'null') . ' (type: ' . gettype($id) . '), page: ' . $page);
+        \Log::info('ImageRepository::getImagesUploadedPaginated - id: ' . ($id ?? 'null') . ', page: ' . $page);
         
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
@@ -262,23 +251,6 @@ class ImageRepository implements ImageRepositoryInterface
             
             return $result;
         }
-    }
-
-    /**
-     * Lấy danh sách hình ảnh do người dùng tải lên với phân trang
-     *
-     * @param int|null $id User ID
-     * @param int $perPage Số item mỗi trang
-     * @param int $page Trang hiện tại
-     * @return \Illuminate\Pagination\LengthAwarePaginator
-     */
-    public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
-    {
-        // Debug log
-        \Log::info('ImageRepository::getImagesUploadedPaginated - id: ' . ($id ?? 'null') . ', page: ' . $page);
-        
-        // Trong trường hợp này, getImagesCreatedByUser và getImagesUploaded có cùng logic
-        return $this->getImagesCreatedByUserPaginated($id, $perPage, $page);
     }
 
     /**

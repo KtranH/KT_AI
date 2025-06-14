@@ -89,20 +89,6 @@ export default function useImage() {
         console.log('Going to image detail:', id)
         router.push(`/image/detail/${encodedID(id)}`)
     }
-
-    const fetchImagesCreatedByUser = async (userId) => {
-        isLoading.value = true
-        hasError.value = false
-        try {
-            console.log('Gọi API fetchImagesCreatedByUser với userId:', userId)
-            await store.fetchImagesCreatedByUser(userId)
-        } catch (error) {
-            hasError.value = true
-            console.error('API Error:', error)
-        } finally {
-            isLoading.value = false
-        }
-    }
     
     const fetchImagesUploaded = async (userId) => {
         isLoading.value = true
@@ -363,7 +349,6 @@ export default function useImage() {
 
         // Methods
         fetchImages,
-        fetchImagesCreatedByUser,
         fetchImagesLiked,
         fetchImagesUploaded,
         fetchImagesByFeature,

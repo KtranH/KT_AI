@@ -284,7 +284,6 @@ export default {
     // Fetch data
     const tabs = [
       { id: 'uploaded', name: 'Ảnh tải lên' },
-      { id: 'created', name: 'Ảnh đã tạo' },
       { id: 'liked', name: 'Ảnh đã thích' }
     ]
 
@@ -328,40 +327,57 @@ export default {
         const formData = new FormData()
         formData.append('image', data.file)
 
+        // Debug log
+        console.log('File data:', data.file)
+        console.log('FormData entries:')
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1])
+        }
+
         // Call appropriate API based on image type
         if (data.type === 'avatar') {
           // Hiển thị thông báo đang tải
           toast.loading('Đang cập nhật ảnh đại diện...')
 
           const response = await profileAPI.updateAvatar(formData)
-          // Update local avatar
-          avatar.value = response.data.data.avatar_url
-          // Update auth store
-          if (auth.user.value) {
-            auth.user.value.avatar_url = response.data.data.avatar_url
+          if (response.data.success) {
+            // Update local avatar
+            avatar.value = response.data.data.avatar_url
+            // Update auth store
+            if (auth.user.value) {
+              auth.user.value.avatar_url = response.data.data.avatar_url
+            }
+            toast.dismiss()
+            toast.success('Cập nhật ảnh đại diện thành công!')
+          } else {
+            throw new Error(response.data.message || 'Cập nhật ảnh đại diện thất bại')
           }
         } else {
-
           // Hiển thị thông báo đang tải
           toast.loading('Đang cập nhật ảnh bìa...')
 
           const response = await profileAPI.updateCoverImage(formData)
-          // Update local cover image
-          coverImage.value = response.data.data.cover_image_url
-          // Update auth store
-          if (auth.user.value) {
-            auth.user.value.cover_image_url = response.data.data.cover_image_url
+          if (response.data.success) {
+            // Update local cover image
+            coverImage.value = response.data.data.cover_image_url
+            // Update auth store
+            if (auth.user.value) {
+              auth.user.value.cover_image_url = response.data.data.cover_image_url
+            }
+            toast.dismiss()
+            toast.success('Cập nhật ảnh bìa thành công!')
+          } else {
+            throw new Error(response.data.message || 'Cập nhật ảnh bìa thất bại')
           }
         }
-
-        toast.dismiss();
-        // Show success message
-        toast.success(`Cập nhật ${data.type === 'avatar' ? 'ảnh đại diện' : 'ảnh bìa'} thành công!`)
       } catch (error) {
         // Tắt thông báo đang tải
         toast.dismiss()
         console.error('Error updating profile image:', error)
-        toast.error('Có lỗi xảy ra khi cập nhật ảnh. Vui lòng thử lại sau.')
+        if (error.response) {
+          console.error('Error response:', error.response.data)
+        }
+        toast.error(error.message || 'Có lỗi xảy ra khi cập nhật ảnh. Vui lòng thử lại sau.')
       } finally {
         // Tắt trạng thái loading
         isLoading.value = false

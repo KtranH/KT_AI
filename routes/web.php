@@ -67,7 +67,7 @@ Route::prefix('api')->group(function () {
         // Comment Routes
         Route::get('/images/{imageId}/comments', [CommentController::class, 'getComments']);
         Route::post('/comments', [CommentController::class, 'store']);
-        Route::put('/comments/{comment}', [CommentController::class, 'update']);
+        Route::patch('/comments/{comment}', [CommentController::class, 'update']);
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
         Route::post('/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike']);
         // Reply Routes
@@ -75,18 +75,17 @@ Route::prefix('api')->group(function () {
         // Image upload Routes
         Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
         // Image Routes
-        Route::get('/get_images_created_by_user', [ImageController::class, 'getImagesCreatedByUser']);
         Route::get('/get_images_uploaded', [ImageController::class, 'getImagesUploaded']);
         Route::get('/get_images_liked', [ImageController::class, 'getImagesLiked']);
         Route::get('/check_new_images', [ImageController::class, 'checkNewImages']);
         Route::delete('/images/{image}', [ImageController::class, 'destroy']);
-        Route::put('/images/{image}', [ImageController::class, 'update']);
+        Route::patch('/images/{image}', [ImageController::class, 'update']);
         // Profile Routes
         Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
         Route::post('/update-cover-image', [UserController::class, 'updateCoverImage']);
-        Route::post('/update-name', [UserController::class, 'updateName']);
+        Route::patch('/update-name', [UserController::class, 'updateName']);
         Route::post('/send-password-change-verification', [MailController::class, 'sendPasswordChangeVerification']);
-        Route::post('/update-password', [UserController::class, 'updatePassword']);
+        Route::patch('/update-password', [UserController::class, 'updatePassword']);
         Route::post('/check-password', [UserController::class, 'checkPassword']);
         Route::get('/check-credits', [UserController::class, 'checkCredits']);
         // Routes Notification
