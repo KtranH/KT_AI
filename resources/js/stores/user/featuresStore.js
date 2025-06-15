@@ -36,7 +36,6 @@ export const usefeaturesStore = defineStore('features', {
         async fetchFeatureDetail(decodedID) {
           if(this.feature !== null && this.id_feature_current === decodedID)
           {
-            console.log('Fetching feature detail: already loaded');
             return this.feature
           }
           this.error_message = null;

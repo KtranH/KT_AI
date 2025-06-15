@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             //
+            $table->timestamp('last_name_change')->nullable();
+            $table->timestamp('last_password_change')->nullable();
         });
     }
 
@@ -23,6 +25,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             //
+            $table->dropColumn('last_name_change');
+            $table->dropColumn('last_password_change');
         });
     }
 };

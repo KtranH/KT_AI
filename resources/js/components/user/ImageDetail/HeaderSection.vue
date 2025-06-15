@@ -131,14 +131,6 @@ export default {
             try {
                 // Kiểm tra xác thực
                 await auth.checkAuth()
-                // In ra console để debug
-                console.log('=== HEADER SECTION DEBUG ===')
-                console.log('Auth user:', auth.user)
-                console.log('Current user image:', imageStore.currentUser)
-                console.log('Data image:', dataImage.value)
-                console.log('User computed:', user.value)
-                console.log('CurrentUserImage computed:', currentUserImage.value)
-                console.log('============================')
             } catch (error) {
                 console.error('Lỗi khi kiểm tra xác thực:', error)
             }
@@ -197,12 +189,6 @@ export default {
 
         const toggleDropdown = () => {
             isDropdownOpen.value = !isDropdownOpen.value
-            console.log('=== DROPDOWN TOGGLE ===')
-            console.log('Dropdown open:', isDropdownOpen.value)
-            console.log('Is owner:', isOwner.value)
-            console.log('Current user:', user?.value)
-            console.log('Post owner:', currentUserImage?.value)
-            console.log('======================')
         }
 
         const handleClickOutside = (event) => {

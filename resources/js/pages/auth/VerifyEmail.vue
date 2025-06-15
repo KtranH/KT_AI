@@ -164,7 +164,6 @@ export default {
     
     const handleComplete = (code) => {
       // Mã hoàn thành, có thể tự động submit nếu muốn
-      console.log('Code complete event received:', code);
     }
 
     const handleSubmit = async () => {
@@ -180,7 +179,6 @@ export default {
         
         // Lọc bỏ các ô trống và nối thành chuỗi
         const code = verificationCode.value.filter(digit => digit && digit.trim() !== '').join('')
-        console.log('Submitting code:', code);
         
         if (code.length < 4) {
           error.value = 'Mã xác thực cần ít nhất 4 ký tự'

@@ -159,7 +159,6 @@ export default {
     const route = useRoute()
     const { masonryContainer, initMasonry, onImageLoaded } = useMasonry()
     const isLoadingMore = ref(false)
-    const currentPage = ref(1)
     const hasMoreImages = ref(false)
     const refreshInterval = ref(null)
     const imageStore = useImageStore()
@@ -176,23 +175,15 @@ export default {
     
     // Sử dụng composable
     const { 
-      imagesCreatedByUser, 
       imagesLikedByUser,
       imagesUploadedByUser,
       isLoading,
       hasError,
-      fetchImagesCreatedByUser,
       fetchImagesLiked,
       fetchImagesUploaded,
-      loadMoreUserImages,
       loadMoreLikedImages,
-      loadMoreCreatedImages,
       loadMoreUploadedImages,
       goToImageDetail,
-      hasMoreUserImages,
-      hasMoreLikedImages,
-      hasMoreCreatedImages,
-      hasMoreUploadedImages,
       showRefreshButton,
       checkNeedRefreshUserImages: importedCheckNeedRefresh,
     } = useImage()
@@ -305,10 +296,6 @@ export default {
             await fetchImagesUploaded(userId)
             images = imagesUploadedByUser?.value || []
             break
-          case 'created':
-            await fetchImagesCreatedByUser(userId)
-            images = imagesCreatedByUser?.value || []
-            break
           case 'liked':
             await fetchImagesLiked(userId)
             images = imagesLikedByUser?.value || []
@@ -327,8 +314,6 @@ export default {
         switch(filter) {
           case 'uploaded':
             return await loadMoreUploadedImages(userId.value, page)
-          case 'created':
-            return await loadMoreCreatedImages(userId.value, page)
           case 'liked':
             return typeof loadMoreLikedImages === 'function' 
               ? await loadMoreLikedImages(userId.value, page)
@@ -346,12 +331,6 @@ export default {
       try {
         // Sử dụng pagination từ store
         const canLoadMore = (imageStore.currentPage || 1) < (imageStore.lastPage || 1)
-        console.log('Kiểm tra có thể tải thêm:', {
-          filter,
-          currentPage: imageStore.currentPage,
-          lastPage: imageStore.lastPage,
-          canLoadMore
-        })
         return canLoadMore
       } catch {
         return false
@@ -383,12 +362,6 @@ export default {
           let newImagesData = []
           
           switch(props.filter) {
-            case 'created':
-              if (imagesCreatedByUser?.value) {
-                const currentIds = new Set(imageGroups.value.map(group => group.id))
-                newImagesData = imagesCreatedByUser.value.filter(img => !currentIds.has(img.id))
-              }
-              break
             case 'uploaded':
               if (imagesUploadedByUser?.value) {
                 const currentIds = new Set(imageGroups.value.map(group => group.id))
@@ -431,8 +404,6 @@ export default {
       try {
         // Sử dụng currentPage từ store thay vì currentPage cục bộ
         const nextPage = (imageStore.currentPage || 1) + 1
-        console.log('Tải thêm trang:', nextPage, 'từ trang hiện tại:', imageStore.currentPage)
-        
         const success = await loadMoreImagesByFilter(props.filter, nextPage)
         
         if (success) {

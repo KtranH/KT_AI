@@ -263,7 +263,6 @@ setup(props) {
 
   // Theo dõi featureId để tải lại dữ liệu khi thay đổi
   watch(featureId, async (newId, oldId) => {
-    console.log(`featureId thay đổi từ ${oldId} thành ${newId}`);
     if (newId && newId !== oldId) {
       await fetchImagesByFeature(newId);
     }

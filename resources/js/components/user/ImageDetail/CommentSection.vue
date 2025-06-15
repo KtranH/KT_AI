@@ -113,18 +113,14 @@ export default {
         } = useComments(props.imageId)
 
         // Thêm hàm xử lý sự kiện navigate-to-user trực tiếp
-        const handleNavigateToUser = (userId) => {
-            console.log('CommentSection - handleNavigateToUser được gọi với userId:', userId)
-            
+        const handleNavigateToUser = (userId) => {            
             try {
                 // Kiểm tra xem userId có phải là người dùng hiện tại không
                 if (userId === userStore.user?.id) {
                     // Nếu là người dùng hiện tại, điều hướng đến trang dashboard cá nhân
-                    console.log('CommentSection - Chuyển đến dashboard cá nhân')
                     router.push({ name: 'dashboard' })
                 } else {
                     // Nếu là người dùng khác, điều hướng đến trang dashboard với userId
-                    console.log('CommentSection - Chuyển đến dashboard với userId:', userId)
                     router.push({ 
                         name: 'dashboard', 
                         query: { userId: userId }
@@ -172,8 +168,6 @@ export default {
                         commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }
-
-                console.log(hasMoreComments.value)
             } else {
                 console.log("imageId không tồn tại hoặc không hợp lệ")
             }
@@ -181,9 +175,7 @@ export default {
 
         // Watch prop changes
         watch(() => props.imageId, (newValue, oldValue) => {
-            console.log("imageId changed:", oldValue, "->", newValue);
             if (newValue && newValue !== oldValue) {
-                console.log("Refreshing comments due to imageId change");
                 fetchComments();
             }
         });

@@ -170,8 +170,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { gsap } from 'gsap'
 import { useNotifications } from '@/composables/user/useNotifications'
@@ -182,8 +181,6 @@ export default {
   setup() {
     // State
     const { unreadCount } = useNotifications()
-    const router = useRouter()
-    const route = useRoute()
     const auth = useAuthStore()
     const isOpen = ref(false) // Default closed on mobile, will adjust in mounted
     const isTestMenuOpen = ref(false)
@@ -221,8 +218,6 @@ export default {
           document.body.classList.remove('overflow-hidden');
         }
       }
-      
-      console.log('Toggled sidebar:', isOpen.value);
     }
     
     const toggleTestMenu = () => {

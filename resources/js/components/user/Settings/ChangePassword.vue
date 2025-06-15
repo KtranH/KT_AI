@@ -9,18 +9,18 @@
         <form @submit.prevent="requestPasswordChange" class="space-y-5">
           <div>
             <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại</label>
-            <input type="password" id="current_password" v-model="passwords.current" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80">
+            <input type="password" id="current_password" v-model="passwords.current" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80" required>
           </div>
 
           <div>
             <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
-            <input type="password" id="new_password" v-model="passwords.new" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80">
+            <input type="password" id="new_password" v-model="passwords.new" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80" required>
             <p class="mt-1 text-xs text-gray-400">Mật khẩu mới phải có ít nhất 8 ký tự</p>
           </div>
 
           <div>
             <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới</label>
-            <input type="password" id="confirm_password" v-model="passwords.confirm" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80">
+            <input type="password" id="confirm_password" v-model="passwords.confirm" class="mt-1 block w-full rounded-lg border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-base px-4 py-2 bg-white/80" required>
           </div>
 
           <div class="flex items-center gap-3">
@@ -100,6 +100,7 @@
 import { ref, reactive, computed } from 'vue'
 import { profileAPI } from '@/services/api'
 import { toast } from 'vue-sonner'
+import { useAuthStore } from '@/stores/auth/authStore'
 import ConfirmUpdate from '@/components/common/ConfirmUpdate.vue'
 
 export default {
@@ -143,6 +144,21 @@ export default {
     const requestPasswordChange = async () => {
       passwordError.value = false
       passwordStatus.value = ''
+
+      // Kiểm tra thời gian từ lần đổi mật khẩu cuối
+      const lastChange = auth.user.value?.last_password_change
+      if (lastChange) {
+        const lastChangeDate = new Date(lastChange)
+        const now = new Date()
+        const diffTime = Math.abs(now - lastChangeDate)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays < 7) {
+          const remainingDays = 7 - diffDays
+          toast.error(`Bạn chỉ có thể đổi mật khẩu sau ${remainingDays} ngày nữa`)
+          return
+        }
+      }
 
       if (passwords.new !== passwords.confirm) {
         passwordStatus.value = 'Mật khẩu xác nhận không khớp!'
@@ -216,6 +232,12 @@ export default {
           passwords.confirm = ''
           verificationCode.value = ['', '', '', '', '', '']
           passwordChangeStep.value = 1
+          
+          // Cập nhật thời gian đổi mật khẩu
+          if (auth.user) {
+            auth.user.value.last_password_change = new Date().toISOString()
+          }
+          
           toast.success('Đổi mật khẩu thành công!')
           setTimeout(() => {
             passwordStatus.value = ''

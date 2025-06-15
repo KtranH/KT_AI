@@ -94,9 +94,7 @@ export const useImageStore = defineStore('image',
                 }
                 
                 try {
-                    console.log(`Đang gọi API cho ${targetArray}...`)
                     const response = await apiMethod
-                    console.log(`Kết quả API cho ${targetArray}:`, response.data)
                     
                     if (response.data && response.data.success) {
                         // Kiểm tra dữ liệu trong response
@@ -112,8 +110,6 @@ export const useImageStore = defineStore('image',
                             console.warn(`Không tìm thấy mảng dữ liệu trong response cho ${targetArray}`, response.data)
                             dataToProcess = []
                         }
-                        
-                        console.log(`Số lượng dữ liệu để xử lý cho ${targetArray}:`, dataToProcess.length)
                         
                         if (dataToProcess.length > 0) {
                             const processedImages = dataToProcess.map(item => {
@@ -155,10 +151,8 @@ export const useImageStore = defineStore('image',
                                 this[targetArray] = processedImages;
                             }
                             
-                            console.log(`Đã xử lý và lưu ${processedImages.length} ảnh cho ${targetArray}`)
                         } else {
                             // Nếu không có dữ liệu, đặt mảng trống
-                            console.log(`Không có dữ liệu cho ${targetArray}, đặt mảng trống`)
                             if (!appendData) {
                                 this[targetArray] = []
                             }
@@ -194,7 +188,6 @@ export const useImageStore = defineStore('image',
             
             // Tải hình ảnh do người dùng tạo
             async fetchImagesCreatedByUser(userId) {
-                console.log('Store: Tải ảnh người dùng tạo với userId:', userId)
                 // Reset dữ liệu trước khi fetch
                 this.imagesCreatedByUser = [];
                 return await this._fetchImages(imageAPI.getImagesCreatedByUser(userId), 'imagesCreatedByUser');
@@ -202,7 +195,6 @@ export const useImageStore = defineStore('image',
             
             // Tải hình ảnh người dùng đã thích
             async fetchImagesLiked(userId) {
-                console.log('Store: Tải ảnh người dùng đã thích với userId:', userId)
                 // Reset dữ liệu trước khi fetch
                 this.imagesLikedByUser = [];
                 return await this._fetchImages(imageAPI.getImagesLiked(userId), 'imagesLikedByUser');
@@ -210,7 +202,6 @@ export const useImageStore = defineStore('image',
             
             // Tải hình ảnh người dùng đã tải lên
             async fetchImagesUploaded(userId) {
-                console.log('Store: Tải ảnh người dùng đã tải lên với userId:', userId)
                 // Reset dữ liệu trước khi fetch
                 this.imagesUploadedByUser = [];
                 return await this._fetchImages(imageAPI.getImagesUploaded(userId), 'imagesUploadedByUser');

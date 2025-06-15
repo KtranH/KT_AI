@@ -240,6 +240,7 @@ class UserRepository implements UserRepositoryInterface
     {
         // Cập nhật hoạt động
         $user->activities = json_encode($activities);
+        $user->last_name_change = Carbon::now()->toDateTimeString();
         $user->save();
         return $user;
     }
@@ -285,6 +286,7 @@ class UserRepository implements UserRepositoryInterface
     public function updatePassword($activities, $user): User
     {
         $user->activities = json_encode($activities);
+        $user->last_password_change = Carbon::now()->toDateTimeString();
         $user->save();
         return $user;
     }

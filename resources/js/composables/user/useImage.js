@@ -62,12 +62,10 @@ export default function useImage() {
 
         isLoading.value = true
         hasError.value = false
-        console.log('Đang tải dữ liệu cho ID:', id)
 
         try {
             await store.fetchImages(id)
             if (store.error_message) {
-                console.error('Lỗi từ API:', store.error_message)
                 hasError.value = true
                 router.push('/error/404')
             }
@@ -83,10 +81,8 @@ export default function useImage() {
     const goToImageDetail = (id) => {
         if (!id) {
           router.push('/error/404')
-          console.error('Không tìm thấy ID hình ảnh')
           return
         }
-        console.log('Going to image detail:', id)
         router.push(`/image/detail/${encodedID(id)}`)
     }
     
@@ -94,7 +90,6 @@ export default function useImage() {
         isLoading.value = true
         hasError.value = false
         try {
-            console.log('Gọi API fetchImagesUploaded với userId:', userId)
             await store.fetchImagesUploaded(userId)
         } catch (error) {
             hasError.value = true
@@ -108,7 +103,6 @@ export default function useImage() {
         isLoading.value = true
         hasError.value = false
         try {
-            console.log('Gọi API fetchImagesLiked với userId:', userId)
             await store.fetchImagesLiked(userId)
         } catch (error) {
             hasError.value = true
@@ -125,7 +119,6 @@ export default function useImage() {
         hasError.value = false
 
         try {
-            console.log(`Đang tải ảnh cho feature ${id}, trang ${page}...`);
             const response = await store.fetchImagesByFeature(id, page)
             return response;
         } catch (error) {
@@ -139,7 +132,6 @@ export default function useImage() {
     const loadMoreImages = async (id) => {
         if (currentPage.value < lastPage.value) {
             const nextPage = currentPage.value + 1;
-            console.log(`Đang tải thêm ảnh cho feature ${id}, trang ${nextPage}...`);
             return await fetchImagesByFeature(id, nextPage);
         }
     }
@@ -147,7 +139,6 @@ export default function useImage() {
     // Phương thức mới để tải thêm ảnh người dùng đã tạo
     const loadMoreUserImages = async (userId, page) => {
         if (page) {
-            console.log(`Đang tải thêm ảnh người dùng ${userId} trang ${page}...`);
             isLoading.value = true;
             hasError.value = false;
 
@@ -156,9 +147,7 @@ export default function useImage() {
                 let apiUrl = `/get_images_created_by_user?page=${page}`;
                 if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
                     apiUrl += `&user_id=${userId}`;
-                }
-                console.log('API URL cho created images:', apiUrl);
-                
+                }                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesCreatedByUserPage(apiUrl, page);
                 return true;
@@ -175,7 +164,6 @@ export default function useImage() {
     // Phương thức tải thêm ảnh người dùng đã thích
     const loadMoreLikedImages = async (userId, page) => {
         if (page) {
-            console.log(`Đang tải thêm ảnh đã thích của user ${userId} trang ${page}...`);
             isLoading.value = true;
             hasError.value = false;
 
@@ -185,7 +173,6 @@ export default function useImage() {
                 if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
                     apiUrl += `&user_id=${userId}`;
                 }
-                console.log('API URL cho liked images:', apiUrl);
                 
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesLikedPage(apiUrl, page);
@@ -203,7 +190,6 @@ export default function useImage() {
     // Phương thức tải thêm ảnh người dùng đã tạo
     const loadMoreCreatedImages = async (userId, page) => {
         if (page) {
-            console.log(`Đang tải thêm ảnh đã tạo của user ${userId} trang ${page}...`);
             isLoading.value = true;
             hasError.value = false;
 
@@ -212,9 +198,7 @@ export default function useImage() {
                 let apiUrl = `/get_images_created_by_user?page=${page}`;
                 if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
                     apiUrl += `&user_id=${userId}`;
-                }
-                console.log('API URL cho created images (loadMoreCreatedImages):', apiUrl);
-                
+                }                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesCreatedByUserPage(apiUrl, page);
                 return true;
@@ -231,7 +215,6 @@ export default function useImage() {
     // Phương thức tải thêm ảnh người dùng đã tải lên
     const loadMoreUploadedImages = async (userId, page) => {
         if (page) {
-            console.log(`Đang tải thêm ảnh đã tải lên của user ${userId} trang ${page}...`);
             isLoading.value = true;
             hasError.value = false;
 
@@ -240,9 +223,7 @@ export default function useImage() {
                 let apiUrl = `/get_images_uploaded?page=${page}`;
                 if (userId !== null && userId !== undefined && userId !== 'null' && userId !== '') {
                     apiUrl += `&user_id=${userId}`;
-                }
-                console.log('API URL cho uploaded images:', apiUrl);
-                
+                }                
                 // Dùng store để tải dữ liệu theo trang
                 await store.fetchImagesUploadedPage(apiUrl, page);
                 return true;

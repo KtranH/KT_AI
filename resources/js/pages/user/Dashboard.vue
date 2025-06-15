@@ -220,14 +220,12 @@ export default {
     
     // Lấy userId từ cả route.params và route.query
     const otherUserId = ref(route.params.id || route.query.userId)
-    console.log('Dashboard - Other user ID (raw):', otherUserId.value)
-    
+
     // Chuyển đổi sang số nếu có thể
     if (otherUserId.value) {
       const parsedId = parseInt(otherUserId.value)
       if (!isNaN(parsedId)) {
         otherUserId.value = parsedId
-        console.log('Dashboard - Other user ID (parsed):', otherUserId.value, 'type:', typeof otherUserId.value)
       }
     }
     
@@ -254,7 +252,6 @@ export default {
     // Hàm xử lý khi refresh trang (F5) hoặc đóng trang
     const handleBeforeUnload = () => {
       imageStore.clearAllUserImages()
-      console.log('Page refreshed or closed, clearing image store data')
     }
 
     // Tải thông tin người dùng theo ID
@@ -327,13 +324,6 @@ export default {
         const formData = new FormData()
         formData.append('image', data.file)
 
-        // Debug log
-        console.log('File data:', data.file)
-        console.log('FormData entries:')
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1])
-        }
-
         // Call appropriate API based on image type
         if (data.type === 'avatar') {
           // Hiển thị thông báo đang tải
@@ -386,15 +376,11 @@ export default {
 
     // Mounted hook
     onMounted(async () => {
-      console.log('Dashboard mounted, current user:', auth.user.value.id)
       await auth.checkAuth()      
       // Kiểm tra nếu có userId trong params hoặc query parameter
       if (otherUserId.value && otherUserId.value !== auth.user.value.id.toString()) {
-        console.log('Loading profile for user ID:', otherUserId.value)
         await loadUserProfile(otherUserId.value)
       } else {
-        // Nếu không có userId hoặc userId là người dùng hiện tại
-        console.log('Loading current user profile')
         user.value = auth.user.value
         avatar.value = user.value.avatar_url
         coverImage.value = user.value.cover_image_url
@@ -402,7 +388,6 @@ export default {
       
       // Đánh dấu đã khởi tạo xong để render ImageListVue
       isInitialized.value = true
-      console.log('Dashboard initialization completed, activeTab:', activeTab.value)
       
       setTimeout(() => {
         AOS.refresh()
@@ -419,8 +404,6 @@ export default {
       
       // Xóa event listener
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      
-      console.log('Dashboard component unmounted, clearing image store data')
     })
 
     return {

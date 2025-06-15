@@ -160,8 +160,6 @@ export const useAuthStore = () => {
           if (typeof isListeningToNotifications !== 'undefined') {
             isListeningToNotifications = false
           }
-          
-          console.log('Đã dọn dẹp kết nối Echo khi đăng xuất')
         }
         
         // Ngắt kết nối tất cả các kênh
@@ -223,7 +221,6 @@ export const useAuthStore = () => {
         const { success, token, user } = event.data
 
         if (success) {
-          console.log('Đăng nhập thành công:', user)
           // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
           saveAuthData(user, token, true)
 

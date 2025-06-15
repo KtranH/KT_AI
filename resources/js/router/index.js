@@ -169,6 +169,10 @@ const routes = [
         meta: { title: 'KT_AI - Test 4' }
       }
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/error/404'
   }
 ]
 

@@ -258,8 +258,6 @@ export default {
 
         // Mounted Hook
         onMounted(async () => {
-            console.log("Kiểm tra", authStore.user)
-
             try {
                 const encodedID = route.params.encodedID
                 if (encodedID) {

@@ -128,7 +128,6 @@ export default {
         }
 
         const handleNavigateToUser = (userId) => {
-            console.log('CommentList - handleNavigateToUser được gọi với userId:', userId)
             emit('navigate-to-user', userId)
         }
 

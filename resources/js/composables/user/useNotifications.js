@@ -249,7 +249,6 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
             
             // Đánh dấu là đã thiết lập listener
             isListeningToNotifications = true
-            console.log('Đã thiết lập kênh thông báo mới cho user:', userId)
         } catch (error) {
             console.error('Lỗi khi thiết lập lắng nghe thông báo:', error)
             isListeningToNotifications = false
@@ -322,8 +321,6 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
                 fetchNotifications()
             }
         })
-        
-        console.log('Thông báo mới:', notification.message || 'Bạn có thông báo mới')
     }
 
     // Xóa listeners khi component unmounted
@@ -349,7 +346,6 @@ export function useNotifications(loadMore = false) { // Đổi tên tham số đ
         if (Notification.permission !== 'denied') {
             try {
                 const permission = await Notification.requestPermission()
-                console.log('Trạng thái quyền thông báo:', permission)
             } catch (error) {
                 console.error('Lỗi khi yêu cầu quyền thông báo:', error)
             }

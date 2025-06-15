@@ -143,8 +143,6 @@ export default function useComments(imageId) {
                 origin_comment: originCommentId
             }
 
-            console.log('Gửi phản hồi cho:', targetCommentId, 'với nội dung:', replyData.content)
-
             // Gọi API tạo phản hồi
             const response = await commentAPI.createReply(targetCommentId, replyData)
 

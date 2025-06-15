@@ -242,6 +242,14 @@ class UserService
 
             // Lưu URL mới vào database
             $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
+
+            // Cập nhật hoạt động
+            $activities = json_decode($user->activities, true) ?? [];
+            $activities[] = [
+                'action' => "Cập nhật avatar",
+                'timestamp' => now()
+            ];
+            $user->activities = json_encode($activities);
             $user = $this->userRepository->updateAvatar($fullPath);
 
             return response()->json([
@@ -288,6 +296,14 @@ class UserService
 
             // Lưu URL mới vào database
             $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
+
+            // Cập nhật hoạt động
+            $activities = json_decode($user->activities, true) ?? [];
+            $activities[] = [
+                'action' => "Cập nhật ảnh bìa",
+                'timestamp' => now()
+            ];
+            $user->activities = json_encode($activities);
             $user = $this->userRepository->updateCoverImage($fullPath);
 
             // Có thể xóa ảnh bìa cũ nếu cần
