@@ -57,9 +57,6 @@ class ImageController extends Controller
             // Ưu tiên user_id từ request nếu có
             $userId = $request->query('user_id', $userId);
             
-            // Log để debug
-            \Log::info('paginateAndRespond được gọi với typeImage: ' . $typeImage . ', user_id: ' . $userId);
-            
             $result = $this->imageService->paginateAndRespond($request, $typeImage, $errorType, $userId);
             
             // Kiểm tra xem result có phải là JSON resource không
@@ -86,18 +83,12 @@ class ImageController extends Controller
         // Lấy user_id từ request query
         $userId = $request->query('user_id');
         
-        // Log để debug
-        \Log::info('getImagesLiked được gọi với user_id: ' . $userId);
-        
         return $this->paginateAndRespond($request, 'liked', 'Get Images Liked Error', $userId);
     }
     public function getImagesUploaded(Request $request)
     {
         // Ưu tiên id từ path, nếu không có thì lấy từ query
         $userId = $request->query('user_id');
-        
-        // Log để debug
-        \Log::info('getImagesUploaded được gọi với user_id: ' . $userId);
         
         return $this->paginateAndRespond($request, 'uploaded', 'Get Images Uploaded Error', $userId);
     }

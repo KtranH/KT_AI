@@ -118,3 +118,55 @@ export const formatTimev2 = (timestamp) => {
 export const getCurrentURL = () => {
   return window.location.href;
 }
+
+// Hàm tính toán tổng số trang
+export const calculateTotalPages = (totalItems, itemsPerPage) => {
+  return Math.ceil(totalItems / itemsPerPage)
+}
+
+// Hàm tính toán các trang cần hiển thị
+export const calculateDisplayedPages = (currentPage, totalPages, maxVisiblePages = 5) => {
+  const pages = []
+  if (totalPages <= maxVisiblePages) {
+    // Nếu tổng số trang <= 5, hiển thị tất cả
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Luôn hiển thị trang đầu tiên
+    pages.push(1)
+
+    // Tính toán các trang ở giữa
+    let start = Math.max(2, currentPage - 1)
+    let end = Math.min(totalPages - 1, currentPage + 1)
+
+    // Điều chỉnh start và end để luôn hiển thị 3 trang ở giữa
+    if (currentPage <= 3) {
+      end = 4
+    } else if (currentPage >= totalPages - 2) {
+      start = totalPages - 3
+    }
+
+    // Thêm dấu ... nếu cần
+    if (start > 2) {
+      pages.push('...')
+    }
+
+    // Thêm các trang ở giữa
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    // Thêm dấu ... nếu cần
+    if (end < totalPages - 1) {
+      pages.push('...')
+    }
+
+    // Luôn hiển thị trang cuối cùng
+    pages.push(totalPages)
+  }
+
+  return pages
+}
+
+

@@ -86,8 +86,6 @@ class ImageRepository implements ImageRepositoryInterface
      */
     public function getImagesUploaded($id = null): Collection
     {
-        // Debug log
-        \Log::info('ImageRepository::getImagesUploaded - id: ' . ($id ?? 'null') . ', Auth ID: ' . (Auth::id() ?? 'null'));
         // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
         $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
         
@@ -100,14 +98,11 @@ class ImageRepository implements ImageRepositoryInterface
                 ->orderBy('created_at', 'desc')
                 ->get();
                 
-            \Log::info('Lấy ảnh cho user ID cụ thể: ' . $userId . ', số lượng: ' . $images->count());
         } else {
             $images = Image::with('user')
                 ->where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->get();
-                
-            \Log::info('Lấy ảnh cho user hiện tại: ' . Auth::id() . ', số lượng: ' . $images->count());
         }
 
         return $this->transformImages($images);
@@ -119,9 +114,6 @@ class ImageRepository implements ImageRepositoryInterface
      */
     public function getImagesLiked($id = null): Collection
     {
-        // Debug log
-        \Log::info('ImageRepository::getImagesLiked - id: ' . ($id ?? 'null') . ', type: ' . gettype($id) . ', Auth ID: ' . (Auth::id() ?? 'null'));
-        
         // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
         $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
         
@@ -133,13 +125,10 @@ class ImageRepository implements ImageRepositoryInterface
                 ->where('type_interaction', 'like')
                 ->pluck('image_id');
                 
-            \Log::info('Lấy ảnh đã thích cho user ID cụ thể: ' . $userId . ', số lượng: ' . $list_images_liked->count());
         } else {
             $list_images_liked = Interaction::where('user_id', Auth::id())
                 ->where('type_interaction', 'like')
                 ->pluck('image_id');
-                
-            \Log::info('Lấy ảnh đã thích cho user hiện tại: ' . Auth::id() . ', số lượng: ' . $list_images_liked->count());
         }
 
         $images = Image::with('user')
@@ -160,13 +149,8 @@ class ImageRepository implements ImageRepositoryInterface
      */
     public function getImagesLikedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
     {
-        // Debug log
-        \Log::info('ImageRepository::getImagesLikedPaginated - id: ' . ($id ?? 'null') . ' (type: ' . gettype($id) . '), page: ' . $page);
-        
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
-        
-        \Log::info('ID validation for liked - id: ' . var_export($id, true) . ', idIsValid: ' . ($idIsValid ? 'true' : 'false') . ', Auth::id(): ' . Auth::id());
         
         if ($idIsValid) {
             $userId = is_numeric($id) ? (int)$id : $id;
@@ -198,9 +182,6 @@ class ImageRepository implements ImageRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Debug log
-        \Log::info('Paginated result for user ' . $userId . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
-        
         return $result;
     }
 
@@ -213,41 +194,24 @@ class ImageRepository implements ImageRepositoryInterface
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
     public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
-    {
-        // Debug log
-        \Log::info('ImageRepository::getImagesUploadedPaginated - id: ' . ($id ?? 'null') . ', page: ' . $page);
-        
+    {        
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
-        
-        \Log::info('ID validation - id: ' . var_export($id, true) . ', idIsValid: ' . ($idIsValid ? 'true' : 'false') . ', Auth::id(): ' . Auth::id());
-        
+                
         if ($idIsValid) {
             $userId = is_numeric($id) ? (int)$id : $id;
-            
-            // Debug: Đếm tổng số ảnh trước khi phân trang
-            $totalCount = Image::where('user_id', $userId)->count();
-            \Log::info('Total images for user ' . $userId . ': ' . $totalCount);
             
             $result = Image::with('user')
                 ->where('user_id', $userId)
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage, ['*'], 'page', $page);
-                
-            \Log::info('Paginated result for user ' . $userId . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
-            
+                ->paginate($perPage, ['*'], 'page', $page);      
+                      
             return $result;
         } else {
-            // Debug: Đếm tổng số ảnh trước khi phân trang
-            $totalCount = Image::where('user_id', Auth::id())->count();
-            \Log::info('Total images for current user ' . Auth::id() . ': ' . $totalCount);
-            
             $result = Image::with('user')
                 ->where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage, ['*'], 'page', $page);
-                
-            \Log::info('Paginated result for current user ' . Auth::id() . ' - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Page: ' . $page);
             
             return $result;
         }

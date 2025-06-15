@@ -37,19 +37,13 @@ class ImageService
      */
     public function paginateAndRespond(Request $request, string $typeImage, string $errorType, $id = null)
     {
-        try {
-            // Debug log
-            \Log::info('ImageService::paginateAndRespond - typeImage: ' . $typeImage . ', id: ' . $id);
-            
+        try { 
             $perPage = (int)$request->input('per_page', 5);
             $page = (int)$request->input('page', 1);
             
             // Sử dụng phân trang database thay vì collection
             $paginatedImages = $this->getImagesByTypePaginated($typeImage, $id, $perPage, $page);
-            
-            // Log về số lượng ảnh trả về
-            \Log::info('ImageService::paginateAndRespond - Trang: ' . $page . ', Số lượng ảnh: ' . $paginatedImages->count() . ', Tổng: ' . $paginatedImages->total());
-            
+                        
             // Xử lý dữ liệu ảnh để đảm bảo image_url được format đúng
             $formattedItems = $paginatedImages->getCollection()->map(function($image) {
                 // Nếu image_url là chuỗi JSON, chuyển đổi thành mảng
@@ -84,23 +78,17 @@ class ImageService
     // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
     private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 5, $page = 1)
     {
-        // Debug log
-        \Log::info('ImageService::getImagesByTypePaginated - typeImage: ' . $typeImage . ', id: ' . $id . ', page: ' . $page);
-        
         try {
             if ($typeImage === 'liked') {
                 $result = $this->imageRepository->getImagesLikedPaginated($id, $perPage, $page);
-                \Log::info('getImagesLikedPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
                 return $result;
             }
             if ($typeImage === 'created') {
                 $result = $this->imageRepository->getImagesCreatedByUserPaginated($id, $perPage, $page);
-                \Log::info('getImagesCreatedByUserPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
                 return $result;
             }
             if ($typeImage === 'uploaded') {
                 $result = $this->imageRepository->getImagesUploadedPaginated($id, $perPage, $page);
-                \Log::info('getImagesUploadedPaginated result - Count: ' . $result->count() . ', Total: ' . $result->total() . ', Current Page: ' . $result->currentPage() . ', Last Page: ' . $result->lastPage());
                 return $result;
             }
             
@@ -124,9 +112,6 @@ class ImageService
     // Giữ lại method cũ cho backward compatibility
     private function getImagesByType(string $typeImage, $id = null)
     {
-        // Debug log
-        \Log::info('ImageService::getImagesByType - typeImage: ' . $typeImage . ', id: ' . $id);
-        
         if ($typeImage === 'liked') {
             return $this->imageRepository->getImagesLiked($id);
         }
