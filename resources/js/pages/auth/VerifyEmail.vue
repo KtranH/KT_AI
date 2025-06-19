@@ -87,7 +87,7 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { resendCode } from '@/services/verificationService'
+import { authAPI } from '@/services/auth'
 import { useCodeVerification } from '@/composables/auth/useCodeVerification'
 import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
 import AlertMessage from '@/components/auth/AlertMessage.vue'
@@ -120,7 +120,6 @@ export default {
       isCodeComplete,
       checkTooManyAttempts,
       incrementAttempts,
-      resetCode
     } = useCodeVerification(6)
 
     // Tạo computed property mới để kiểm tra liệu nút có thể submit hay không
@@ -151,19 +150,22 @@ export default {
         loading.value = true
         error.value = null
         
-        await resendCode(email.value)
+        const response = await authAPI.resendVerification(email.value)
+        // Handle response data if needed
+        if (response.data) {
+          console.log('Verification code sent successfully')
+        }
         resendCount.value++
         startResendTimer()
         success.value = 'Mã xác thực mới đã được gửi đến email của bạn'
       } catch (err) {
-        error.value = err
+        error.value = err.response?.data?.message || 'Không thể gửi lại mã xác thực'
       } finally {
         loading.value = false
       }
     }
     
     const handleComplete = (code) => {
-      // Mã hoàn thành, có thể tự động submit nếu muốn
     }
 
     const handleSubmit = async () => {

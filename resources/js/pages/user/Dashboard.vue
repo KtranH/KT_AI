@@ -96,7 +96,7 @@
                     <div class="text-gray-500 text-sm">Số ảnh</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user?.created_at? formatDate(user.created_at): "01/01/2025" }}</div>
+                    <div class="text-xl font-bold bg-gradient-text-v2">{{ user?.created_at? dayjs(user.created_at).format('DD/MM/YYYY'): "01/01/2025" }}</div>
                     <div class="text-gray-500 text-sm">Tham gia</div>
                 </div>
             </div>
@@ -196,11 +196,11 @@
 import AOS from 'aos'
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
+import dayjs from 'dayjs'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
-import { formatDate } from '@/utils/index'
 import { toast } from 'vue-sonner'
 import { profileAPI } from '@/services/api'
 
@@ -408,7 +408,7 @@ export default {
 
     return {
       user,
-      formatDate,
+      dayjs,
       logout,
       active,
       avatar,
