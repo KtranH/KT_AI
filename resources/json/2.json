@@ -1,0 +1,194 @@
+{
+  "2": {
+    "inputs": {
+      "ckpt_name": "SDXL\\moonrideMixes_moonrideLightMix1.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "3": {
+    "inputs": {
+      "text": [
+        "35",
+        0
+      ],
+      "speak_and_recognation": true,
+      "clip": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "4": {
+    "inputs": {
+      "text": "watermark,long neck,reality,photorealistic,ugly,deformed,noisy,blurry,low contrast,text,open mouth,big forehead,",
+      "speak_and_recognation": true,
+      "clip": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "6": {
+    "inputs": {
+      "width": 512,
+      "height": 768,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "7": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 450274929569941,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "sgm_uniform",
+      "start_at_step": 0,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "preview_method": "auto",
+      "vae_decode": "true",
+      "model": [
+        "17",
+        0
+      ],
+      "positive": [
+        "3",
+        0
+      ],
+      "negative": [
+        "4",
+        0
+      ],
+      "latent_image": [
+        "6",
+        0
+      ],
+      "optional_vae": [
+        "2",
+        2
+      ],
+      "script": [
+        "37",
+        0
+      ]
+    },
+    "class_type": "KSampler Adv. (Efficient)",
+    "_meta": {
+      "title": "KSampler Adv. (Efficient)"
+    }
+  },
+  "14": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "7",
+        5
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "16": {
+    "inputs": {
+      "preset": "PLUS (high strength)",
+      "model": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "IPAdapterUnifiedLoader",
+    "_meta": {
+      "title": "IPAdapter Unified Loader"
+    }
+  },
+  "17": {
+    "inputs": {
+      "weight": 0.55,
+      "weight_type": "linear",
+      "combine_embeds": "concat",
+      "start_at": 0.2,
+      "end_at": 0.8,
+      "embeds_scaling": "V only",
+      "model": [
+        "16",
+        0
+      ],
+      "ipadapter": [
+        "16",
+        1
+      ],
+      "image": [
+        "36",
+        0
+      ]
+    },
+    "class_type": "IPAdapterAdvanced",
+    "_meta": {
+      "title": "IPAdapter Advanced"
+    }
+  },
+  "35": {
+    "inputs": {
+      "action": "append",
+      "tidy_tags": "yes",
+      "text_a": "1girl, cute",
+      "text_b": "3D",
+      "text_c": "",
+      "speak_and_recognation": true
+    },
+    "class_type": "StringFunction|pysssss",
+    "_meta": {
+      "title": "String Function 🐍"
+    }
+  },
+  "36": {
+    "inputs": {
+      "image": "db5baead-c18c-42bf-8544-498c27e61ee5.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image First"
+    }
+  },
+  "37": {
+    "inputs": {
+      "upscale_type": "latent",
+      "hires_ckpt_name": "(use same)",
+      "latent_upscaler": "ttl_nn.SDXL",
+      "pixel_upscaler": "4x-UltraSharp.pth",
+      "upscale_by": 1.25,
+      "use_same_seed": false,
+      "seed": 453967680218774,
+      "hires_steps": 12,
+      "denoise": 0.56,
+      "iterations": 1,
+      "use_controlnet": false,
+      "control_net_name": "FLUX.1\\Shakker-Labs-ControlNet-Union-Pro-2.0\\FLUX.1-dev-ControlNet-Union-Pro-2.0.safetensors",
+      "strength": 1,
+      "preprocessor": "none",
+      "preprocessor_imgs": false
+    },
+    "class_type": "HighRes-Fix Script",
+    "_meta": {
+      "title": "HighRes-Fix Script"
+    }
+  }
+}

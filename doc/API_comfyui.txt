@@ -1,0 +1,51 @@
+API Overview
+ComfyUI, một giao diện đồ họa mạnh mẽ và mô-đun cho mô hình khuếch tán, có một API RESTful cho phép người dùng kết nối và tương tác với hệ thống thông qua các yêu cầu HTTP. Các điểm cuối chính bao gồm quản lý mô hình, tải lên hình ảnh, xem hình ảnh, và xử lý hàng đợi, giúp người dùng tự động hóa quy trình làm việc.
+
+Cách Sử Dụng
+Để sử dụng API, bạn có thể gửi các yêu cầu như POST đến http://127.0.0.1:8188/prompt với dữ liệu JSON, như được minh họa trong ví dụ tại basic_api_example.py. Điều này cho phép bạn gửi các yêu cầu như tạo hình ảnh hoặc quản lý hàng đợi.
+
+Báo Cáo Chi Tiết
+ComfyUI, được phát triển bởi comfyanonymous và có sẵn trên GitHub tại ComfyUI GitHub Repository, là một công cụ mạnh mẽ và mô-đun cho giao diện đồ họa và backend của mô hình khuếch tán, đặc biệt là Stable Diffusion. Dự án này hỗ trợ nhiều hệ điều hành như Windows, Linux, và macOS, cũng như các loại GPU khác nhau (NVIDIA, AMD, Intel, Apple Silicon, Ascend). Với hơn 73.000 sao trên GitHub tính đến tháng 11/2024, ComfyUI là một trong những giao diện phổ biến nhất cho Stable Diffusion, nổi bật với giao diện dựa trên nút (node-based), nơi mỗi nút đại diện cho một chức năng như "tải mô hình" hoặc "viết lời nhắc".
+
+Khám Phá API
+Mục tiêu chính là xác định tất cả các API có sẵn trong kho lưu trữ để người dùng có thể kết nối và tương tác. Từ việc phân tích, API của ComfyUI được định nghĩa chủ yếu trong lớp PromptServer trong tệp server.py, được tìm thấy tại ComfyUI/server.py. Đây là một API RESTful, cho phép người dùng gửi các yêu cầu HTTP để thực hiện các tác vụ như quản lý mô hình, tải lên hình ảnh, và xử lý hàng đợi.
+
+Danh Sách Các Điểm Cuối API
+Dựa trên phân tích mã nguồn, các điểm cuối API chính được liệt kê trong bảng dưới đây, bao gồm cả định dạng gốc và định dạng với tiền tố "/api" để hỗ trợ tương thích với máy chủ phát triển frontend:
+
+Phương Thức	Đường Dẫn	Chức Năng
+GET	/ws	Kết nối WebSocket cho cập nhật thời gian thực
+GET	/	Phục vụ index.html từ thư mục web
+GET	/embeddings	Liệt kê các tệp nhúng (embeddings)
+GET	/models	Liệt kê các loại mô hình
+GET	/models/{folder}	Lấy tệp cho thư mục mô hình cụ thể
+GET	/extensions	Liệt kê các tệp mở rộng JavaScript
+POST	/upload/image	Xử lý tải lên hình ảnh
+POST	/upload/mask	Xử lý tải lên mặt nạ với xử lý hình ảnh
+GET	/view	Xem hình ảnh với tùy chọn xem trước
+GET	/view_metadata/{folder_name}	Xem siêu dữ liệu cho tệp safetensors
+GET	/system_stats	Trả về thống kê hệ thống và thiết bị
+GET	/prompt	Lấy thông tin hàng đợi
+GET	/object_info	Lấy thông tin cho tất cả các lớp nút
+GET	/object_info/{node_class}	Lấy thông tin cho lớp nút cụ thể
+GET	/history	Lấy lịch sử với tham số max_items tùy chọn
+GET	/history/{prompt_id}	Lấy lịch sử cho ID yêu cầu cụ thể
+GET	/queue	Lấy trạng thái hàng đợi hiện tại
+POST	/prompt	Gửi yêu cầu để thực thi
+POST	/queue	Quản lý hàng đợi (xóa hoặc xóa mục)
+POST	/interrupt	Ngắt quá trình xử lý
+POST	/free	Giải phóng bộ nhớ/tài nguyên
+POST	/history	Quản lý lịch sử (xóa hoặc xóa mục)
+Tất cả các điểm cuối này cũng có thể được truy cập với tiền tố "/api", ví dụ: /api/ws, /api/prompt, để hỗ trợ cả định dạng cũ và mới, đảm bảo tương thích với máy chủ phát triển frontend.
+
+Ví Dụ Sử Dụng
+Một ví dụ cụ thể về cách sử dụng API được cung cấp trong tệp basic_api_example.py, nằm tại basic_api_example.py. Tệp này minh họa cách gửi một yêu cầu POST đến http://127.0.0.1:8188/prompt với dữ liệu JSON định nghĩa một quy trình làm việc, bao gồm các nút như KSampler, CheckpointLoaderSimple, và SaveImage. Ví dụ này cho thấy cách tạo hình ảnh bằng cách gửi lời nhắc và cấu hình các tham số như cfg, seed, và văn bản.
+
+Thiết Lập Máy Chủ
+Máy chủ API được khởi động thông qua tệp main.py, nơi người dùng có thể chạy ComfyUI bằng lệnh python main.py. Máy chủ mặc định chạy trên cổng 8188 và hỗ trợ nhiều địa chỉ, có thể cấu hình thông qua tham số dòng lệnh. Thiết lập này bao gồm các tính năng như quản lý bộ nhớ thông minh, tối ưu hóa chỉ thực thi các phần thay đổi của quy trình làm việc, và hỗ trợ chạy trên CPU nếu không có GPU (chậm hơn).
+
+Tài Liệu Thêm
+Mặc dù kho lưu trữ chính không cung cấp tài liệu API chính thức chi tiết, có một số nguồn cộng đồng như ComfyUI Community Manual, nhưng không tìm thấy thông tin cụ thể về API trong lần kiểm tra này. Ngoài ra, có một yêu cầu tài liệu API trên GitHub tại API documentation Issue, cho thấy nhu cầu về tài liệu chính thức, nhưng chưa có phản hồi rõ ràng.
+
+Kết Luận
+Dựa trên phân tích, danh sách trên bao gồm các API chính có sẵn trong kho lưu trữ ComfyUI, cho phép người dùng kết nối và tự động hóa các tác vụ. Tuy nhiên, có thể có thêm các điểm cuối từ các thành phần như UserManager, ModelFileManager, và CustomNodeManager, nhưng thông tin chi tiết chưa được xác định đầy đủ trong phạm vi này. Người dùng nên tham khảo mã nguồn và ví dụ để hiểu rõ hơn về cách sử dụng.
