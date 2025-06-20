@@ -1,4 +1,4 @@
-import apiClient from '../config/apiConfig'
+import apiClient from '../../config/apiConfig'
 
 // === FEATURES API ===
 export const featuresAPI = {

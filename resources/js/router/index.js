@@ -23,12 +23,12 @@ import Upload from '../pages/user/Upload.vue'
 // User routes
 //import Profile from '../pages/user/ProfilePage.vue'
 import Notifications from '../pages/user/Notification.vue'
-// Test Pages
-import TestLayout from '../pages/test/TestLayout.vue'
-import Test1 from '../pages/test/Test1.vue'
-import Test2 from '../pages/test/Test2.vue'
-import Test3 from '../pages/test/Test3.vue'
-import Test4 from '../pages/test/Test4.vue'
+// Test Pages (Development only)
+// import TestLayout from '../pages/test/TestLayout.vue'
+// import Test1 from '../pages/test/Test1.vue'
+// import Test2 from '../pages/test/Test2.vue'
+// import Test3 from '../pages/test/Test3.vue'
+// import Test4 from '../pages/test/Test4.vue'
 // Statistics Pages
 import StatisticsPage from '../pages/user/StatisticsPage.vue';
 // Image Jobs Management
@@ -137,7 +137,8 @@ const routes = [
     component: ImageJobsManager,
     meta: { requiresAuth: true, title: 'KT_AI - Quản lý tiến trình tạo ảnh' }
   },
-  // Test routes
+  // Test routes (Development only)
+  /*
   {
     path: '/test',
     name: 'test',
@@ -170,6 +171,7 @@ const routes = [
       }
     ]
   },
+  */
   {
     path: '/:pathMatch(.*)*',
     redirect: '/error/404'
