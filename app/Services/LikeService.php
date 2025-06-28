@@ -5,11 +5,9 @@ use App\Interfaces\LikeRepositoryInterface;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Resources\LikeResource;
-use App\Models\User;
 use App\Models\Image;
 use App\Models\Interaction;
 use App\Notifications\LikeImageNotification;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 

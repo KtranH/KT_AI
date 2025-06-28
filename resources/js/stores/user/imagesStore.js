@@ -17,7 +17,14 @@ export const useImageStore = defineStore('image',
             isLoading: false,
             currentPage: 1,
             lastPage: 1,
-            totalImages: 0
+            totalImages: 0,
+            // Cache state cho dashboard
+            dashboardCache: {
+                uploaded: {},  // {userId: {data: [], page: 1, lastPage: 1, total: 0}}
+                liked: {}      // {userId: {data: [], page: 1, lastPage: 1, total: 0}}
+            },
+            lastDashboardUserId: null,
+            lastDashboardFilter: null
         }),
         getters: {
             currentUser: (state) => state.user || state.lastUser || null
@@ -338,6 +345,53 @@ export const useImageStore = defineStore('image',
                 this.currentPage = 1;
                 this.lastPage = 1;
                 this.totalImages = 0;
+            },
+            
+            // Dashboard cache management
+            getDashboardCache(userId, filter) {
+                const key = String(userId || 'null');
+                return this.dashboardCache[filter]?.[key] || null;
+            },
+            
+            setDashboardCache(userId, filter, data, page = 1, lastPage = 1, total = 0) {
+                const key = String(userId || 'null');
+                if (!this.dashboardCache[filter]) {
+                    this.dashboardCache[filter] = {};
+                }
+                this.dashboardCache[filter][key] = {
+                    data: [...data],
+                    page,
+                    lastPage,
+                    total,
+                    timestamp: Date.now()
+                };
+                this.lastDashboardUserId = userId;
+                this.lastDashboardFilter = filter;
+            },
+            
+            hasCachedDashboardData(userId, filter) {
+                const cached = this.getDashboardCache(userId, filter);
+                if (!cached) return false;
+                
+                // Kiểm tra cache không quá 5 phút
+                const fiveMinutes = 5 * 60 * 1000;
+                return (Date.now() - cached.timestamp) < fiveMinutes;
+            },
+            
+            clearDashboardCache(userId = null, filter = null) {
+                if (userId && filter) {
+                    const key = String(userId);
+                    if (this.dashboardCache[filter]?.[key]) {
+                        delete this.dashboardCache[filter][key];
+                    }
+                } else if (filter) {
+                    this.dashboardCache[filter] = {};
+                } else {
+                    this.dashboardCache = {
+                        uploaded: {},
+                        liked: {}
+                    };
+                }
             }
         },
         persist: {
@@ -346,7 +400,7 @@ export const useImageStore = defineStore('image',
                 {
                     key: 'image-store',
                     storage: localStorage,
-                    paths: ['lastUser']
+                    paths: ['lastUser', 'dashboardCache', 'lastDashboardUserId', 'lastDashboardFilter']
                 }
             ]
         }

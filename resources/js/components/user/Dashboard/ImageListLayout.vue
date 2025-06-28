@@ -343,6 +343,22 @@ export default {
         const targetUserId = refreshUserId !== undefined ? refreshUserId : userId.value;
         
         if (!isLoadMore) {
+          // Kiểm tra cache trước khi fetch
+          if (!forceRefresh && imageStore.hasCachedDashboardData(targetUserId, props.filter)) {
+            const cached = imageStore.getDashboardCache(targetUserId, props.filter);
+            if (cached) {
+              imageGroups.value = processAndGroupImages(cached.data);
+              imageStore.currentPage = cached.page;
+              imageStore.lastPage = cached.lastPage;
+              imageStore.totalImages = cached.total;
+              hasMoreImages.value = checkHasMoreImages(props.filter);
+              
+              await nextTick();
+              initMasonry();
+              return; // Không cần fetch mới
+            }
+          }
+          
           // Reset store pagination khi không phải load more
           imageStore.currentPage = 1
           imageStore.lastPage = 1
@@ -357,6 +373,16 @@ export default {
           
           if (newGroups.length > 0 || imageGroups.value.length === 0) {
             imageGroups.value = newGroups;
+            
+            // Lưu vào cache
+            imageStore.setDashboardCache(
+              targetUserId, 
+              props.filter, 
+              images, 
+              imageStore.currentPage, 
+              imageStore.lastPage, 
+              imageStore.totalImages
+            );
           }
         } else {
           let newImagesData = []
@@ -378,6 +404,20 @@ export default {
           
           const newGroups = processAndGroupImages(newImagesData)
           imageGroups.value = [...imageGroups.value, ...newGroups]
+          
+          // Cập nhật cache cho load more
+          const allData = props.filter === 'uploaded' 
+            ? imagesUploadedByUser?.value || []
+            : imagesLikedByUser?.value || [];
+          
+          imageStore.setDashboardCache(
+            userId.value,
+            props.filter,
+            allData,
+            imageStore.currentPage,
+            imageStore.lastPage,
+            imageStore.totalImages
+          );
         }
         
         hasMoreImages.value = checkHasMoreImages(props.filter)
@@ -392,6 +432,7 @@ export default {
     // Làm mới dữ liệu
     const refreshData = async () => {
       imageStore.clearAllUserImages()
+      imageStore.clearDashboardCache(userId.value, props.filter)
       imageGroups.value = []
       await fetchAndGroupImages(false, true, userId.value)
     }
@@ -427,18 +468,22 @@ export default {
     
     // Tải dữ liệu ban đầu
     const loadInitialData = async () => {
-      imageStore.clearAllUserImages();
-      await fetchAndGroupImages(false, true, userId.value);
+      // Không clear cache khi load initial data
+      await fetchAndGroupImages(false, false, userId.value);
     };
     
     // Watchers
-    watch(() => props.filter, () => {
-      fetchAndGroupImages(false, true, userId.value);
+    watch(() => props.filter, (newFilter, oldFilter) => {
+      if (newFilter !== oldFilter) {
+        // Không clear cache khi chỉ thay đổi filter, để có thể switch nhanh giữa uploaded/liked
+        fetchAndGroupImages(false, false, userId.value);
+      }
     }, { immediate: true });
     
     watch(() => userId.value, (newVal, oldVal) => {
       if (newVal !== oldVal) {
         imageStore.clearAllUserImages();
+        imageStore.clearDashboardCache(); // Clear all cache khi đổi user
         imageGroups.value = [];
         fetchAndGroupImages(false, true, newVal);
       }

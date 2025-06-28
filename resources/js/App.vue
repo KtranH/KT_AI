@@ -5,15 +5,19 @@
   <div v-else>
     <Header />
     <Sidebar v-if="showSidebar">
-      <router-view v-slot="{ Component }" :key="$route.fullPath">
+      <router-view v-slot="{ Component, route }">
         <transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <keep-alive :include="['Dashboard', 'ImageList']">
+            <component :is="Component" :key="route.meta.keepAlive ? route.name : route.fullPath" />
+          </keep-alive>
         </transition>
       </router-view>
     </Sidebar>
-    <router-view v-else v-slot="{ Component }" :key="$route.fullPath">
+    <router-view v-else v-slot="{ Component, route }">
       <transition name="fade" mode="out-in">
-        <component :is="Component" />
+        <keep-alive :include="['Dashboard', 'ImageList']">
+          <component :is="Component" :key="route.meta.keepAlive ? route.name : route.fullPath" />
+        </keep-alive>
       </transition>
     </router-view>
     <VueSonner position="top-right" theme="light" />

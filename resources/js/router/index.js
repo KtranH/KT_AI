@@ -68,13 +68,13 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ' }
+    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ', keepAlive: true }
   },
   {
     path: '/dashboard/:id',
     name: 'dashboard-user',
     component: Dashboard,
-    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ người dùng' }
+    meta: { requiresAuth: true, title: 'KT_AI - Trang chủ người dùng', keepAlive: true }
   },
   {
     path: '/features',
