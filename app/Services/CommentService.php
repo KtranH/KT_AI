@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Interfaces\CommentRepositoryInterface;
 use App\Services\NotificationService;
+use App\Services\CacheService;
 use App\Models\Comment;
 use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;
@@ -13,17 +14,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
 
-class CommentService
+class CommentService extends BaseService
 {
     protected CommentRepositoryInterface $commentRepository;
     protected NotificationService $notificationService;
+    protected CacheService $cacheService;
     
     public function __construct(
         CommentRepositoryInterface $commentRepository,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        CacheService $cacheService
     ) {
         $this->commentRepository = $commentRepository;
         $this->notificationService = $notificationService;
+        $this->cacheService = $cacheService;
     }
     
     public function getComments(int $imageId, Request $request)
@@ -38,8 +42,18 @@ class CommentService
         $comment = $this->commentRepository->storeComment($request->validated());
         $comment->is_new = true;
 
+        // Clear cache cho image comment count
+        $this->cacheService->clearImageCommentCache($comment->image_id);
+
         // Gửi thông báo bình luận mới
         $this->notificationService->sendCommentNotification($comment, Auth::id());
+
+        // Log action
+        $this->logAction('Comment created', [
+            'comment_id' => $comment->id,
+            'image_id' => $comment->image_id,
+            'user_id' => Auth::id()
+        ]);
 
         return $comment;
     }
@@ -49,11 +63,22 @@ class CommentService
         $reply = $this->commentRepository->storeReply($request->validated(), $comment);
         $reply->is_new = true;
 
+        // Clear cache cho image comment count  
+        $this->cacheService->clearImageCommentCache($reply->image_id);
+
         // Gửi thông báo phản hồi
         $this->notificationService->sendReplyNotification($reply, $comment, Auth::id());
         
         // Đưa bình luận gốc lên đầu nếu có
         $this->moveOriginCommentToTop($reply);
+
+        // Log action
+        $this->logAction('Reply created', [
+            'reply_id' => $reply->id,
+            'parent_comment_id' => $comment->id,
+            'image_id' => $reply->image_id,
+            'user_id' => Auth::id()
+        ]);
 
         return $reply;
     }
@@ -116,9 +141,8 @@ class CommentService
         }
 
         try {
-            $originComment = Comment::find($comment->origin_comment);
-            if ($originComment) {
-                $originComment->touch();
+            if ($this->commentRepository->touchComment($comment->origin_comment)) {
+                Log::info("Đã đưa bình luận gốc ID:{$comment->origin_comment} lên đầu danh sách");
             }
         } catch (\Exception $e) {
             Log::error('Lỗi khi đưa bình luận gốc lên đầu: ' . $e->getMessage());
@@ -130,9 +154,17 @@ class CommentService
      */
     public function getCommentCount(int $imageId): int
     {
-        return \Cache::remember("image_comments_count_{$imageId}", 300, function() use ($imageId) {
-            return Comment::where('image_id', $imageId)->where('parent_id', null)->count();
-        });
+        // Kiểm tra cache trước
+        $cachedCount = $this->cacheService->getImageCommentCount($imageId);
+        if ($cachedCount !== null) {
+            return $cachedCount;
+        }
+        
+        // Nếu không có cache, query từ DB và cache lại
+        $count = $this->commentRepository->countByImageId($imageId);
+        $this->cacheService->cacheImageCommentCount($imageId, $count);
+        
+        return $count;
     }
     
     /**
@@ -143,7 +175,7 @@ class CommentService
         $results = [];
         
         foreach ($commentIds as $commentId) {
-            $comment = Comment::find($commentId);
+            $comment = $this->commentRepository->findById($commentId);
             if ($comment) {
                 $results[$commentId] = $this->toggleLike($comment);
             }

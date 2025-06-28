@@ -15,8 +15,12 @@
                     <img :src="icon_title" class="w-4 h-4" alt="Icon" />
                 </div>
             </div>
-            <span class="text-gray-500 ml-1 text-xs">Đã đăng vào {{ dataImage && dataImage.created_at ? formatTime(dataImage.created_at) : 'vừa xong' }}</span>
-            <span v-if="dataImage && dataImage.updated_at !== dataImage.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
+            <span class="text-gray-500 ml-1 text-xs">
+                Đã đăng vào {{ dataImage && dataImage.created_at ? formatTime(dataImage.created_at) : 'vừa xong' }}
+            </span>
+            <span v-if="dataImage && dataImage.updated_at !== dataImage.created_at" class="ml-1 text-gray-500 text-xs font-medium">
+                (Đã chỉnh sửa)
+            </span>
         </div>
          <!-- Setting post button with dropdown -->
         <div class="ml-auto relative dropdown-container">
@@ -25,10 +29,6 @@
                     <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
             </button>
-            <!-- Debug indicator -->
-            <div v-if="isDropdownOpen" class="absolute right-0 mt-1 text-xs text-red-500 z-50">
-                DEBUG: Menu mở
-            </div>
             
             <!-- Dropdown menu -->
             <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
@@ -51,8 +51,8 @@
         </div>
     </div>
 
-    <!-- Post Title -->
-    <div class="px-4 py-2 border-b" v-if="!isEditing">
+     <!-- Post Title -->
+     <div class="px-4 py-2 border-b" v-if="!isEditing">
         <div class="flex items-center">
             <h1 class="text-xl font-bold">{{dataImage && dataImage.title? dataImage.title : title}}</h1>
         </div>
@@ -64,7 +64,7 @@
     <!-- Edit Form -->
     <div v-else class="px-4 py-2 border-b">
         <EditImageForm
-            :imageData="dataImage"
+            :imageData="dataImage ? dataImage : null"
             @update:success="handleUpdateSuccess"
             @cancel="isEditing = false"
         />
@@ -146,10 +146,9 @@ export default {
         // Computed để kiểm tra xem user hiện tại có phải chủ bài viết không
         const isOwner = computed(() => {
             const currentUser = auth.user.value
-            const postOwner = currentUserImage.value
+            const postOwner = dataImage.value && dataImage.value.user ? dataImage.value.user : null
             
             if (!currentUser || !postOwner) {
-                console.log('isOwner: Missing data', { currentUser, postOwner })
                 return false
             }
             
@@ -159,20 +158,7 @@ export default {
             
             const isMatch = currentUserId === postOwnerId
             
-            console.log('isOwner check:', {
-                currentUserId,
-                postOwnerId,
-                isMatch,
-                currentUser,
-                postOwner
-            })
-            
             return isMatch
-        })
-
-        // Thêm console.log để debug
-        watch(() => auth.user, (newUser) => {
-            console.log('Auth user changed:', newUser)
         })
 
         // Thêm hàm để điều hướng đến trang dashboard của người dùng
@@ -206,7 +192,13 @@ export default {
                 const result = await deleteRef.value.showAlert()
                 if (result.isConfirmed) {
                     try {
-                        await deleteImage(dataImage.value.id)
+                        const imageId = dataImage.value && dataImage.value.id ? dataImage.value.id : null
+                        if (!imageId) {
+                            toast.error('Không tìm thấy ID ảnh để xóa')
+                            return
+                        }
+                        
+                        await deleteImage(imageId)
                         toast.success('Đã xóa bài viết thành công!')
                         router.go(-1)
                     } catch (error) {

@@ -52,7 +52,7 @@
       
       <!-- Empty State -->
       <EmptyJob 
-        v-else-if="activeTab === 'active' && activeJobs.length === 0 || activeTab === 'completed' && completedJobs.length === 0"
+        v-else-if="(activeTab === 'active' && activeJobs.length === 0) || (activeTab === 'completed' && completedJobs.length === 0)"
         :active-tab="activeTab"
       />
       
@@ -95,7 +95,7 @@ import JobsFailed from '../../components/user/ImageJobsManager/JobsFailed.vue'
 import EmptyJob from '../../components/user/ImageJobsManager/EmptyJob.vue'
 import LoadingState from '../../components/common/LoadingState.vue'
 import DetailsJob from '../../components/user/ImageJobsManager/DetailsJob.vue'
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, onErrorCaptured } from 'vue';
 import { toast } from 'vue-sonner';
 import { comfyuiAPI } from '@/services/api';
 
@@ -119,16 +119,24 @@ export default {
     const previewImage = ref(null);
     const refreshInterval = ref(null);
     
+    // Computed properties để đảm bảo safe access
+    const safeActiveJobs = computed(() => Array.isArray(activeJobs.value) ? activeJobs.value : []);
+    const safeCompletedJobs = computed(() => Array.isArray(completedJobs.value) ? completedJobs.value : []);
+    const safeFailedJobs = computed(() => Array.isArray(failedJobs.value) ? failedJobs.value : []);
+    
     // Fetch active jobs
     const fetchActiveJobs = async () => {
       try {
         const response = await comfyuiAPI.getActiveJobs();
         if (response.data.success) {
-          activeJobs.value = response.data.active_jobs;
+          activeJobs.value = response.data.data?.active_jobs || [];
+        } else {
+          activeJobs.value = [];
         }
       } catch (error) {
         console.error('Lỗi khi lấy tiến trình đang hoạt động:', error);
         toast.error('Không thể tải danh sách tiến trình đang hoạt động');
+        activeJobs.value = [];
       }
     };
     
@@ -137,11 +145,14 @@ export default {
       try {
         const response = await comfyuiAPI.getCompletedJobs();
         if (response.data.success) {
-          completedJobs.value = response.data.completed_jobs;
+          completedJobs.value = response.data.data?.completed_jobs || [];
+        } else {
+          completedJobs.value = [];
         }
       } catch (error) {
         console.error('Lỗi khi lấy tiến trình đã hoàn thành:', error);
         toast.error('Không thể tải danh sách tiến trình đã hoàn thành');
+        completedJobs.value = [];
       } finally {
         isLoading.value = false;
       }
@@ -152,19 +163,28 @@ export default {
       try {
         const response = await comfyuiAPI.getFailedJobs();
         if (response.data.success) {
-          failedJobs.value = response.data.failed_jobs;
+          failedJobs.value = response.data.data?.failed_jobs || [];
+        } else {
+          failedJobs.value = [];
         }
       } catch (error) {
         console.error('Lỗi khi lấy tiến trình thất bại:', error);
         toast.error('Không thể tải danh sách tiến trình thất bại');
+        failedJobs.value = [];
       }
     };
     
     // Fetch all jobs
     const fetchAllJobs = async () => {
-      isLoading.value = true;
-      await Promise.all([fetchActiveJobs(), fetchCompletedJobs(), fetchFailedJobs()]);
-      isLoading.value = false;
+      try {
+        isLoading.value = true;
+        await Promise.all([fetchActiveJobs(), fetchCompletedJobs(), fetchFailedJobs()]);
+      } catch (error) {
+        console.error('Error fetching all jobs:', error);
+        toast.error('Không thể tải danh sách công việc');
+      } finally {
+        isLoading.value = false;
+      }
     };    
 
     // View image details
@@ -194,11 +214,25 @@ export default {
       }
     });
     
+    // Error boundary để bắt lỗi unhandled
+    onErrorCaptured((error, instance, info) => {
+      console.error('Error captured in ImageJobsManager:', error, info);
+      
+      // Không hiển thị toast cho runtime errors từ browser extension
+      if (!error.message?.includes('runtime.lastError') && 
+          !error.message?.includes('Could not establish connection')) {
+        toast.error('Có lỗi xảy ra trong ứng dụng. Vui lòng thử lại.');
+      }
+      
+      // Trả về false để ngăn error bubble up
+      return false;
+    });
+    
     return {
       activeTab,
-      activeJobs,
-      completedJobs,
-      failedJobs,
+      activeJobs: safeActiveJobs,
+      completedJobs: safeCompletedJobs,
+      failedJobs: safeFailedJobs,
       isLoading,
       previewImage,
       fetchActiveJobs,

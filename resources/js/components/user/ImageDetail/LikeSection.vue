@@ -18,7 +18,7 @@
             <router-link
                 :to="{ name: 'createimage', params: { encodedID: encodedID(featureImage?.id || 1) }}"
                 class="text-blue-500 hover:underline ml-auto text-sm font-medium">
-            <i class="fa-solid fa-square-caret-right" style="color: #74C0FC;"></i> {{ featureImage?.title || 'Lỗi 404' }}</router-link>
+            <i class="fa-solid fa-square-caret-right" style="color: #74C0FC;"></i> {{ featureImage?.title || 'Đang tải...' }}</router-link>
         </div>
     </div>
 </template>

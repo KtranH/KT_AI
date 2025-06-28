@@ -49,10 +49,10 @@ interface UserRepositoryInterface
 
     /**
      * Tăng số lượng lượt thích khi người dùng thích
-     * @param User $user User
+     * @param int $userId ID của user
      * @return void
      */
-    public function increaseSumLike(User $user): void;
+    public function increaseSumLike(int $userId): void;
 
     /**
      * Tăng số lượng credits khi người dùng tạo ảnh thất bại
@@ -77,10 +77,10 @@ interface UserRepositoryInterface
 
     /**
      * Giảm số lượng lượt thích khi người dùng xóa
-     * @param User $user User
+     * @param int $userId ID của user
      * @return void
      */
-    public function decreaseSumLike(User $user): void;
+    public function decreaseSumLike(int $userId): void;
 
     /**
      * Lấy user hiện tại
@@ -157,4 +157,14 @@ interface UserRepositoryInterface
      * @return int Số lượng ảnh user
      */
     public function checkSumImg(int $id): int;
+
+    /**
+     * Tìm user theo ID (có thể null)
+     */
+    public function findById(int $userId): ?User;
+    
+    /**
+     * Lấy user với thông tin cần thiết cho notification
+     */
+    public function getUserForNotification(int $userId): ?User;
 }

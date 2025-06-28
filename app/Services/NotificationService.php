@@ -19,7 +19,10 @@ class NotificationService
     protected $userRepository;
     private const DEFAULT_AVATAR_URL = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
     
-    public function __construct(NotificationRepositoryInterface $notificationRepository, UserRepositoryInterface $userRepository) {
+    public function __construct(
+        NotificationRepositoryInterface $notificationRepository, 
+        UserRepositoryInterface $userRepository
+    ) {
         $this->notificationRepository = $notificationRepository;
         $this->userRepository = $userRepository;
     }
@@ -113,7 +116,7 @@ class NotificationService
         }
 
         $commenter = $this->getUserWithDefaultAvatar($commenterId);
-        $imageOwner = User::find($imageOwnerId);
+        $imageOwner = $this->userRepository->findById($imageOwnerId);
 
         if ($commenter && $imageOwner) {
             try {
@@ -137,7 +140,7 @@ class NotificationService
         }
 
         $replier = $this->getUserWithDefaultAvatar($replierId);
-        $commentOwner = User::find($commentOwnerId);
+        $commentOwner = $this->userRepository->findById($commentOwnerId);
 
         if ($replier && $commentOwner) {
             try {
@@ -159,7 +162,7 @@ class NotificationService
         }
         
         $liker = $this->getUserWithDefaultAvatar($likerId);
-        $commentOwner = User::find($comment->user_id);
+        $commentOwner = $this->userRepository->findById($comment->user_id);
 
         if ($liker && $commentOwner) {
             try {
@@ -205,7 +208,7 @@ class NotificationService
      */
     private function getUserWithDefaultAvatar(int $userId): ?User
     {
-        $user = User::select('id', 'name', 'avatar_url')->find($userId);
+        $user = $this->userRepository->getUserForNotification($userId);
         
         if ($user && $user->avatar_url === null) {
             $user->avatar_url = self::DEFAULT_AVATAR_URL;

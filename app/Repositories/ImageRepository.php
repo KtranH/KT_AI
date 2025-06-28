@@ -29,9 +29,14 @@ class ImageRepository implements ImageRepositoryInterface
             throw new \Exception("Không tìm thấy ảnh với ID: {$id}");
         }
         return [
-            'success' => true,
             'images' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
-            'data' => $image,
+            'data' => $image->only('id', 'prompt', 'features_id', 'sum_like', 'sum_comment', 'created_at', 'updated_at', 'title')
+            + [
+                'ai_feature' => [
+                    'id' => $image->aiFeature->id,
+                    'title' => $image->aiFeature->title,
+                ]
+            ],
             'user' => [
                 'id' => $image->user->id,
                 'name' => $image->user->name,
@@ -470,5 +475,15 @@ class ImageRepository implements ImageRepositoryInterface
         } catch (\Exception $exception) {
             Log::error("Lỗi khi giảm số lượng like cho hình ảnh: {$exception->getMessage()}");
         }
+    }
+
+    /**
+     * Kiểm tra xem có hình ảnh mới kể từ timestamp
+     */
+    public function hasNewImagesForUser(int $userId, int $timestampAfter): bool
+    {
+        return Image::where('user_id', $userId)
+            ->where('created_at', '>', date('Y-m-d H:i:s', $timestampAfter))
+            ->exists();
     }
 }

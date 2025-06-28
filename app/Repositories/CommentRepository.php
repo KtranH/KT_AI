@@ -187,5 +187,41 @@ class CommentRepository implements CommentRepositoryInterface
             $image->decrement('sum_comment');
         }
     }
+    public function update(Comment $comment)
+    {
+        $comment->save();
+        return $comment;
+    }
+    
+    /**
+     * Tìm comment theo ID
+     */
+    public function findById(int $commentId): ?Comment
+    {
+        return Comment::find($commentId);
+    }
+    
+    /**
+     * Đếm số lượng comment của một ảnh
+     */
+    public function countByImageId(int $imageId): int
+    {
+        return Comment::where('image_id', $imageId)
+            ->where('parent_id', null)
+            ->count();
+    }
+    
+    /**
+     * Đưa comment gốc lên đầu bằng cách touch updated_at
+     */
+    public function touchComment(int $commentId): bool
+    {
+        $comment = Comment::find($commentId);
+        if ($comment) {
+            $comment->touch();
+            return true;
+        }
+        return false;
+    }
 }
 

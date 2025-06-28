@@ -50,11 +50,27 @@ export const useImageStore = defineStore('image',
 
                     const response = await imageAPI.getImages(processedId)
                     if (response.data && response.data.success) {
-                        this.images = response.data.images
-                        this.data = toRaw(response.data.data)
-                        if (response.data.user) {
-                            this.user = toRaw(response.data.user)
-                            this.lastUser = { ...toRaw(response.data.user) }
+                        // Kiểm tra structure thực tế
+                        if (response.data.data && response.data.data.images) {
+                            // Structure: {success: true, data: {images: [...], data: {...}, user: {...}}}
+                            const responseData = response.data.data;
+                            
+                            this.images = responseData.images || []
+                            this.data = toRaw(responseData.data)  // Lấy image data thực tế
+                            
+                            if (responseData.user) {
+                                this.user = toRaw(responseData.user)
+                                this.lastUser = { ...toRaw(responseData.user) }
+                            }
+                        } else {
+                            // Structure: {success: true, data: {...}, images: [...], user: {...}}
+                            this.images = response.data.images || []
+                            this.data = toRaw(response.data.data)  
+                            
+                            if (response.data.user) {
+                                this.user = toRaw(response.data.user)
+                                this.lastUser = { ...toRaw(response.data.user) }
+                            }
                         }
                         
                         this.lastFetchedId = processedId;
@@ -97,16 +113,30 @@ export const useImageStore = defineStore('image',
                     const response = await apiMethod
                     
                     if (response.data && response.data.success) {
-                        // Kiểm tra dữ liệu trong response
+                        // Kiểm tra dữ liệu trong response với structure mới
                         let dataToProcess = []
                         
-                        // Cấu trúc response: {success: true, data: {data: [...], pagination: {...}}, message: null}
-                        if (response.data.data && Array.isArray(response.data.data.data)) {
-                            dataToProcess = response.data.data.data
-                        } else if (Array.isArray(response.data.data)) {
+                        // Structure mới: {success: true, data: {images: [...], data: {...}, user: {...}}, message: null}
+                        // Hoặc structure cũ: {success: true, data: {data: [...], pagination: {...}}, message: null}
+                        
+                        if (response.data.data && Array.isArray(response.data.data)) {
+                            // Structure cũ: response.data.data là array
                             dataToProcess = response.data.data
+                        } else if (response.data.data && Array.isArray(response.data.data.data)) {
+                            // Structure với pagination: response.data.data.data là array
+                            dataToProcess = response.data.data.data
                         } else if (response.data.images && Array.isArray(response.data.images)) {
-                            dataToProcess = response.data.images
+                            // Structure mới: response.data.images là array URLs
+                            // Trong trường hợp này, cần tạo object từ response.data.data và response.data.images
+                            if (response.data.data) {
+                                dataToProcess = [{
+                                    ...response.data.data,
+                                    image_url: response.data.images,
+                                    user: response.data.user
+                                }]
+                            } else {
+                                dataToProcess = []
+                            }
                         } else {
                             console.warn(`Không tìm thấy mảng dữ liệu trong response cho ${targetArray}`, response.data)
                             dataToProcess = []
@@ -230,12 +260,24 @@ export const useImageStore = defineStore('image',
                 try {
                     const response = await imageAPI.getImagesByFeature(id, page)             
                     if (response.data && response.data.success) {
-                        // Lấy dữ liệu từ response - kiểm tra cấu trúc nested
+                        // Lấy dữ liệu từ response - xử lý structure mới
                         let imageData = [];
-                        if (response.data.data && Array.isArray(response.data.data.data)) {
-                            imageData = response.data.data.data;
-                        } else if (Array.isArray(response.data.data)) {
+                        
+                        if (response.data.data && Array.isArray(response.data.data)) {
+                            // Structure cũ: response.data.data là array
                             imageData = response.data.data;
+                        } else if (response.data.data && Array.isArray(response.data.data.data)) {
+                            // Structure với pagination: response.data.data.data là array
+                            imageData = response.data.data.data;
+                        } else if (response.data.images && Array.isArray(response.data.images)) {
+                            // Structure mới: response.data.images là array URLs
+                            if (response.data.data) {
+                                imageData = [{
+                                    ...response.data.data,
+                                    image_url: response.data.images,
+                                    user: response.data.user
+                                }];
+                            }
                         }
                         
                         // Xử lý dữ liệu đặc biệt cho tính năng này (thêm currentSlideIndex)

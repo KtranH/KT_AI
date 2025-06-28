@@ -52,13 +52,16 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * Tăng số lượng lượt thích khi người dùng thích
-     * @param User $user Người dùng
+     * @param int $userId ID của user
      * @return void
      */
-    public function increaseSumLike(User $user): void
+    public function increaseSumLike(int $userId): void
     {
-        $user->sum_like++;
-        $user->save();
+        $user = User::find($userId);
+        if ($user) {
+            $user->sum_like++;
+            $user->save();
+        }
     }
 
     /**
@@ -114,12 +117,13 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * Giảm số lượng lượt thích khi người dùng xóa
-     * @param User $user Người dùng
+     * @param int $userId ID của user
      * @return void
      */
-    public function decreaseSumLike(User $user): void
+    public function decreaseSumLike(int $userId): void
     {
-        if ($user->sum_like > 0) {
+        $user = User::find($userId);
+        if ($user && $user->sum_like > 0) {
             $user->sum_like--;
             $user->save();
         }
@@ -369,5 +373,21 @@ class UserRepository implements UserRepositoryInterface
             return 0;
         }
         return $user->sum_img;
+    }
+
+    /**
+     * Tìm user theo ID (có thể null)
+     */
+    public function findById(int $userId): ?User
+    {
+        return User::find($userId);
+    }
+    
+    /**
+     * Lấy user với thông tin cần thiết cho notification
+     */
+    public function getUserForNotification(int $userId): ?User
+    {
+        return User::select('id', 'name', 'avatar_url')->find($userId);
     }
 }

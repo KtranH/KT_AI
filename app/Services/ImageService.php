@@ -146,9 +146,7 @@ class ImageService
         $lastCheckTimestamp = Cache::get($lastCheckCacheKey, 0);
         
         // Kiểm tra có hình ảnh mới kể từ lần kiểm tra cuối không
-        $hasNewImages = Image::where('user_id', $userId)
-            ->where('created_at', '>', date('Y-m-d H:i:s', $lastCheckTimestamp))
-            ->exists();
+        $hasNewImages = $this->imageRepository->hasNewImagesForUser($userId, $lastCheckTimestamp);
         
         // Cập nhật timestamp lần kiểm tra hiện tại
         Cache::put($lastCheckCacheKey, time(), now()->addHours(24));

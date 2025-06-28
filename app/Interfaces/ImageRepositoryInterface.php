@@ -137,4 +137,9 @@ interface ImageRepositoryInterface
      * @return void
      */
     public function decrementSumLike(int $imageId): void;
+
+    /**
+     * Kiểm tra xem có hình ảnh mới kể từ timestamp
+     */
+    public function hasNewImagesForUser(int $userId, int $timestampAfter): bool;
 } 

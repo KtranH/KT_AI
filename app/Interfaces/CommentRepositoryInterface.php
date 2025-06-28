@@ -81,4 +81,19 @@ interface CommentRepositoryInterface
     * @return void
     */
     public function decrementImageCommentCount(int $imageId): void;
+    
+    /**
+     * Tìm comment theo ID
+     */
+    public function findById(int $commentId): ?Comment;
+    
+    /**
+     * Đếm số lượng comment của một ảnh
+     */
+    public function countByImageId(int $imageId): int;
+    
+    /**
+     * Đưa comment gốc lên đầu bằng cách touch updated_at
+     */
+    public function touchComment(int $commentId): bool;
 } 

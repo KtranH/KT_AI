@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class LikeService
+class LikeService extends BaseService
 {
     protected $likeRepository;
     protected $imageRepository;
@@ -70,23 +70,20 @@ class LikeService
      */
     public function likePost(int $id): array
     {
-        try {
-            // Kiểm tra xem ảnh có tồn tại không
-            $image = $this->likeRepository->checkImageExist($id);
-            
-            if (!$image) {
-                throw new \Exception('Không tìm thấy hình ảnh');
-            }
+        // Kiểm tra xem ảnh có tồn tại không
+        $image = $this->likeRepository->checkImageExist($id);
+        
+        if (!$image) {
+            throw new \Exception('Không tìm thấy hình ảnh');
+        }
 
-            // Kiểm tra xem tương tác đã tồn tại chưa
-            $existingInteraction = $this->likeRepository->checkInteraction($id);
-            if ($existingInteraction) {
-                throw new \Exception('Bạn đã thích hình ảnh này rồi');
-            }
+        // Kiểm tra xem tương tác đã tồn tại chưa
+        $existingInteraction = $this->likeRepository->checkInteraction($id);
+        if ($existingInteraction) {
+            throw new \Exception('Bạn đã thích hình ảnh này rồi');
+        }
 
-            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
-            DB::beginTransaction();
-
+        return $this->executeInTransaction(function() use ($id, $image) {
             // Tạo mới tương tác
             $interaction = $this->likeRepository->store($id, Auth::id());
 
@@ -94,8 +91,8 @@ class LikeService
             $this->imageRepository->incrementSumLike($id);
 
             // Lấy thông tin đầy đủ của người thích
-            $liker = User::find(Auth::id());
-            if ($liker instanceof User) {
+            $liker = $this->userRepository->findById(Auth::id());
+            if ($liker) {
                 $this->userRepository->increaseSumLike($image->user_id);
 
                 // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
@@ -104,7 +101,12 @@ class LikeService
                 }
             }
 
-            DB::commit();
+            // Log action
+            $this->logAction('Image liked', [
+                'image_id' => $id,
+                'user_id' => Auth::id(),
+                'interaction_id' => $interaction->id
+            ]);
             
             return [
                 'interaction_id' => $interaction->id,
@@ -112,12 +114,7 @@ class LikeService
                 'is_liked' => true,
                 'new_like_count' => $image->fresh()->sum_like
             ];
-            
-        } catch (\Exception $exception) {
-            DB::rollBack();
-            Log::error('Lỗi khi thích bài đăng: ' . $exception->getMessage());
-            throw $exception;
-        }
+        });
     }
     
     /**
@@ -131,14 +128,14 @@ class LikeService
     {
         try {
             // Lấy thông tin người sở hữu ảnh
-            $imageOwner = User::find($image->user_id);
-            if (!$imageOwner instanceof User) {
+            $imageOwner = $this->userRepository->findById($image->user_id);
+            if (!$imageOwner) {
                 return;
             }
 
             // Đảm bảo tải đầy đủ thông tin người dùng
-            $fullLikerInfo = User::select('id', 'name', 'avatar_url')->find(Auth::id());
-            if (!$fullLikerInfo instanceof User) {
+            $fullLikerInfo = $this->userRepository->getUserForNotification(Auth::id());
+            if (!$fullLikerInfo) {
                 return;
             }
 
@@ -163,23 +160,20 @@ class LikeService
      */
     public function unlikePost(int $id): array
     {
-        try {
-            // Kiểm tra xem ảnh có tồn tại không
-            $image = $this->likeRepository->checkImageExist($id);
-            
-            if (!$image) {
-                throw new \Exception('Không tìm thấy hình ảnh');
-            }
+        // Kiểm tra xem ảnh có tồn tại không
+        $image = $this->likeRepository->checkImageExist($id);
+        
+        if (!$image) {
+            throw new \Exception('Không tìm thấy hình ảnh');
+        }
 
-            // Tìm tương tác
-            $interaction = $this->likeRepository->checkInteraction($id);
-            if (!$interaction) {
-                throw new \Exception('Bạn chưa thích hình ảnh này');
-            }
+        // Tìm tương tác
+        $interaction = $this->likeRepository->checkInteraction($id);
+        if (!$interaction) {
+            throw new \Exception('Bạn chưa thích hình ảnh này');
+        }
 
-            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
-            DB::beginTransaction();
-
+        return $this->executeInTransaction(function() use ($id, $image, $interaction) {
             // Xóa tương tác
             $this->likeRepository->delete($interaction);
 
@@ -189,23 +183,22 @@ class LikeService
             }
 
             // Giảm số lượt thích cho người dùng nếu hiện tại > 0
-            $user = User::find(Auth::id());
-            if ($user instanceof User && $user->sum_like > 0) {
+            $user = $this->userRepository->findById(Auth::id());
+            if ($user && $user->sum_like > 0) {
                 $this->userRepository->decreaseSumLike($image->user_id);
             }
 
-            DB::commit();
+            // Log action
+            $this->logAction('Image unliked', [
+                'image_id' => $id,
+                'user_id' => Auth::id()
+            ]);
             
             return [
                 'image_id' => $id,
                 'is_liked' => false,
                 'new_like_count' => $image->fresh()->sum_like
             ];
-            
-        } catch (\Exception $exception) {
-            DB::rollBack();
-            Log::error('Lỗi khi bỏ thích bài đăng: ' . $exception->getMessage());
-            throw $exception;
-        }
+        });
     }
 }
