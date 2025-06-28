@@ -1,0 +1,211 @@
+<?php
+
+namespace App\Services;
+use App\Interfaces\LikeRepositoryInterface;
+use App\Interfaces\ImageRepositoryInterface;
+use App\Interfaces\UserRepositoryInterface;
+use App\Http\Resources\LikeResource;
+use App\Models\User;
+use App\Models\Image;
+use App\Models\Interaction;
+use App\Notifications\LikeImageNotification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
+class LikeService
+{
+    protected $likeRepository;
+    protected $imageRepository;
+    protected $userRepository;
+    
+    public function __construct(
+        LikeRepositoryInterface $likeRepository,
+        ImageRepositoryInterface $imageRepository,
+        UserRepositoryInterface $userRepository
+    ) {
+        $this->likeRepository = $likeRepository;
+        $this->imageRepository = $imageRepository;
+        $this->userRepository = $userRepository;
+    }
+    
+    /**
+     * Kiểm tra xem ảnh đã được thích hay chưa
+     *
+     * @param int $id
+     * @return array
+     */
+    public function checkLiked(int $id): array
+    {
+        $isLiked = $this->likeRepository->checkLiked($id);
+        
+        return [
+            'is_liked' => $isLiked,
+            'image_id' => $id
+        ];
+    }
+    
+    /**
+     * Lấy danh sách likes
+     *
+     * @param int $id
+     * @return array
+     */
+    public function getLikes(int $id): array
+    {
+        $likes = $this->likeRepository->getLikes($id);
+        
+        return [
+            'like' => LikeResource::collection($likes),
+            'count' => $likes->count()
+        ];
+    }
+    
+    /**
+     * Thích một bài đăng
+     *
+     * @param int $id ID của hình ảnh
+     * @return array Trả về thông tin like operation
+     * @throws \Exception
+     */
+    public function likePost(int $id): array
+    {
+        try {
+            // Kiểm tra xem ảnh có tồn tại không
+            $image = $this->likeRepository->checkImageExist($id);
+            
+            if (!$image) {
+                throw new \Exception('Không tìm thấy hình ảnh');
+            }
+
+            // Kiểm tra xem tương tác đã tồn tại chưa
+            $existingInteraction = $this->likeRepository->checkInteraction($id);
+            if ($existingInteraction) {
+                throw new \Exception('Bạn đã thích hình ảnh này rồi');
+            }
+
+            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+            DB::beginTransaction();
+
+            // Tạo mới tương tác
+            $interaction = $this->likeRepository->store($id, Auth::id());
+
+            // Cập nhật số lượt thích cho ảnh
+            $this->imageRepository->incrementSumLike($id);
+
+            // Lấy thông tin đầy đủ của người thích
+            $liker = User::find(Auth::id());
+            if ($liker instanceof User) {
+                $this->userRepository->increaseSumLike($image->user_id);
+
+                // Gửi thông báo tới chủ ảnh (nếu không phải chính họ thích)
+                if ($image->user_id !== Auth::id()) {
+                    $this->sendNotification($interaction, $image);
+                }
+            }
+
+            DB::commit();
+            
+            return [
+                'interaction_id' => $interaction->id,
+                'image_id' => $id,
+                'is_liked' => true,
+                'new_like_count' => $image->fresh()->sum_like
+            ];
+            
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            Log::error('Lỗi khi thích bài đăng: ' . $exception->getMessage());
+            throw $exception;
+        }
+    }
+    
+    /**
+     * Gửi thông báo khi có người thích bài đăng
+     *
+     * @param \App\Models\Interaction $interaction Tương tác thích
+     * @param \App\Models\Image $image Hình ảnh được thích
+     * @return void
+     */
+    private function sendNotification(Interaction $interaction, Image $image): void
+    {
+        try {
+            // Lấy thông tin người sở hữu ảnh
+            $imageOwner = User::find($image->user_id);
+            if (!$imageOwner instanceof User) {
+                return;
+            }
+
+            // Đảm bảo tải đầy đủ thông tin người dùng
+            $fullLikerInfo = User::select('id', 'name', 'avatar_url')->find(Auth::id());
+            if (!$fullLikerInfo instanceof User) {
+                return;
+            }
+
+            // Nếu avatar_url là null, gán giá trị mặc định
+            if ($fullLikerInfo->avatar_url === null) {
+                $fullLikerInfo->avatar_url = "https://pub-ed515111f589440fb333ebcd308ee890.r2.dev/img/avatar.png";
+            }
+
+            // Gửi thông báo tới chủ sở hữu ảnh
+            $imageOwner->notify(new LikeImageNotification($interaction, $fullLikerInfo, $image));
+        } catch (\Exception $exception) {
+            Log::error('Lỗi khi gửi thông báo: ' . $exception->getMessage());
+        }
+    }
+    
+    /**
+     * Bỏ thích một bài đăng
+     *
+     * @param int $id ID của hình ảnh
+     * @return array Trả về thông tin unlike operation
+     * @throws \Exception
+     */
+    public function unlikePost(int $id): array
+    {
+        try {
+            // Kiểm tra xem ảnh có tồn tại không
+            $image = $this->likeRepository->checkImageExist($id);
+            
+            if (!$image) {
+                throw new \Exception('Không tìm thấy hình ảnh');
+            }
+
+            // Tìm tương tác
+            $interaction = $this->likeRepository->checkInteraction($id);
+            if (!$interaction) {
+                throw new \Exception('Bạn chưa thích hình ảnh này');
+            }
+
+            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+            DB::beginTransaction();
+
+            // Xóa tương tác
+            $this->likeRepository->delete($interaction);
+
+            // Giảm số lượt thích cho ảnh nếu hiện tại > 0
+            if ($image->sum_like > 0) {
+                $this->imageRepository->decrementSumLike($id);
+            }
+
+            // Giảm số lượt thích cho người dùng nếu hiện tại > 0
+            $user = User::find(Auth::id());
+            if ($user instanceof User && $user->sum_like > 0) {
+                $this->userRepository->decreaseSumLike($image->user_id);
+            }
+
+            DB::commit();
+            
+            return [
+                'image_id' => $id,
+                'is_liked' => false,
+                'new_like_count' => $image->fresh()->sum_like
+            ];
+            
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            Log::error('Lỗi khi bỏ thích bài đăng: ' . $exception->getMessage());
+            throw $exception;
+        }
+    }
+}

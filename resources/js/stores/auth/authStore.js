@@ -1,0 +1,302 @@
+import { ref, computed } from 'vue'
+import router from '../../router'
+import { authAPI, googleAPI, profileAPI } from '../../services/api'
+import { useImageStore } from '@/stores/user/imagesStore'
+import { useLikeStore } from '@/stores/user/likeStore'
+import { refreshCsrfToken } from '../../config/apiConfig'
+
+// Import biến toàn cục từ useNotifications
+import '@/composables/user/useNotifications'
+
+// Reactive state
+const parseUserData = () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem('user') || 'null');
+    if (userData && !userData.id) {
+      console.warn('User data không có ID', userData);
+      return null;
+    }
+    return userData;
+  } catch (e) {
+    console.error('Lỗi khi parse user data:', e);
+    localStorage.removeItem('user');
+    return null;
+  }
+};
+
+const user = ref(parseUserData());
+const token = ref(localStorage.getItem('token') || null);
+const isRemembered = ref(localStorage.getItem('remember') === 'true');
+const isAuthenticated = computed(() => !!user.value && !!user.value.id);
+
+export const useAuthStore = () => {
+  const storeImage = useImageStore()
+  const storeLike = useLikeStore()
+  const saveAuthData = (userData, userToken, remember = false) => {
+    user.value = userData
+    token.value = userToken
+    isRemembered.value = remember
+
+    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('token', userToken)
+    localStorage.setItem('remember', remember)
+
+    // Nếu không remember, dữ liệu sẽ bị xóa khi đóng trình duyệt
+    if (!remember) {
+      sessionStorage.setItem('user', JSON.stringify(userData))
+      sessionStorage.setItem('token', userToken)
+    }
+  }
+
+  const clearAuthData = () => {
+    user.value = null
+    token.value = null
+    isRemembered.value = false
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('remember')
+    sessionStorage.removeItem('user')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('remember')
+
+    // Xóa dữ liệu trong các store khác nếu cần
+    if (window.$pinia) {
+      const stores = window.$pinia._s
+      Object.keys(stores).forEach(key => {
+        if (key !== 'auth') {
+          stores[key].$reset()
+        }
+      })
+    }
+  }
+
+  const checkAuth = async () => {
+    try {
+      // Nếu không remember, kiểm tra trong sessionStorage
+      if (!isRemembered.value) {
+        const sessionToken = sessionStorage.getItem('token')
+        const sessionUser = sessionStorage.getItem('user')
+
+        if (!sessionToken || !sessionUser) {
+          clearAuthData()
+          return false
+        }
+
+        token.value = sessionToken
+        user.value = JSON.parse(sessionUser)
+      }
+
+      if (!token.value || !user.value) return false
+
+      const response = await authAPI.check()
+
+      // Cấu trúc mới: {success: true, data: {authenticated: true, user: {...}}, message: null}
+      if (response.data && response.data.success && response.data.data) {
+        const authData = response.data.data
+        if (authData.authenticated) {
+          if (isRemembered.value) {
+            saveAuthData(authData.user, token.value, true)
+          } else {
+            saveAuthData(authData.user, token.value, false)
+          }
+          return true
+        } else {
+          clearAuthData()
+          return false
+        }
+      } else {
+        clearAuthData()
+        return false
+      }
+    } catch (error) {
+      clearAuthData()
+      console.error('Error checking auth:', error)
+      return false
+    }
+  }
+
+  // Hàm khởi tạo để thay thế onMounted
+  const initializeAuth = async () => {
+    // Luôn lấy CSRF token mới khi khởi động ứng dụng
+    await refreshCsrfToken()
+
+    // Kiểm tra trạng thái đăng nhập
+    await checkAuth()
+  }
+
+  const login = async (credentials) => {
+    try {
+      // Lấy CSRF token mới trước khi đăng nhập
+      await refreshCsrfToken()
+
+      const response = await authAPI.login(credentials)
+      
+      // Cấu trúc mới: {success: true, data: {user: {...}, token: "...", remember: true}, message: "Đăng nhập thành công"}
+      if (response.data && response.data.success && response.data.data) {
+        const loginData = response.data.data
+        
+        // Kiểm tra nếu cần verification
+        if (loginData.needs_verification) {
+          return loginData
+        }
+        
+        saveAuthData(loginData.user, loginData.token, loginData.remember)
+        
+        // Sử dụng router.push thay vì window.location để tránh reload trang
+        // và thêm một khoảng thời gian ngắn để đảm bảo dữ liệu đã được lưu
+        setTimeout(() => {
+          router.push(router.currentRoute.value.query.redirect || '/dashboard')
+        }, 100)
+        
+        return loginData
+      } else {
+        // Fallback cho response structure cũ (backward compatibility)
+        if (response.data.needs_verification) {
+          return response.data
+        }
+        saveAuthData(response.data.user, response.data.token, response.data.remember)
+        
+        setTimeout(() => {
+          router.push(router.currentRoute.value.query.redirect || '/dashboard')
+        }, 100)
+        
+        return response.data
+      }
+    } catch (error) {
+      // Lỗi đã được xử lý tự động bởi interceptor, không cần xử lý thêm lỗi CSRF ở đây nữa
+      throw error
+    }
+  }
+
+  const logout = async () => {
+    try {
+      // Lấy CSRF token mới trước khi đăng xuất
+      await refreshCsrfToken()
+
+      // Dọn dẹp kết nối Echo trước khi đăng xuất để tránh thông báo không cần thiết
+      if (window.Echo) {
+        // Dọn dẹp biến toàn cục từ useNotifications nếu tồn tại
+        if (typeof globalEchoConnection !== 'undefined' && globalEchoConnection) {
+          globalEchoConnection.stopListening('notification')
+          globalEchoConnection = null
+          
+          if (typeof connectedUserId !== 'undefined') {
+            connectedUserId = null
+          }
+          
+          if (typeof isListeningToNotifications !== 'undefined') {
+            isListeningToNotifications = false
+          }
+        }
+        
+        // Ngắt kết nối tất cả các kênh
+        window.Echo.disconnect()
+      }
+
+      const response = await authAPI.logout()
+      storeImage.clearImages()
+      storeImage.clearImagesCreatedByUser()
+      storeLike.clearLikes()
+      clearAuthData()
+
+      // Cấu trúc mới: {success: true, data: {csrf_token: "...", logged_out: true}, message: "Đăng xuất thành công"}
+      let csrfToken = null
+      if (response.data && response.data.success && response.data.data) {
+        csrfToken = response.data.data.csrf_token
+      } else if (response.data && response.data.csrf_token) {
+        // Fallback cho response structure cũ
+        csrfToken = response.data.csrf_token
+      }
+
+      // Cập nhật CSRF token mới từ phản hồi
+      if (csrfToken) {
+        document.cookie = `XSRF-TOKEN=${csrfToken}; path=/`
+      }
+
+      // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
+      await refreshCsrfToken()
+
+      // Sử dụng router.replace thay vì router.push để tránh lịch sử điều hướng không cần thiết
+      router.replace('/login')
+
+    } catch (error) {
+      console.error('Logout error:', error)
+
+      // Xử lý lỗi CSRF token mismatch (419)
+      if (error.response && error.response.status === 419) {
+        // Vẫn xóa dữ liệu người dùng
+        storeImage.clearImages()
+        storeImage.clearImagesCreatedByUser()
+        storeLike.clearLikes()
+        clearAuthData()
+
+        // Sử dụng router để điều hướng thay vì window.location.reload
+        router.replace('/login')
+        return
+      }
+
+      // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi khác
+      await refreshCsrfToken()
+      
+      // Luôn chuyển hướng về trang đăng nhập sau khi đăng xuất
+      router.replace('/login')
+    }
+  }
+
+  const handleLoginByGoogle = async () => {
+    try {
+      const response = await googleAPI.getAuthUrl()
+      const googleAuthUrl = response.data.url
+
+      const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600')
+
+      // Lắng nghe phản hồi từ popup
+      const messageHandler = (event) => {
+        if (event.origin !== window.location.origin) return
+
+        const { success, token, user } = event.data
+
+        if (success) {
+          // Đóng popup
+          popup.close()
+          
+          // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
+          saveAuthData(user, token, true)
+
+          // Sử dụng router.push() thay vì window.location.reload()
+          router.push('/dashboard')
+        } else {
+          console.error('Đăng nhập thất bại:', event.data.message)
+        }
+        
+        // Xóa event listener
+        window.removeEventListener('message', messageHandler)
+      }
+
+      window.addEventListener('message', messageHandler)
+
+      // Xử lý trường hợp popup bị đóng thủ công
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          window.removeEventListener('message', messageHandler)
+        }
+      }, 1000)
+
+    } catch (error) {
+      console.error('Lỗi trong quá trình đăng nhập Google:', error)
+    }
+  }
+
+
+  return {
+    user,
+    token,
+    isAuthenticated,
+    checkAuth,
+    login,
+    logout,
+    handleLoginByGoogle,
+    initializeAuth
+  }
+}
