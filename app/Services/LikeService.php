@@ -81,7 +81,7 @@ class LikeService extends BaseService
             throw new \Exception('Bạn đã thích hình ảnh này rồi');
         }
 
-        return $this->executeInTransaction(function() use ($id, $image) {
+        return $this->executeInTransactionSafely(function() use ($id, $image) {
             // Tạo mới tương tác
             $interaction = $this->likeRepository->store($id, Auth::id());
 
@@ -112,7 +112,7 @@ class LikeService extends BaseService
                 'is_liked' => true,
                 'new_like_count' => $image->fresh()->sum_like
             ];
-        });
+        }, "Liking image ID: $id");
     }
     
     /**
@@ -171,7 +171,7 @@ class LikeService extends BaseService
             throw new \Exception('Bạn chưa thích hình ảnh này');
         }
 
-        return $this->executeInTransaction(function() use ($id, $image, $interaction) {
+        return $this->executeInTransactionSafely(function() use ($id, $image, $interaction) {
             // Xóa tương tác
             $this->likeRepository->delete($interaction);
 
@@ -197,6 +197,6 @@ class LikeService extends BaseService
                 'is_liked' => false,
                 'new_like_count' => $image->fresh()->sum_like
             ];
-        });
+        }, "Unliking image ID: $id");
     }
 }

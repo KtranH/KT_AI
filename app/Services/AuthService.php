@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Exceptions\ExternalServiceException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -10,11 +12,12 @@ use App\Services\TurnStileService;
 use App\Services\MailService;
 
 
-class AuthService
+class AuthService extends BaseService
 {
     protected MailService $mailService;
     protected UserRepository $userRepository;
     protected TurnStileService $turnStileService;
+    
     
     public function __construct(UserRepository $userRepository, TurnStileService $turnStileService, MailService $mailService) 
     {
@@ -41,27 +44,32 @@ class AuthService
      */
     public function register(Request $request): array
     {
-        // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile(
-            $request->input('cf-turnstile-response'), 
-            $request->ip()
-        );
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            // Xác thực Turnstile
+            $turnstileResponse = $this->turnStileService->verifyTurnstile(
+                $request->input('cf-turnstile-response'), 
+                $request->ip()
+            );
 
-        if (!$turnstileResponse['success']) {
-            throw new \Exception('Xác thực không thành công. Vui lòng thử lại.');
-        }
+            if (!$turnstileResponse['success']) {
+                throw new ExternalServiceException(
+                    'Lỗi xác thực Turnstile: Xác thực không thành công',
+                    ['service' => 'Turnstile', 'ip' => $request->ip()]
+                );
+            }
 
-        $user = $this->userRepository->store($request->all());
-        
-        if (!$this->mailService->sendMail($user)) {
-            throw new \Exception('Lỗi khi gửi mã xác thực');
-        }
-        
-        return [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'verification_sent' => true
-        ];
+            $user = $this->userRepository->store($request->all());
+            
+            if (!$this->mailService->sendMail($user)) {
+                throw ExternalServiceException::emailServiceError('Failed to send verification email');
+            }
+            
+            return [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'verification_sent' => true
+            ];
+        }, "Registering user with email: {$request->input('email')}");
     }
     
     /**
@@ -72,49 +80,51 @@ class AuthService
      */
     public function login(Request $request): array
     {
-        // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile(
-            $request->input('cf-turnstile-response'), 
-            $request->ip()
-        );
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            // Xác thực Turnstile
+            $turnstileResponse = $this->turnStileService->verifyTurnstile(
+                $request->input('cf-turnstile-response'), 
+                $request->ip()
+            );
 
-        if (!$turnstileResponse['success']) {
-            throw ValidationException::withMessages([
-                'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
-            ]);
-        }
+            if (!$turnstileResponse['success']) {
+                throw ValidationException::withMessages([
+                    'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
+                ]);
+            }
 
-        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            throw ValidationException::withMessages([
-                'email' => ['Thông tin đăng nhập không chính xác.'],
-            ]);
-        }
-        
-        // Lấy user mới nhất từ database
-        $user = $this->userRepository->getUser();
+            if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+                throw ValidationException::withMessages([
+                    'email' => ['Thông tin đăng nhập không chính xác.'],
+                ]);
+            }
+            
+            // Lấy user mới nhất từ database
+            $user = $this->userRepository->getUser();
 
-        if (!$user->is_verified) {
-            Auth::logout();
-            throw new \Exception('Vui lòng xác thực email trước khi đăng nhập.', 403);
-        }
+            if (!$user->is_verified) {
+                Auth::logout();
+                throw BusinessException::invalidPermissions('unverified email');
+            }
 
-        // Tạo token Sanctum với thời hạn phù hợp với lựa chọn remember_me
-        $tokenName = 'auth_token';
+            // Tạo token Sanctum với thời hạn phù hợp với lựa chọn remember_me
+            $tokenName = 'auth_token';
 
-        if ($request->boolean('remember')) {
-            $tokenName = 'auth_token_remember';
-        } else {
-            $tokenName = 'auth_token_session';
-        }
+            if ($request->boolean('remember')) {
+                $tokenName = 'auth_token_remember';
+            } else {
+                $tokenName = 'auth_token_session';
+            }
 
-        $token = $user->createToken($tokenName)->plainTextToken;
+            $token = $user->createToken($tokenName)->plainTextToken;
 
-        return [
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'remember' => $request->boolean('remember')
-        ];
+            return [
+                'user' => $user,
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'remember' => $request->boolean('remember')
+            ];
+        }, "Login attempt for email: {$request->input('email')}");
     }
 
     /**
@@ -126,38 +136,40 @@ class AuthService
      */
     public function apiLogin(Request $request): array
     {
-        // Validate input
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'remember' => 'boolean'
-        ]);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            // Validate input
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+                'remember' => 'boolean'
+            ]);
 
-        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            throw new \Exception('Thông tin đăng nhập không chính xác.', 401);
-        }
+            if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+                throw BusinessException::invalidPermissions('incorrect credentials');
+            }
 
-        // Lấy user mới nhất từ database
-        $user = $this->userRepository->getUser();
+            // Lấy user mới nhất từ database
+            $user = $this->userRepository->getUser();
 
-        if (!$user->is_verified) {
-            Auth::logout();
-            throw new \Exception('Vui lòng xác thực email trước khi đăng nhập.', 403);
-        }
+            if (!$user->is_verified) {
+                Auth::logout();
+                throw BusinessException::invalidPermissions('unverified email');
+            }
 
-        // Xóa các token cũ (tuỳ chọn)
-        $user->tokens()->delete();
+            // Xóa các token cũ (tuỳ chọn)
+            $user->tokens()->delete();
 
-        // Tạo token mới
-        $tokenName = $request->boolean('remember') ? 'api_token_remember' : 'api_token';
-        $token = $user->createToken($tokenName)->plainTextToken;
+            // Tạo token mới
+            $tokenName = $request->boolean('remember') ? 'api_token_remember' : 'api_token';
+            $token = $user->createToken($tokenName)->plainTextToken;
 
-        return [
-            'user' => $user->only('id', 'name', 'email', 'is_verified', 'created_at', 'updated_at'),
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'expires_in' => config('sanctum.expiration') * 60 // Convert minutes to seconds
-        ];
+            return [
+                'user' => $user->only('id', 'name', 'email', 'is_verified', 'created_at', 'updated_at'),
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'expires_in' => config('sanctum.expiration') * 60 // Convert minutes to seconds
+            ];
+        }, "API login attempt for email: {$request->input('email')}");
     }
 
     /**
@@ -168,38 +180,16 @@ class AuthService
      */
     public function logout(Request $request): array
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($request) {
             $user = $request->user();
             if ($user && method_exists($user, 'tokens')) {
-                // Nếu dùng token-based, xoá toàn bộ token
                 $user->tokens()->delete();
             }
-
-            // Nếu dùng session-based (Google OAuth), logout session
-            Auth::guard('web')->logout();
-
-            // Đảm bảo regenerate session
-            if ($request->session()) {
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-            }
-
-            // Xóa dữ liệu user trong session
-            if ($request->session()) {
-                $request->session()->forget('user');
-            }
-
-            // Lấy CSRF token mới
-            $token = csrf_token();
-
+            
             return [
-                'csrf_token' => $token,
-                'logged_out' => true
+                'success' => true,
+                'message' => 'Đăng xuất thành công'
             ];
-
-        } catch (\Exception $e) {
-            report($e);
-            throw new \Exception('Đã xảy ra lỗi khi đăng xuất: ' . $e->getMessage());
-        }
+        }, "Logging out user ID: " . ($request->user()->id ?? 'unknown'));
     }
 }

@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ExternalServiceException;
+use App\Exceptions\BusinessException;
 use App\Interfaces\UserRepositoryInterface;
 use App\Mail\VerificationMail;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Exception;
 
 class MailService extends BaseService
 {
@@ -31,7 +30,7 @@ class MailService extends BaseService
      */
     public function sendMail($user): bool
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($user) {
             $verificationcode = Str::random(6);
             Redis::setex("verify_code:{$user->email}", 600, $verificationcode);
             
@@ -50,10 +49,7 @@ class MailService extends BaseService
             ]);
             
             return true;
-        } catch (Exception $e) {
-            Log::error('Lỗi khi gửi email xác nhận: ' . $e->getMessage());
-            return false;
-        }
+        }, "Sending verification email to: {$user->email}");
     }
 
     /**
@@ -61,7 +57,7 @@ class MailService extends BaseService
      */
     public function sendMailResend($user): bool
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($user) {
             $verificationcode = Str::random(6);
             Redis::setex("verify_code:{$user->email}", 600, $verificationcode);
             
@@ -79,10 +75,7 @@ class MailService extends BaseService
             ]);
             
             return true;
-        } catch (Exception $e) {
-            Log::error('Lỗi khi gửi email xác nhận: ' . $e->getMessage());
-            return false;
-        }
+        }, "Resending verification email to: {$user->email}");
     }
 
     /**
@@ -90,7 +83,7 @@ class MailService extends BaseService
      */
     public function sendPasswordChangeVerification($user): bool
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($user) {
             $verificationcode = Str::random(6);
             Redis::setex("password_change_code:{$user->email}", 600, $verificationcode);
             
@@ -108,10 +101,7 @@ class MailService extends BaseService
             ]);
             
             return true;
-        } catch (Exception $e) {
-            Log::error('Lỗi khi gửi email xác nhận đổi mật khẩu: ' . $e->getMessage());
-            return false;
-        }
+        }, "Sending password change verification to: {$user->email}");
     }
 
     /**
@@ -119,7 +109,7 @@ class MailService extends BaseService
      */
     public function verifyEmail(Request $request): JsonResponse
     {
-        return $this->executeInTransaction(function () use ($request) {
+        return $this->executeInTransactionSafely(function () use ($request) {
             $request->validate([
                 'email' => ['required', 'email'],
                 'code' => ['required', 'string', 'size:6'],
@@ -163,7 +153,7 @@ class MailService extends BaseService
                 'message' => 'Xác thực email thành công.',
                 'user' => $user
             ]);
-        });
+        }, "Verifying email for: {$request->email}");
     }
 
     /**
@@ -171,7 +161,7 @@ class MailService extends BaseService
      */
     public function resendVerification(Request $request): JsonResponse
     {
-        return $this->executeInTransaction(function () use ($request) {
+        return $this->executeInTransactionSafely(function () use ($request) {
             $request->validate([
                 'email' => ['required', 'email'],
             ]);
@@ -195,7 +185,7 @@ class MailService extends BaseService
 
             // Gửi email và cập nhật counters
             if (!$this->sendMailResend($user)) {
-                throw new Exception('Lỗi khi gửi mã xác thực');
+                throw ExternalServiceException::emailServiceError('Failed to resend verification code');
             }
 
             $this->updateResendCounters($request->email);
@@ -203,7 +193,7 @@ class MailService extends BaseService
             return response()->json([
                 'message' => 'Đã gửi lại mã xác thực.',
             ]);
-        });
+        }, "Resending verification for: {$request->email}");
     }
 
     /**
@@ -211,11 +201,11 @@ class MailService extends BaseService
      */
     public function sendPasswordChangeVerificationCode(): JsonResponse
     {
-        try {
+        return $this->executeWithExceptionHandling(function() {
             $user = Auth::user();
 
             if (!$user) {
-                throw new Exception('Người dùng chưa đăng nhập', 401);
+                throw BusinessException::invalidPermissions('password change (not authenticated)');
             }
 
             // Kiểm tra rate limiting
@@ -223,7 +213,7 @@ class MailService extends BaseService
 
             // Gửi mã xác thực
             if (!$this->sendPasswordChangeVerification($user)) {
-                throw new Exception('Lỗi khi gửi mã xác thực');
+                throw ExternalServiceException::emailServiceError('Failed to send verification code');
             }
 
             // Lưu thời gian gửi
@@ -233,17 +223,7 @@ class MailService extends BaseService
                 'success' => true,
                 'message' => 'Đã gửi mã xác thực đến email của bạn'
             ]);
-        } catch (Exception $e) {
-            $this->logAction('Password change verification failed', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 500);
-        }
+        }, "Sending password change verification code for user ID: " . Auth::id());
     }
 
     /**
@@ -279,7 +259,7 @@ class MailService extends BaseService
     {
         $lastSentTime = Redis::get("password_change_last_sent:{$email}");
         if ($lastSentTime && (time() - $lastSentTime) < 60) {
-            throw new Exception('Vui lòng đợi 60 giây trước khi gửi lại mã xác thực', 429);
+            throw BusinessException::quotaExceeded('password change verification attempts', 60);
         }
     }
 

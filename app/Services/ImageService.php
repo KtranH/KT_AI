@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Services;
+
+use App\Exceptions\BusinessException;
+use App\Exceptions\ExternalServiceException;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Services\R2StorageService;
 use App\Http\Resources\PaginateAndRespondResource;
@@ -10,7 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-class ImageService
+class ImageService extends BaseService
 {
     protected ImageRepositoryInterface $imageRepository;
     protected R2StorageService $r2StorageService;
@@ -37,7 +40,7 @@ class ImageService
      */
     public function paginateAndRespond(Request $request, string $typeImage, string $errorType, $id = null)
     {
-        try { 
+        return $this->executeWithExceptionHandling(function() use ($request, $typeImage, $id) {
             $perPage = (int)$request->input('per_page', 5);
             $page = (int)$request->input('page', 1);
             
@@ -66,19 +69,13 @@ class ImageService
                     'total' => $paginatedImages->total()
                 ]
             ];
-        } catch (\Exception $e) {
-            // Ghi log lỗi
-            \Log::error("$errorType: " . $e->getMessage(), [
-                'exception' => $e,
-            ]);
-            throw $e;
-        }
+        }, "Paginating images - type: {$typeImage}, page: {$request->input('page', 1)}");
     }
     
     // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
     private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 5, $page = 1)
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($typeImage, $id, $perPage, $page) {
             if ($typeImage === 'liked') {
                 $result = $this->imageRepository->getImagesLikedPaginated($id, $perPage, $page);
                 return $result;
@@ -103,10 +100,7 @@ class ImageService
                     'pageName' => 'page',
                 ]
             );
-        } catch (\Exception $e) {
-            \Log::error('Error in getImagesByTypePaginated: ' . $e->getMessage());
-            throw $e;
-        }
+        }, "Getting paginated images by type: {$typeImage} for ID: {$id}");
     }
     
     // Giữ lại method cũ cho backward compatibility
@@ -156,28 +150,35 @@ class ImageService
     
     public function storeImage(array $request, $featureId)
     {
-        // Kiểm tra nếu không tìm thấy key 'images'
-        if (!isset($request['images'])) {
-            throw new \InvalidArgumentException("Thiếu trường 'images' trong request");
-        }
-        
-        $files = $request['images'];
-        // Duyệt qua từng file ảnh
-        $uploadedPaths = [];
-        foreach ($files as $file) {
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $path = "uploads/features/{$featureId}/user/" . Auth::user()->email . '/' . $fileName;
-            // Upload file và bỏ qua giá trị trả về vì chúng ta chỉ cần path
-            $this->r2StorageService->upload($path, $file, 'public');
-            $uploadedPaths[] = $this->r2StorageService->getUrlR2() . "/" . $path;
-        }
-        // Lưu trữ vào database
-        $data = [
-            'title' => $request['title'] ?? '',
-            'description' => $request['description'] ?? '',
-            'feature_id' => $featureId
-        ];
-        return $this->imageRepository->storeImage($uploadedPaths, Auth::user(), $data);
+        return $this->executeWithExceptionHandling(function() use ($request, $featureId) {
+            // Kiểm tra nếu không tìm thấy key 'images'
+            if (!isset($request['images'])) {
+                throw BusinessException::resourceNotFound('images field in request');
+            }
+            
+            $user = Auth::user();
+            if (!$user) {
+                throw BusinessException::invalidPermissions('image upload (not authenticated)');
+            }
+            
+            $files = $request['images'];
+            // Duyệt qua từng file ảnh
+            $uploadedPaths = [];
+            foreach ($files as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $path = "uploads/features/{$featureId}/user/" . $user->email . '/' . $fileName;
+                // Upload file và bỏ qua giá trị trả về vì chúng ta chỉ cần path
+                $this->r2StorageService->upload($path, $file, 'public');
+                $uploadedPaths[] = $this->r2StorageService->getUrlR2() . "/" . $path;
+            }
+            // Lưu trữ vào database
+            $data = [
+                'title' => $request['title'] ?? '',
+                'description' => $request['description'] ?? '',
+                'feature_id' => $featureId
+            ];
+            return $this->imageRepository->storeImage($uploadedPaths, $user, $data);
+        }, "Storing image for feature ID: {$featureId}, user: " . Auth::user()?->email);
     }
     public function updateImage(array $request, Image $image)
     {

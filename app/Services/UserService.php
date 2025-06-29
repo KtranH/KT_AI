@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Exceptions\ExternalServiceException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 use App\Services\R2StorageService;
@@ -17,7 +19,7 @@ use App\Http\Requests\User\CheckPasswordRequest;
  * Service class xử lý các chức năng liên quan đến User
  * Đã được tối ưu hóa để sử dụng Request classes và loại bỏ validation thủ công
  */
-class UserService
+class UserService extends BaseService
 {
     protected UserRepositoryInterface $userRepository;
     protected R2StorageService $r2StorageService;
@@ -78,19 +80,18 @@ class UserService
      */
     public function checkPassword(CheckPasswordRequest $request)
     {
-        $currentPassword = $request->input('current_password');
-        
-        if (!$this->userRepository->checkPassword($currentPassword)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mật khẩu hiện tại không đúng'
-            ]);
-        }
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $currentPassword = $request->input('current_password');
+            
+            if (!$this->userRepository->checkPassword($currentPassword)) {
+                throw BusinessException::invalidPermissions('incorrect current password');
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Mật khẩu hiện tại đúng'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Mật khẩu hiện tại đúng'
+            ]);
+        }, "Checking password for user ID: " . Auth::id());
     }
 
     /**
@@ -100,26 +101,32 @@ class UserService
      */
     public function updateName(UpdateNameRequest $request)
     {
-        $user = Auth::user();
-        $name = $request->input('name');
-        
-        // Cập nhật tên trực tiếp
-        $user->name = $name;
-        
-        // Cập nhật hoạt động
-        $activities = json_decode($user->activities, true) ?? [];
-        $activities[] = [
-            'action' => "Cập nhật tên tài khoản thành {$name}",
-            'timestamp' => now()
-        ];
-        
-        // Sử dụng repository để lưu
-        $updatedUser = $this->userRepository->updateName($activities, $user);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $user = Auth::user();
+            if (!$user) {
+                throw BusinessException::invalidPermissions('update name (not authenticated)');
+            }
+            
+            $name = $request->input('name');
+            
+            // Cập nhật tên trực tiếp
+            $user->name = $name;
+            
+            // Cập nhật hoạt động
+            $activities = json_decode($user->activities, true) ?? [];
+            $activities[] = [
+                'action' => "Cập nhật tên tài khoản thành {$name}",
+                'timestamp' => now()
+            ];
+            
+            // Sử dụng repository để lưu
+            $updatedUser = $this->userRepository->updateName($activities, $user);
 
-        return response()->json([
-            'success' => true,
-            'data' => $updatedUser
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $updatedUser
+            ]);
+        }, "Updating name to '{$request->input('name')}' for user ID: " . Auth::id());
     }
 
     /**
@@ -129,46 +136,45 @@ class UserService
      */
     public function updatePassword(UpdatePasswordRequest $request)
     {
-        $user = Auth::user();
-        
-        // Kiểm tra mã xác thực
-        $storedCode = Redis::get("password_change_code:{$user->email}");
-        if (!$storedCode) {
+        return $this->executeInTransactionSafely(function() use ($request) {
+            $user = Auth::user();
+            if (!$user) {
+                throw BusinessException::invalidPermissions('update password (not authenticated)');
+            }
+            
+            // Kiểm tra mã xác thực
+            $storedCode = Redis::get("password_change_code:{$user->email}");
+            if (!$storedCode) {
+                throw BusinessException::resourceNotFound('verification code', 'expired or not exists');
+            }
+
+            $verificationCode = $request->input('verification_code');
+            if ($verificationCode !== $storedCode) {
+                throw BusinessException::invalidPermissions('incorrect verification code');
+            }
+
+            // Cập nhật mật khẩu
+            $password = $request->input('password');
+            $user->password = $password;
+            $activities = json_decode($user->activities, true) ?? [];
+            $activities[] = [
+                'action' => 'Cập nhật mật khẩu',
+                'timestamp' => now()
+            ];
+
+            // Cập nhật thông qua repository
+            $user = $this->userRepository->updatePassword($activities, $user);
+
+            // Xóa mã xác thực sau khi đã sử dụng
+            Redis::del("password_change_code:{$user->email}");
+            Redis::del("password_change_last_sent:{$user->email}");
+
             return response()->json([
-                'success' => false,
-                'message' => 'Mã xác thực đã hết hạn hoặc không tồn tại'
-            ], 400);
-        }
-
-        $verificationCode = $request->input('verification_code');
-        if ($verificationCode !== $storedCode) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mã xác thực không đúng'
-            ], 400);
-        }
-
-        // Cập nhật mật khẩu
-        $password = $request->input('password');
-        $user->password = $password;
-        $activities = json_decode($user->activities, true) ?? [];
-        $activities[] = [
-            'action' => 'Cập nhật mật khẩu',
-            'timestamp' => now()
-        ];
-
-        // Cập nhật thông qua repository
-        $user = $this->userRepository->updatePassword($activities, $user);
-
-        // Xóa mã xác thực sau khi đã sử dụng
-        Redis::del("password_change_code:{$user->email}");
-        Redis::del("password_change_last_sent:{$user->email}");
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Đổi mật khẩu thành công',
-            'data' => $user
-        ]);
+                'success' => true,
+                'message' => 'Đổi mật khẩu thành công',
+                'data' => $user
+            ]);
+        }, "Updating password for user ID: " . Auth::id());
     }
 
     /**
@@ -178,26 +184,35 @@ class UserService
      */
     public function updateAvatar(UpdateAvatarRequest $request)
     {
-        $user = Auth::user();
-        $file = $request->file('image');
-        
-        // Tạo tên file duy nhất
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $path = "avatars/user/" . $user->email . '/' . $fileName;
-        
-        // Upload file lên R2
-        $this->r2StorageService->upload($path, $file);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $user = Auth::user();
+            if (!$user) {
+                throw BusinessException::invalidPermissions('update avatar (not authenticated)');
+            }
+            
+            $file = $request->file('image');
+            if (!$file) {
+                throw BusinessException::resourceNotFound('image file in request');
+            }
+            
+            // Tạo tên file duy nhất
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = "avatars/user/" . $user->email . '/' . $fileName;
+            
+            // Upload file lên R2
+            $this->r2StorageService->upload($path, $file);
 
-        // Lưu URL mới vào database
-        $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
+            // Lưu URL mới vào database
+            $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
 
-        // Cập nhật thông qua repository
-        $user = $this->userRepository->updateAvatar($fullPath);
+            // Cập nhật thông qua repository
+            $user = $this->userRepository->updateAvatar($fullPath);
 
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+        }, "Updating avatar for user ID: " . Auth::id());
     }
 
     /**
@@ -207,21 +222,30 @@ class UserService
      */
     public function updateCoverImage(UpdateCoverImageRequest $request)
     {
-        $user = Auth::user();
-        $file = $request->file('image');
-        
-        $path = "cover_images/user/" . $user->email . '/' . $file->getClientOriginalName();
-        $this->r2StorageService->upload($path, $file);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $user = Auth::user();
+            if (!$user) {
+                throw BusinessException::invalidPermissions('update cover image (not authenticated)');
+            }
+            
+            $file = $request->file('image');
+            if (!$file) {
+                throw BusinessException::resourceNotFound('image file in request');
+            }
+            
+            $path = "cover_images/user/" . $user->email . '/' . $file->getClientOriginalName();
+            $this->r2StorageService->upload($path, $file);
 
-        // Lưu URL mới vào database
-        $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
+            // Lưu URL mới vào database
+            $fullPath = $this->r2StorageService->getUrlR2() . "/" . $path;
 
-        // Cập nhật thông qua repository
-        $user = $this->userRepository->updateCoverImage($fullPath);
+            // Cập nhật thông qua repository
+            $user = $this->userRepository->updateCoverImage($fullPath);
 
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+        }, "Updating cover image for user ID: " . Auth::id());
     }
 }

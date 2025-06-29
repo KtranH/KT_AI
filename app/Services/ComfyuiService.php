@@ -10,7 +10,6 @@ use App\Services\ComfyUIJobService;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use App\Models\ImageJob;
 use Exception;
 use Illuminate\Support\Facades\Http;
@@ -161,7 +160,7 @@ class ComfyUIService
                     'error' => 'HTTP Error: ' . $response->status()
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Exception khi kiểm tra tiến trình job: ' . $e->getMessage());
             return [
                 'status' => 'failed',

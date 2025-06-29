@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ExternalServiceException;
 use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
@@ -28,7 +28,7 @@ class GoogleService extends BaseService
      */
     public function getRedirectUrl(): array
     {
-        try {
+        return $this->executeWithExceptionHandling(function() {
             $redirectUrl = Socialite::driver('google')->redirect()->getTargetUrl();
             
             $this->logAction('Google OAuth redirect URL generated');
@@ -36,13 +36,7 @@ class GoogleService extends BaseService
             return [
                 'url' => $redirectUrl
             ];
-        } catch (Exception $e) {
-            $this->logAction('Failed to generate Google OAuth redirect URL', [
-                'error' => $e->getMessage()
-            ]);
-            
-            throw new Exception('Không thể tạo URL đăng nhập Google: ' . $e->getMessage());
-        }
+        }, 'Generating Google OAuth redirect URL');
     }
 
     /**
@@ -53,39 +47,37 @@ class GoogleService extends BaseService
      */
     public function handleCallback(): array
     {
-        return $this->executeInTransaction(function () {
-            try {
-                $googleUser = Socialite::driver('google')->user();
-                
-                // Tìm hoặc tạo user
-                $user = $this->findOrCreateUser($googleUser);
-                
-                // Đăng nhập user
-                Auth::login($user);
-                
-                // Tạo token
-                $token = $user->createToken('google_auth_token')->plainTextToken;
-                
-                $this->logAction('Google OAuth login successful', [
-                    'user_id' => $user->id,
-                    'email' => $user->email
-                ]);
-                
-                return [
-                    'success' => true,
-                    'message' => 'Đăng nhập thành công',
-                    'user' => $user,
-                    'token' => $token
-                ];
-                
-            } catch (Exception $e) {
-                $this->logAction('Google OAuth callback failed', [
-                    'error' => $e->getMessage()
-                ]);
-                
-                throw new Exception('Đăng nhập thất bại: ' . $e->getMessage());
+        return $this->executeInTransactionSafely(function () {
+            $googleUser = Socialite::driver('google')->user();
+            
+            if (!$googleUser || !$googleUser->email) {
+                throw new ExternalServiceException(
+                    'Lỗi từ Google OAuth: Không nhận được dữ liệu user hợp lệ',
+                    ['service' => 'Google OAuth', 'issue' => 'Invalid user data received']
+                );
             }
-        });
+            
+            // Tìm hoặc tạo user
+            $user = $this->findOrCreateUser($googleUser);
+            
+            // Đăng nhập user
+            Auth::login($user);
+            
+            // Tạo token
+            $token = $user->createToken('google_auth_token')->plainTextToken;
+            
+            $this->logAction('Google OAuth login successful', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Đăng nhập thành công',
+                'user' => $user,
+                'token' => $token
+            ];
+        }, 'Processing Google OAuth callback');
     }
 
     /**

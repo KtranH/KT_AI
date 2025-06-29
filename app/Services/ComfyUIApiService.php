@@ -4,10 +4,10 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Exception;
+use App\Exceptions\ExternalServiceException;
 
-class ComfyUIApiService
+class ComfyUIApiService extends BaseService
 {
     protected string $comfyuiBaseUrl;
 
@@ -21,15 +21,20 @@ class ComfyUIApiService
      */
     public function sendPrompt(array $template): array
     {
-        $response = Http::post($this->comfyuiBaseUrl . '/prompt', [
-            'prompt' => $template
-        ]);
-        
-        if (!$response->successful()) {
-            throw new Exception("Lỗi khi gửi yêu cầu đến ComfyUI: " . $response->body());
-        }
-        
-        return $response->json();
+        return $this->executeWithExceptionHandling(function() use ($template) {
+            $response = Http::post($this->comfyuiBaseUrl . '/prompt', [
+                'prompt' => $template
+            ]);
+            
+            if (!$response->successful()) {
+                throw new ExternalServiceException(
+                    "Lỗi khi gửi yêu cầu đến ComfyUI: " . $response->body(),
+                    ['service' => 'ComfyUI', 'url' => $this->comfyuiBaseUrl]
+                );
+            }
+            
+            return $response->json();
+        }, "Sending prompt to ComfyUI: " . json_encode($template));
     }
     
     /**
@@ -37,26 +42,20 @@ class ComfyUIApiService
      */
     public function uploadImageToComfyUI(string $imagePath): ?string
     {
-        try {
-            $filePath = Storage::path($imagePath);
-            
-            $response = Http::attach(
-                'image', 
-                file_get_contents($filePath), 
-                basename($filePath)
-            )->post($this->comfyuiBaseUrl . '/upload/image');
+        return $this->executeWithExceptionHandling(function() use ($imagePath) {
+            $response = Http::post($this->comfyuiBaseUrl . '/upload', [
+                'image' => $imagePath
+            ]);
             
             if (!$response->successful()) {
-                throw new Exception("Lỗi khi tải ảnh lên ComfyUI: " . $response->body());
+                throw new ExternalServiceException(
+                    "Lỗi khi tải ảnh lên ComfyUI: " . $response->body(),
+                    ['service' => 'ComfyUI', 'url' => $this->comfyuiBaseUrl]
+                );
             }
             
-            $responseData = $response->json();
-            return $responseData['name'] ?? null;
-            
-        } catch (Exception $e) {
-            Log::error("Lỗi khi tải ảnh lên ComfyUI: " . $e->getMessage());
-            return null;
-        }
+            return $response->json();
+        }, "Uploading image to ComfyUI: " . $imagePath);
     }
     
     /**
@@ -64,22 +63,19 @@ class ComfyUIApiService
      */
     public function checkJobStatus(string $comfyPromptId): array
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($comfyPromptId) {
             $apiUrl = $this->comfyuiBaseUrl . '/api/history/' . $comfyPromptId;
-            Log::debug("Gọi API kiểm tra job: " . $apiUrl);
-            
             $response = Http::get($apiUrl);
             
-            if (!$response->successful()) {
-                throw new Exception("Lỗi khi kiểm tra trạng thái tiến trình: " . $response->body());
+            if (!$response->successful()) {    
+                throw new ExternalServiceException(
+                    "Lỗi khi kiểm tra trạng thái tiến trình: " . $response->body(),
+                    ['service' => 'ComfyUI', 'url' => $apiUrl]
+                );
             }
             
             return $response->json();
-            
-        } catch (Exception $e) {
-            Log::error("Lỗi khi kiểm tra trạng thái: " . $e->getMessage());
-            return ['error' => $e->getMessage()];
-        }
+        }, "Checking job status for ComfyUI: " . $comfyPromptId);
     }
     
     /**
@@ -87,7 +83,7 @@ class ComfyUIApiService
      */
     public function checkJobProgress(string $comfyPromptId): array
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($comfyPromptId) {
             $apiUrl = $this->comfyuiBaseUrl . '/api/progress';
             $response = Http::get($apiUrl);
             
@@ -132,10 +128,7 @@ class ComfyUIApiService
             // Nếu không tìm thấy trong progress, có thể đang chờ xử lý
             return ['status' => 'pending', 'progress' => 0];
             
-        } catch (Exception $e) {
-            Log::error("Lỗi khi kiểm tra tiến độ: " . $e->getMessage());
-            return ['status' => 'error', 'progress' => 0, 'error' => $e->getMessage()];
-        }
+        }, "Checking job progress for ComfyUI: " . $comfyPromptId);
     }
     
     /**
@@ -143,7 +136,7 @@ class ComfyUIApiService
      */
     public function downloadResultImage(string $imageFilename, string $tempPath): ?string
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($imageFilename, $tempPath) {
             // Thử tải từ nhiều endpoint khác nhau
             $endpoints = [
                 $this->comfyuiBaseUrl . '/view?filename=' . $imageFilename,
@@ -176,7 +169,7 @@ class ComfyUIApiService
                     } else {
                         Log::debug("Endpoint trả lỗi: " . $apiUrl . " - Status: " . $response->status());
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Log::debug("Lỗi khi thử endpoint " . $apiUrl . ": " . $e->getMessage());
                 }
             }
@@ -186,11 +179,7 @@ class ComfyUIApiService
             }
             
             return $responseBody;
-            
-        } catch (Exception $e) {
-            Log::error("Lỗi khi tải ảnh kết quả: " . $e->getMessage());
-            return null;
-        }
+        }, "Downloading result image from ComfyUI: " . $imageFilename);
     }
     
     /**
@@ -198,12 +187,9 @@ class ComfyUIApiService
      */
     public function isComfyUIAvailable(): bool
     {
-        try {
+        return $this->executeWithExceptionHandling(function() {
             $response = Http::timeout(3)->get($this->comfyuiBaseUrl);
             return $response->successful();
-        } catch (\Exception $e) {
-            Log::warning("Không thể kết nối tới ComfyUI: " . $e->getMessage());
-            return false;
-        }
+        }, "Checking if ComfyUI is available");
     }
 } 

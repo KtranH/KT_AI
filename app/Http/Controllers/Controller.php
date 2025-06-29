@@ -3,27 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Traits\ApiResponseTrait;
+use App\Traits\ExceptionHandlerTrait;
 
 abstract class Controller
 {
-    use ApiResponseTrait;
+    use ApiResponseTrait, ExceptionHandlerTrait;
     
     /**
      * Thực thi phương thức dịch vụ với xử lý lỗi đồng nhất
      * 
      * @param callable $serviceMethod
      * @param string|null $successMessage
-     * @param string $errorMessage
+     * @param string $context Mô tả ngữ cảnh để logging
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function executeServiceMethod(callable $serviceMethod, ?string $successMessage = null, string $errorMessage = 'Có lỗi xảy ra')
+    protected function executeServiceMethod(callable $serviceMethod, ?string $successMessage = null, string $context = '')
     {
-        try {
-            $result = $serviceMethod();
-            return $this->successResponse($result, $successMessage);
-        } catch (\Exception $e) {
-            return $this->handleException($e, $errorMessage);
-        }
+        return $this->executeAndRespond($serviceMethod, $context, $successMessage);
     }
     
     /**
@@ -31,16 +27,12 @@ abstract class Controller
      * Dùng cho các dịch vụ trả về phản hồi định dạng
      * 
      * @param callable $serviceMethod
-     * @param string $errorMessage
+     * @param string $context Mô tả ngữ cảnh để logging
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function executeServiceJsonMethod(callable $serviceMethod, string $errorMessage = 'Có lỗi xảy ra')
+    protected function executeServiceJsonMethod(callable $serviceMethod, string $context = '')
     {
-        try {
-            return $serviceMethod(); // Return directly without wrapping
-        } catch (\Exception $e) {
-            return $this->handleException($e, $errorMessage);
-        }
+        return $this->executeAndRespond($serviceMethod, $context);
     }
     
     /**

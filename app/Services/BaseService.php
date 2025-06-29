@@ -2,30 +2,20 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
+use App\Traits\ExceptionHandlerTrait;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
 abstract class BaseService
 {
+    use ExceptionHandlerTrait;
     /**
-     * Thực hiện transaction với error handling
+     * Thực hiện transaction với error handling tối ưu
+     * @deprecated Sử dụng executeInTransactionSafely từ ExceptionHandlerTrait
      */
     protected function executeInTransaction(callable $callback)
     {
-        try {
-            DB::beginTransaction();
-            $result = $callback();
-            DB::commit();
-            return $result;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Transaction failed: ' . $e->getMessage(), [
-                'service' => static::class,
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        return $this->executeInTransactionSafely($callback, 'BaseService transaction');
     }
     
     /**

@@ -2,8 +2,9 @@
 
 namespace App\Services;
 use App\Interfaces\FeatureRepositoryInterface;
+use App\Services\BaseService;
 
-class FeatureService
+class FeatureService extends BaseService
 {
     protected FeatureRepositoryInterface $featureRepository;
     public function __construct(FeatureRepositoryInterface $featureRepository)
@@ -12,18 +13,26 @@ class FeatureService
     }
     public function getFeatures()
     {
-        return $this->featureRepository->getFeatures();
+        return $this->executeWithExceptionHandling(function() {
+            return $this->featureRepository->getFeatures();
+        }, "Getting features");
     }
     public function getFeatureById($id)
     {
-        return $this->featureRepository->getFeatureById($id);
+        return $this->executeWithExceptionHandling(function() use ($id) {
+            return $this->featureRepository->getFeatureById($id);
+        }, "Getting feature by ID: {$id}");
     }
     public function increaseSumImg($id)
     {
-        $this->featureRepository->increaseSumImg($id);
+        return $this->executeWithExceptionHandling(function() use ($id) {
+            $this->featureRepository->increaseSumImg($id);
+        }, "Increasing sum image for feature ID: {$id}");
     }
     public function decreaseSumImg(int $featureId)
     {
-        $this->featureRepository->decreaseSumImg($featureId);
+        return $this->executeWithExceptionHandling(function() use ($featureId) {
+            $this->featureRepository->decreaseSumImg($featureId);
+        }, "Decreasing sum image for feature ID: {$featureId}");
     }
 }
