@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Exceptions\ExternalServiceException;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rules\Password as PasswordRules;
 use Illuminate\Auth\Events\PasswordReset;
 
-class ForgotPasswordService
+class ForgotPasswordService extends BaseService
 {
     /**
      * The UserRepositoryInterface instance.
@@ -57,182 +57,176 @@ class ForgotPasswordService
 
     /**
      * Gửi email chứa mã xác nhận khôi phục mật khẩu
-     *
-     * @param Request $request
-     * @return JsonResponse
-     * @throws ValidationException
      */
-    public function sendResetLinkEmail(Request $request): JsonResponse
+    public function sendResetLinkEmail(Request $request): array
     {
-        $request->validate([
-            'email' => 'required|email',
-            'cf-turnstile-response' => 'required|string'
-        ]);
-
-        // Xác thực Turnstile
-        $turnstileResponse = $this->turnStileService->verifyTurnstile(
-            $request->input('cf-turnstile-response'),
-            $request->ip()
-        );
-
-        if (!$turnstileResponse['success']) {
-            throw ValidationException::withMessages([
-                'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $request->validate([
+                'email' => 'required|email',
+                'cf-turnstile-response' => 'required|string'
             ]);
-        }
 
-        // Lưu biến đếm số lần gửi mã
-        $emailKey = "password_reset_code_send_count:{$request->email}";
+            // Xác thực Turnstile
+            $turnstileResponse = $this->turnStileService->verifyTurnstile(
+                $request->input('cf-turnstile-response'),
+                $request->ip()
+            );
+
+            if (!$turnstileResponse['success']) {
+                throw new BusinessException('Xác thực captcha không thành công. Vui lòng thử lại.');
+            }
+
+            // Kiểm tra rate limiting
+            $this->checkRateLimit($request->email);
+
+            // Tạo và lưu mã xác thực
+            $verificationCode = $this->generateAndStoreVerificationCode($request->email);
+
+            // Gửi email chứa mã xác thực
+            $user = $this->userRepository->getUserByEmail($request->email);
+
+            if ($user) {
+                $user->sendPasswordResetNotification($verificationCode);
+                return ['message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn.'];
+            }
+
+            return ['message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.'];
+        }, "Sending password reset email to: {$request->email}");
+    }
+
+    /**
+     * Kiểm tra rate limiting cho email
+     */
+    protected function checkRateLimit(string $email): void
+    {
+        $emailKey = "password_reset_code_send_count:{$email}";
         $attempts = Redis::incr($emailKey);
         if ($attempts === 1) {
             Redis::expire($emailKey, 300); // 5 phút
         }
 
-        // Kiểm tra biến đếm có vượt quá số lần chưa
         if ($attempts > 3) {
             $ttl = Redis::ttl($emailKey);
-
-            throw ValidationException::withMessages([
-                'email' => ["Bạn đã yêu cầu quá số lần cho phép. Vui lòng thử lại sau {$ttl} giây."]
-            ]);
+            throw BusinessException::quotaExceeded("yêu cầu reset password", 3);
         }
+    }
 
-        // Tạo mã xác thực 6 số
+    /**
+     * Tạo và lưu mã xác thực
+     */
+    protected function generateAndStoreVerificationCode(string $email): string
+    {
         $verificationCode = rand(100000, 999999);
         $verificationCodeStr = strval($verificationCode);
 
         // Lưu mã vào Redis (thời hạn 10 phút)
-        Redis::setex("password_reset_code:{$request->email}", 600, Hash::make($verificationCodeStr));
+        Redis::setex("password_reset_code:{$email}", 600, Hash::make($verificationCodeStr));
         // Lưu trữ thời gian tạo mã
-        Redis::setex("password_reset_code_created_at:{$request->email}", 600, time());
+        Redis::setex("password_reset_code_created_at:{$email}", 600, time());
 
-        // Gửi email chứa mã xác thực
-        $user = $this->userRepository->getUserByEmail($request->email);
-
-        if ($user) {
-            $user->sendPasswordResetNotification($verificationCodeStr);
-
-            return response()->json([
-                'message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn.'
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.'
-        ]);
+        return $verificationCodeStr;
     }
 
     /**
      * Xác thực mã xác nhận qua email
-     *
-     * @param Request $request
-     * @return JsonResponse
-     * @throws ValidationException
      */
-    public function verifyCode(Request $request): JsonResponse
+    public function verifyCode(Request $request): array
     {
-        $request->validate([
-            'email' => 'required|email',
-            'code' => 'required|string|size:6',
-        ]);
-
-        $record = Redis::get("password_reset_code:{$request->email}");
-
-        // Lấy thời gian tạo mã lần cuối
-        $createdAtTimeStamp = Redis::get("password_reset_code_created_at:{$request->email}");
-
-        if (!$record) {
-            throw ValidationException::withMessages([
-                'code' => ['Mã xác thực không hợp lệ hoặc đã hết hạn']
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $request->validate([
+                'email' => 'required|email',
+                'code' => 'required|string|size:6',
             ]);
-        }
 
-        // Kiểm tra thời gian tạo mã (mã chỉ có hiệu lực trong 60 phút)
-        if ($createdAtTimeStamp && (time() - (int)$createdAtTimeStamp) > 3600) { // 3600 giây = 60 phút
-            Redis::del("password_reset_code:{$request->email}");
-            Redis::del("password_reset_code_created_at:{$request->email}");
+            $record = Redis::get("password_reset_code:{$request->email}");
+            $createdAtTimeStamp = Redis::get("password_reset_code_created_at:{$request->email}");
 
-            throw ValidationException::withMessages([
-                'code' => ['Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.']
-            ]);
-        }
+            if (!$record) {
+                throw new BusinessException('Mã xác thực không hợp lệ hoặc đã hết hạn');
+            }
 
-        // Kiểm tra mã xác thực
-        if (!Hash::check($request->code, $record)) {
-            throw ValidationException::withMessages([
-                'code' => ['Mã xác thực không chính xác.']
-            ]);
-        }
+            // Kiểm tra thời gian tạo mã (mã chỉ có hiệu lực trong 60 phút)
+            if ($createdAtTimeStamp && (time() - (int)$createdAtTimeStamp) > 3600) {
+                Redis::del("password_reset_code:{$request->email}");
+                Redis::del("password_reset_code_created_at:{$request->email}");
+                throw new BusinessException('Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.');
+            }
 
-        // Tạo token mới để sử dụng cho bước reset mật khẩu
-        $token = Str::random(64);
+            // Kiểm tra mã xác thực
+            if (!Hash::check($request->code, $record)) {
+                throw new BusinessException('Mã xác thực không chính xác.');
+            }
 
-        // Lưu token với thời hạn 10 phút
-        Redis::setex("password_reset_token:{$request->email}", 600, $token);
+            // Tạo token mới để sử dụng cho bước reset mật khẩu
+            $token = Str::random(64);
+            Redis::setex("password_reset_token:{$request->email}", 600, $token);
 
-        return response()->json([
-            'message' => 'Mã xác thực hợp lệ',
-            'token' => $token
-        ]);
+            return [
+                'message' => 'Mã xác thực hợp lệ',
+                'token' => $token
+            ];
+        }, "Verifying password reset code for email: {$request->email}");
     }
 
     /**
      * Đặt lại mật khẩu
-     *
-     * @param Request $request
-     * @return JsonResponse
-     * @throws ValidationException
      */
-    public function reset(Request $request): JsonResponse
+    public function reset(Request $request): array
     {
-        $request->validate([
-            'email' => 'required|email',
-            'token' => 'required|string',
-            'password' => ['required', 'confirmed', PasswordRules::defaults()],
-        ]);
-
-        $token = Redis::get("password_reset_token:{$request->email}");
-
-        if (!$token || $token !== $request->token) {
-            throw ValidationException::withMessages([
-                'email' => ['Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.']
+        return $this->executeInTransactionSafely(function() use ($request) {
+            $request->validate([
+                'email' => 'required|email',
+                'token' => 'required|string',
+                'password' => ['required', 'confirmed', PasswordRules::defaults()],
             ]);
-        }
 
-        $user = $this->userRepository->getUserByEmail($request->email);
+            // Kiểm tra token
+            $token = Redis::get("password_reset_token:{$request->email}");
+            if (!$token || $token !== $request->token) {
+                throw new BusinessException('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
+            }
 
-        if (!$user) {
-            throw ValidationException::withMessages([
-                'email' => ['Không tìm thấy tài khoản với email này.']
-            ]);
-        }
+            // Kiểm tra user tồn tại
+            $user = $this->userRepository->getUserByEmail($request->email);
+            if (!$user) {
+                throw BusinessException::resourceNotFound('tài khoản', $request->email);
+            }
 
-        // Cập nhật mật khẩu
-        $activities = [
-            [
-                'action' => 'Đặt lại mật khẩu',
-                'timestamp' => time()
-            ]
-        ];
+            // Cập nhật mật khẩu trong transaction
+            $this->updatePasswordInTransaction($user, $request->password, $request->email);
 
-        // Cập nhật mật khẩu trong database
-        $user->password = $request->password;
-        $user->save();
+            return ['message' => 'Mật khẩu đã được đặt lại thành công'];
+        }, "Resetting password for email: {$request->email}");
+    }
 
-        // Cập nhật hoạt động
-        $this->userRepository->updatePassword($activities, $user);
+    /**
+     * Cập nhật mật khẩu trong transaction
+     */
+    protected function updatePasswordInTransaction($user, string $password, string $email): void
+    {
+        $this->executeInTransactionSafely(function() use ($user, $password, $email) {
+            // Cập nhật mật khẩu
+            $activities = [
+                [
+                    'action' => 'Đặt lại mật khẩu',
+                    'timestamp' => time()
+                ]
+            ];
 
-        // Xóa tất cả các khóa Redis liên quan
-        Redis::del("password_reset_token:{$request->email}");
-        Redis::del("password_reset_code:{$request->email}");
-        Redis::del("password_reset_code_created_at:{$request->email}");
-        Redis::del("password_reset_code_send_count:{$request->email}");
+            $user->password = $password;
+            $user->save();
 
-        // Kích hoạt sự kiện password reset
-        event(new PasswordReset($user));
+            // Cập nhật hoạt động
+            $this->userRepository->updatePassword($activities, $user);
 
-        return response()->json([
-            'message' => 'Mật khẩu đã được đặt lại thành công'
-        ]);
+            // Xóa tất cả các khóa Redis liên quan
+            Redis::del("password_reset_token:{$email}");
+            Redis::del("password_reset_code:{$email}");
+            Redis::del("password_reset_code_created_at:{$email}");
+            Redis::del("password_reset_code_send_count:{$email}");
+
+            // Kích hoạt sự kiện password reset
+            event(new PasswordReset($user));
+        }, "Updating password for user ID: {$user->id}");
     }
 }

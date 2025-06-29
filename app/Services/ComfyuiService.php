@@ -14,7 +14,7 @@ use App\Models\ImageJob;
 use Exception;
 use Illuminate\Support\Facades\Http;
 
-class ComfyUIService
+class ComfyUIService extends BaseService
 {
     public $max_time = 3000;
     public $imageJobsRepository;
@@ -48,21 +48,23 @@ class ComfyUIService
      */
     public function uploadToR2($prompt_id, $number_out, $data)
     {
-        $filename = $data[$prompt_id]['outputs'][$number_out]['images'][0]['filename'];
-        $imageUrl = env('COMFYUI_URL') . '/api/view?filename=' . $filename;
-        
-        // Tải ảnh từ API về (tạm lưu)
-        $tempPath = storage_path("app/tmp/{$filename}");
-        $imageContent = file_get_contents($imageUrl);
-        file_put_contents($tempPath, $imageContent);
+        return $this->executeWithExceptionHandling(function() use ($prompt_id, $number_out, $data) {
+            $filename = $data[$prompt_id]['outputs'][$number_out]['images'][0]['filename'];
+            $imageUrl = env('COMFYUI_URL') . '/api/view?filename=' . $filename;
+            
+            // Tải ảnh từ API về (tạm lưu)
+            $tempPath = storage_path("app/tmp/{$filename}");
+            $imageContent = file_get_contents($imageUrl);
+            file_put_contents($tempPath, $imageContent);
 
-        // Upload ảnh lên R2
-        $r2Path = "uploads/generate_image/user/" . Auth::user()->email . '/' . $filename;
-        $this->r2Service->upload($r2Path, $tempPath, 'public');
+            // Upload ảnh lên R2
+            $r2Path = "uploads/generate_image/user/" . Auth::user()->email . '/' . $filename;
+            $this->r2Service->upload($r2Path, $tempPath, 'public');
 
-        // Xóa file tạm
-        unlink($tempPath);
-        return $this->r2Service->getUrlR2() . "/" . $r2Path;
+            // Xóa file tạm
+            unlink($tempPath);
+            return $this->r2Service->getUrlR2() . "/" . $r2Path;
+        }, "Uploading to R2 for prompt ID: {$prompt_id}");
     }
     
     /**
@@ -70,7 +72,7 @@ class ComfyUIService
      */
     public function createImage(ImageJob $job): ?string
     {
-        try {
+        return $this->executeInTransactionSafely(function() use ($job) {
             // Tải JSON template và cập nhật với thông tin job
             $template = $this->templateService->loadJsonTemplate($job->feature_id);
             $template = $this->templateService->updateJsonTemplate($template, $job);
@@ -87,16 +89,7 @@ class ComfyUIService
             $job->save();
             
             return $responseData['prompt_id'] ?? null;
-            
-        } catch (Exception $e) {
-            Log::error("Lỗi khi tạo ảnh với ComfyUI: " . $e->getMessage());
-            
-            $job->status = 'failed';
-            $job->error_message = $e->getMessage();
-            $job->save();
-            
-            return null;
-        }
+        }, "Creating image with ComfyUI for job ID: {$job->id}");
     }
     
     /**
@@ -104,7 +97,9 @@ class ComfyUIService
      */
     public function checkJobStatus(string $comfyPromptId): array
     {
-        return $this->apiService->checkJobStatus($comfyPromptId);
+        return $this->executeWithExceptionHandling(function() use ($comfyPromptId) {
+            return $this->apiService->checkJobStatus($comfyPromptId);
+        }, "Checking job status for ComfyUI prompt ID: {$comfyPromptId}");
     }
     
     /**
@@ -115,7 +110,7 @@ class ComfyUIService
      */
     public function checkJobProgress(string $promptId): array
     {
-        try {
+        return $this->executeWithExceptionHandling(function() use ($promptId) {
             // Endpoint API để kiểm tra tiến trình
             $url = $this->comfyuiBaseUrl . "/history/{$promptId}";
             
@@ -160,14 +155,7 @@ class ComfyUIService
                     'error' => 'HTTP Error: ' . $response->status()
                 ];
             }
-        } catch (Exception $e) {
-            Log::error('Exception khi kiểm tra tiến trình job: ' . $e->getMessage());
-            return [
-                'status' => 'failed',
-                'progress' => 0,
-                'error' => 'Ngoại lệ: ' . $e->getMessage()
-            ];
-        }
+        }, "Checking job progress for ComfyUI prompt ID: {$promptId}");
     }
     
     /**
@@ -175,7 +163,9 @@ class ComfyUIService
      */
     public function updateCompletedJob(ImageJob $job, array $historyData): bool
     {
-        return $this->jobService->updateCompletedJob($job, $historyData, $this->r2Service);
+        return $this->executeInTransactionSafely(function() use ($job, $historyData) {
+            return $this->jobService->updateCompletedJob($job, $historyData, $this->r2Service);
+        }, "Updating completed job for job ID: {$job->id}");
     }
     
     /**
@@ -183,7 +173,9 @@ class ComfyUIService
      */
     public function checkAndUpdatePendingJobs()
     {
-        return $this->jobService->checkAndUpdatePendingJobs($this->r2Service);
+        return $this->executeInTransactionSafely(function() {
+            return $this->jobService->checkAndUpdatePendingJobs($this->r2Service);
+        }, "Checking and updating pending jobs");
     }
 
     /**
@@ -194,6 +186,7 @@ class ComfyUIService
      */
     public function hasImagesInHistoryData(array $historyData): bool
     {
+        return $this->executeWithExceptionHandling(function() use ($historyData) {
         // Kiểm tra trong mỗi prompt ID
         foreach ($historyData as $promptId => $data) {
             // Bỏ qua các khóa không phải là prompt ID
@@ -212,5 +205,6 @@ class ComfyUIService
         }
         
         return false;
+        }, "Checking for images in history data");
     }
 }

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 
-class R2StorageService
+class R2StorageService extends BaseService
 {
     protected $disk;
     protected $urlR2;
@@ -31,7 +31,9 @@ class R2StorageService
         // Đảm bảo path không bắt đầu bằng dấu /
         $path = ltrim($path, '/');
 
-        return $this->disk->put($path, file_get_contents($file), $visibility);
+        return $this->executeWithExceptionHandling(function() use ($path, $file, $visibility) {
+            return $this->disk->put($path, file_get_contents($file), $visibility);
+        }, "Uploading file to R2: {$path}");
     }
 
     /**
@@ -49,7 +51,9 @@ class R2StorageService
         $baseUrl = rtrim($this->urlR2, '/');
 
         // Trả về URL đầy đủ
-        return "{$baseUrl}/{$path}";
+        return $this->executeWithExceptionHandling(function() use ($baseUrl, $path) {
+            return "{$baseUrl}/{$path}";
+        }, "Getting URL for R2 file: {$path}");
     }
 
     /**
@@ -79,7 +83,9 @@ class R2StorageService
         // Đảm bảo path không bắt đầu bằng dấu /
         $path = ltrim($path, '/');
 
-        return $this->disk->exists($path);
+        return $this->executeWithExceptionHandling(function() use ($path) {
+            return $this->disk->exists($path);
+        }, "Checking if R2 file exists: {$path}");
     }
 
     /**
@@ -99,7 +105,9 @@ class R2StorageService
         // Đảm bảo path không bắt đầu bằng dấu /
         $path = ltrim($path, '/');
 
-        return $this->disk->delete($path);
+        return $this->executeWithExceptionHandling(function() use ($path) {
+            return $this->disk->delete($path);
+        }, "Deleting R2 file: {$path}");
     }
 
     /**
@@ -120,6 +128,8 @@ class R2StorageService
         // Đảm bảo path không bắt đầu bằng dấu /
         $path = ltrim($path, '/');
 
-        return $this->disk->get($path);
+        return $this->executeWithExceptionHandling(function() use ($path) {
+            return $this->disk->get($path);
+        }, "Downloading R2 file: {$path}");
     }
 }

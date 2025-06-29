@@ -89,7 +89,7 @@ class CommentService extends BaseService
     
     public function destroy(Comment $comment): bool
     {
-        return $this->executeWithExceptionHandling(function() use ($comment) {
+        return $this->executeInTransactionSafely(function() use ($comment) {
             if (Gate::denies('delete', $comment)) {
                 throw BusinessException::invalidPermissions('delete comment');
             }
@@ -101,7 +101,7 @@ class CommentService extends BaseService
     
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
-        return $this->executeWithExceptionHandling(function() use ($request, $comment) {
+        return $this->executeInTransactionSafely(function() use ($request, $comment) {
             if (Gate::denies('update', $comment)) {
                 throw BusinessException::invalidPermissions('update comment');
             }

@@ -44,7 +44,7 @@ class AuthService extends BaseService
      */
     public function register(Request $request): array
     {
-        return $this->executeWithExceptionHandling(function() use ($request) {
+        return $this->executeInTransactionSafely(function() use ($request) {
             // Xác thực Turnstile
             $turnstileResponse = $this->turnStileService->verifyTurnstile(
                 $request->input('cf-turnstile-response'), 

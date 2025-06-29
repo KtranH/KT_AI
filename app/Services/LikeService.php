@@ -124,7 +124,7 @@ class LikeService extends BaseService
      */
     private function sendNotification(Interaction $interaction, Image $image): void
     {
-        try {
+        $this->executeWithExceptionHandling(function() use ($interaction, $image) {
             // Lấy thông tin người sở hữu ảnh
             $imageOwner = $this->userRepository->findById($image->user_id);
             if (!$imageOwner) {
@@ -144,9 +144,7 @@ class LikeService extends BaseService
 
             // Gửi thông báo tới chủ sở hữu ảnh
             $imageOwner->notify(new LikeImageNotification($interaction, $fullLikerInfo, $image));
-        } catch (\Exception $exception) {
-            Log::error('Lỗi khi gửi thông báo: ' . $exception->getMessage());
-        }
+        }, "Sending notification for image ID: $image->id");
     }
     
     /**

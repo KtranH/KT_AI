@@ -7,7 +7,7 @@ use App\Services\ComfyUIApiService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class ComfyUITemplateService
+class ComfyUITemplateService extends BaseService
 {
     protected ComfyUIApiService $apiService;
 
@@ -20,6 +20,7 @@ class ComfyUITemplateService
      */
     public function loadJsonTemplate(int $featureId): array
     {
+        return $this->executeWithExceptionHandling(function() use ($featureId) {
         $filePath = resource_path("json/{$featureId}.json");
         
         if (!file_exists($filePath)) {
@@ -34,6 +35,7 @@ class ComfyUITemplateService
         }
         
         return $template;
+        }, "Loading JSON template for feature ID: {$featureId}");
     }
 
     /**
@@ -41,6 +43,7 @@ class ComfyUITemplateService
      */
     public function updateJsonTemplateWithImage(array $template, ImageJob $job): array
     {
+        return $this->executeWithExceptionHandling(function() use ($template, $job) {
         // Xử lý tải ảnh lên nếu cần
         if ($job->main_image) {
             // Tải ảnh lên ComfyUI
@@ -72,6 +75,7 @@ class ComfyUITemplateService
             }
         }
         return $template;
+        }, "Updating JSON template with image for job ID: {$job->id}");
     }
     
     /**
@@ -79,6 +83,7 @@ class ComfyUITemplateService
      */
     public function updateJsonTemplate(array $template, ImageJob $job): array
     {
+        return $this->executeWithExceptionHandling(function() use ($template, $job) {
         // Tìm node EmptyLatentImage và cập nhật width, height
         foreach ($template as $nodeId => $node) {
             if ($node['class_type'] === 'EmptyLatentImage') {
@@ -121,5 +126,6 @@ class ComfyUITemplateService
         }
         
         return $template;
+        }, "Updating JSON template for job ID: {$job->id}");
     }
 } 

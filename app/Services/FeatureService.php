@@ -25,13 +25,13 @@ class FeatureService extends BaseService
     }
     public function increaseSumImg($id)
     {
-        return $this->executeWithExceptionHandling(function() use ($id) {
+        return $this->executeInTransactionSafely(function() use ($id) {
             $this->featureRepository->increaseSumImg($id);
         }, "Increasing sum image for feature ID: {$id}");
     }
     public function decreaseSumImg(int $featureId)
     {
-        return $this->executeWithExceptionHandling(function() use ($featureId) {
+        return $this->executeInTransactionSafely(function() use ($featureId) {
             $this->featureRepository->decreaseSumImg($featureId);
         }, "Decreasing sum image for feature ID: {$featureId}");
     }

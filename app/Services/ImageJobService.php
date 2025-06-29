@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-class ImageJobService
+class ImageJobService extends BaseService
 {
     protected ImageJobRepositoryInterface $imageJobRepository;
     protected ComfyUIService $comfyUIService;
@@ -32,6 +32,7 @@ class ImageJobService
      */
     public function createImageJob(array $data, User $user): array
     {
+        return $this->executeInTransactionSafely(function() use ($data, $user) {
         // Kiểm tra giới hạn tiến trình
         $activeJobsCount = $this->imageJobRepository->countActiveJobsByUser($user->id);
         if ($activeJobsCount >= 5) {
@@ -75,8 +76,9 @@ class ImageJobService
             
         return [
             'job_id' => $imageJob->id,
-            'status' => $imageJob->status,
-        ];
+                'status' => $imageJob->status,
+            ];
+        }, "Creating image job for user ID: {$user->id}");
     }
 
     /**
@@ -84,12 +86,14 @@ class ImageJobService
      */
     public function getActiveJobs(User $user): array
     {
-        $activeJobs = $this->imageJobRepository->getActiveJobsByUser($user->id);
+        return $this->executeWithExceptionHandling(function() use ($user) {
+            $activeJobs = $this->imageJobRepository->getActiveJobsByUser($user->id);
 
         return [
             'active_jobs' => $activeJobs,
             'count' => $activeJobs->count(),
-        ];
+            ];
+        }, "Getting active jobs for user ID: {$user->id}");
     }
 
     /**
@@ -97,12 +101,14 @@ class ImageJobService
      */
     public function getCompletedJobs(User $user): array
     {
-        $completedJobs = $this->imageJobRepository->getCompletedJobsByUser($user->id);
+        return $this->executeWithExceptionHandling(function() use ($user) {
+            $completedJobs = $this->imageJobRepository->getCompletedJobsByUser($user->id);
 
         return [
             'completed_jobs' => $completedJobs,
             'count' => $completedJobs->count(),
-        ];
+            ];
+        }, "Getting completed jobs for user ID: {$user->id}");
     }
 
     /**
@@ -110,12 +116,14 @@ class ImageJobService
      */
     public function getFailedJobs(User $user): array
     {
-        $failedJobs = $this->imageJobRepository->getFailedJobsByUser($user->id);
+        return $this->executeWithExceptionHandling(function() use ($user) {
+            $failedJobs = $this->imageJobRepository->getFailedJobsByUser($user->id);
 
         return [
             'failed_jobs' => $failedJobs,
             'count' => $failedJobs->count(),
-        ];
+            ];
+        }, "Getting failed jobs for user ID: {$user->id}");
     }
 
     /**
@@ -123,7 +131,8 @@ class ImageJobService
      */
     public function checkJobStatus(int $jobId, User $user): array
     {
-        $job = $this->imageJobRepository->findByIdAndUserId($jobId, $user->id);
+        return $this->executeWithExceptionHandling(function() use ($jobId, $user) {
+            $job = $this->imageJobRepository->findByIdAndUserId($jobId, $user->id);
 
         if (!$job) {
             throw new \Exception('Không tìm thấy tiến trình');
@@ -140,7 +149,8 @@ class ImageJobService
 
         return [
             'job' => $job
-        ];
+            ];
+        }, "Checking job status for job ID: {$jobId} and user ID: {$user->id}");
     }
 
     /**
@@ -148,7 +158,8 @@ class ImageJobService
      */
     public function cancelJob(int $jobId, User $user): array
     {
-        $job = $this->imageJobRepository->findCancellableJob($jobId, $user->id);
+        return $this->executeInTransactionSafely(function() use ($jobId, $user) {
+            $job = $this->imageJobRepository->findCancellableJob($jobId, $user->id);
 
         if (!$job) {
             throw new \Exception('Không tìm thấy tiến trình hoặc tiến trình không thể hủy');
@@ -163,7 +174,8 @@ class ImageJobService
         return [
             'job_id' => $jobId,
             'status' => 'cancelled'
-        ];
+            ];
+        }, "Cancelling job ID: {$jobId} for user ID: {$user->id}");
     }
 
     /**
@@ -171,7 +183,8 @@ class ImageJobService
      */
     public function retryJob(int $jobId, User $user): array
     {
-        $job = $this->imageJobRepository->findFailedJob($jobId, $user->id);
+        return $this->executeInTransactionSafely(function() use ($jobId, $user) {
+            $job = $this->imageJobRepository->findFailedJob($jobId, $user->id);
 
         if (!$job) {
             throw new \Exception('Không tìm thấy tiến trình thất bại');
@@ -209,6 +222,7 @@ class ImageJobService
             'job_id' => $job->id,
             'status' => $job->status,
         ];
+        }, "Retrying job ID: {$jobId} for user ID: {$user->id}");
     }
 
     /**

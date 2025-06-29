@@ -101,7 +101,7 @@ class UserService extends BaseService
      */
     public function updateName(UpdateNameRequest $request)
     {
-        return $this->executeWithExceptionHandling(function() use ($request) {
+        return $this->executeInTransactionSafely(function() use ($request) {
             $user = Auth::user();
             if (!$user) {
                 throw BusinessException::invalidPermissions('update name (not authenticated)');
@@ -184,7 +184,7 @@ class UserService extends BaseService
      */
     public function updateAvatar(UpdateAvatarRequest $request)
     {
-        return $this->executeWithExceptionHandling(function() use ($request) {
+        return $this->executeInTransactionSafely(function() use ($request) {
             $user = Auth::user();
             if (!$user) {
                 throw BusinessException::invalidPermissions('update avatar (not authenticated)');
@@ -222,7 +222,7 @@ class UserService extends BaseService
      */
     public function updateCoverImage(UpdateCoverImageRequest $request)
     {
-        return $this->executeWithExceptionHandling(function() use ($request) {
+        return $this->executeInTransactionSafely(function() use ($request) {
             $user = Auth::user();
             if (!$user) {
                 throw BusinessException::invalidPermissions('update cover image (not authenticated)');

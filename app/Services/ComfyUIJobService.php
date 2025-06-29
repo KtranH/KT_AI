@@ -24,7 +24,7 @@ class ComfyUIJobService extends BaseService
      */
     public function updateCompletedJob(ImageJob $job, array $historyData, R2StorageService $r2Service): bool
     {
-        return $this->executeWithExceptionHandling(function() use ($job, $historyData, $r2Service) {
+        return $this->executeInTransactionSafely(function() use ($job, $historyData, $r2Service) {
             Log::debug("Bắt đầu cập nhật tiến trình hoàn thành cho job {$job->id}");
             
             // Lấy tên file ảnh từ kết quả
@@ -294,7 +294,7 @@ class ComfyUIJobService extends BaseService
     protected function processPendingJob(ImageJob $job, R2StorageService $r2Service): void
     {
         try {
-            $this->executeWithExceptionHandling(function() use ($job, $r2Service) {
+            $this->executeInTransactionSafely(function() use ($job, $r2Service) {
                 Log::debug("Kiểm tra trạng thái tiến trình {$job->id} với comfy_prompt_id: {$job->comfy_prompt_id}");
                 
                 // Kiểm tra trực tiếp dữ liệu history
@@ -467,7 +467,7 @@ class ComfyUIJobService extends BaseService
      */
     protected function updateJobProgress(ImageJob $job, array $historyData, R2StorageService $r2Service): void
     {
-        $this->executeWithExceptionHandling(function() use ($job, $historyData, $r2Service) {
+        $this->executeInTransactionSafely(function() use ($job, $historyData, $r2Service) {
             // Nếu chưa hoàn thành, tiếp tục kiểm tra tiến độ
             $progressData = $this->apiService->checkJobProgress($job->comfy_prompt_id);
             Log::debug("Tiến độ tiến trình {$job->id}: " . json_encode($progressData));
