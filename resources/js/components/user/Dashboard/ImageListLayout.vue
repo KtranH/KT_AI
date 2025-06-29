@@ -368,22 +368,24 @@ export default {
             imageGroups.value = []
           }
           
+          // Clear imageGroups trước khi fetch để tránh hiển thị data cũ
+          imageGroups.value = []
+          
           const images = await fetchImagesByFilter(props.filter, targetUserId)
           const newGroups = processAndGroupImages(images);
           
-          if (newGroups.length > 0 || imageGroups.value.length === 0) {
-            imageGroups.value = newGroups;
-            
-            // Lưu vào cache
-            imageStore.setDashboardCache(
-              targetUserId, 
-              props.filter, 
-              images, 
-              imageStore.currentPage, 
-              imageStore.lastPage, 
-              imageStore.totalImages
-            );
-          }
+          // Luôn cập nhật imageGroups khi không phải load more (filter change hoặc initial load)
+          imageGroups.value = newGroups;
+          
+          // Lưu vào cache
+          imageStore.setDashboardCache(
+            targetUserId, 
+            props.filter, 
+            images, 
+            imageStore.currentPage, 
+            imageStore.lastPage, 
+            imageStore.totalImages
+          );
         } else {
           let newImagesData = []
           

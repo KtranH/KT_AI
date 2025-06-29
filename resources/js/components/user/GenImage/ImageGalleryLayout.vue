@@ -280,10 +280,7 @@ setup(props) {
   const handleFileUpload = (event) => {
     const files = event.target.files
     if (!files.length) return
-    
-    // Xử lý upload ảnh đến API (sẽ implement sau)
-    console.log('Tải ảnh lên:', files);
-    
+        
     // Reset file input để cho phép chọn lại các file tương tự
     event.target.value = ''
   }

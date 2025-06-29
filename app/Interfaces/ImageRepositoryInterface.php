@@ -23,7 +23,7 @@ interface ImageRepositoryInterface
      * @param int $perPage Số lượng hình ảnh trên mỗi trang
      * @return array Danh sách hình ảnh
      */
-    public function getImagesByFeature(int $featureId, int $perPage = 5): array;
+    public function getImagesByFeature(int $featureId, int $perPage = 10): array;
         
     /**
      * Lấy danh sách hình ảnh đã thích
@@ -51,7 +51,7 @@ interface ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return LengthAwarePaginator Phân trang các hình ảnh đã thích
      */
-    public function getImagesLikedPaginated($id = null, int $perPage = 5, int $page = 1): LengthAwarePaginator;
+    public function getImagesLikedPaginated($id = null, int $perPage = 10, int $page = 1): LengthAwarePaginator;
 
     /**
      * Phân trang các hình ảnh đã tải lên
@@ -60,7 +60,7 @@ interface ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return LengthAwarePaginator Phân trang các hình ảnh đã tải lên
      */
-    public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): LengthAwarePaginator;
+    public function getImagesUploadedPaginated($id = null, int $perPage = 10, int $page = 1): LengthAwarePaginator;
 
     /**
      * Phân trang các hình ảnh do người dùng tạo
@@ -69,7 +69,7 @@ interface ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return LengthAwarePaginator Phân trang các hình ảnh đã tạo
      */
-    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 5, int $page = 1): LengthAwarePaginator;
+    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 10, int $page = 1): LengthAwarePaginator;
 
     /**
      * Lưu trữ hình ảnh tải lên

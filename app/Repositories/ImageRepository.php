@@ -44,7 +44,7 @@ class ImageRepository implements ImageRepositoryInterface
             ]
         ];
     }
-    public function getImagesByFeature(int $featureId, int $perPage = 5): array
+    public function getImagesByFeature(int $featureId, int $perPage = 10): array
     {
         $images = Image::with('user:id,name,avatar_url')
             ->where('features_id', $featureId)
@@ -160,7 +160,7 @@ class ImageRepository implements ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getImagesLikedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    public function getImagesLikedPaginated($id = null, int $perPage = 10, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
     {
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
@@ -206,7 +206,7 @@ class ImageRepository implements ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getImagesUploadedPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    public function getImagesUploadedPaginated($id = null, int $perPage = 10, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
     {        
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));
@@ -271,7 +271,7 @@ class ImageRepository implements ImageRepositoryInterface
      * @param int $page Trang hiện tại
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 5, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
+    public function getImagesCreatedByUserPaginated($id = null, int $perPage = 10, int $page = 1): \Illuminate\Pagination\LengthAwarePaginator
     {        
         // Kiểm tra xem $id có hợp lệ không - loại bỏ chuỗi rỗng và null
         $idIsValid = $id !== null && $id !== '' && trim($id) !== '' && ($id === '0' || $id === 0 || !empty($id));

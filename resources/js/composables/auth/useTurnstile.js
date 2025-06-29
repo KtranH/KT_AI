@@ -116,7 +116,6 @@ export function useTurnstile(siteKeyParam = null) {
       window.turnstile.render(turnstileWidget.value, {
         sitekey: turnstileSiteKey.value,
         callback: function(token) {
-          console.log('Turnstile callback with token:', token)
           handleTurnstileCallback(token)
         },
         'error-callback': function(error) {

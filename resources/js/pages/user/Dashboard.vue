@@ -132,6 +132,8 @@
                 <p class="text-gray-700 font-medium">Đang xử lý ảnh...</p>
               </div>
             </div>
+
+
         </div>
       <div class="container mx-auto px-4" data-aos="zoom-in" data-aos-delay="300">
         <!-- Xin chào -->
@@ -179,12 +181,7 @@
         <template v-else>
           <ImageListVue 
             :filter="activeTab" 
-            :user-id="otherUserId" 
-            v-if="otherUserId !== undefined"
-          />
-          <ImageListVue 
-            :filter="activeTab" 
-            v-else
+            :user-id="currentUserId"
           />
         </template>
       </div>
@@ -197,7 +194,7 @@ import AOS from 'aos'
 import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
 import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
 import dayjs from 'dayjs'
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
@@ -228,6 +225,16 @@ export default {
         otherUserId.value = parsedId
       }
     }
+    
+    // Computed property để xác định userId hiện tại
+    const currentUserId = computed(() => {
+      // Nếu có otherUserId và khác với user hiện tại, dùng otherUserId
+      if (otherUserId.value && otherUserId.value !== auth.user.value.id.toString()) {
+        return otherUserId.value
+      }
+      // Ngược lại, dùng userId của user hiện tại
+      return auth.user.value?.id || null
+    })
     
     const isOtherUserProfile = ref(false) // Flag để biết đang xem profile người khác hay không
     const active = ref([])
@@ -374,6 +381,8 @@ export default {
       }
     };
 
+
+
     // Mounted hook
     onMounted(async () => {
       await auth.checkAuth()      
@@ -429,6 +438,7 @@ export default {
       isLoading,
       isOtherUserProfile,
       otherUserId,
+      currentUserId,
       isInitialized
     }
   }

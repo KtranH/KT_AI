@@ -257,8 +257,13 @@ export const useAuthStore = () => {
         const { success, token, user } = event.data
 
         if (success) {
-          // Đóng popup
-          popup.close()
+          // Thử đóng popup, nếu không được thì bỏ qua lỗi
+          try {
+            popup.close()
+          } catch (error) {
+            console.log('Không thể đóng popup (Cross-Origin-Opener-Policy):', error)
+            // Popup sẽ tự đóng hoặc user đóng thủ công
+          }
           
           // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
           saveAuthData(user, token, true)

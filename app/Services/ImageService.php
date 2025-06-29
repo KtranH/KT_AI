@@ -3,13 +3,10 @@
 namespace App\Services;
 
 use App\Exceptions\BusinessException;
-use App\Exceptions\ExternalServiceException;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Services\R2StorageService;
-use App\Http\Resources\PaginateAndRespondResource;
 use App\Models\Image;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -41,7 +38,7 @@ class ImageService extends BaseService
     public function paginateAndRespond(Request $request, string $typeImage, string $errorType, $id = null)
     {
         return $this->executeWithExceptionHandling(function() use ($request, $typeImage, $id) {
-            $perPage = (int)$request->input('per_page', 5);
+            $perPage = (int)$request->input('per_page', 10);
             $page = (int)$request->input('page', 1);
             
             // Sử dụng phân trang database thay vì collection
@@ -73,7 +70,7 @@ class ImageService extends BaseService
     }
     
     // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
-    private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 5, $page = 1)
+    private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 10, $page = 1)
     {
         return $this->executeWithExceptionHandling(function() use ($typeImage, $id, $perPage, $page) {
             if ($typeImage === 'liked') {

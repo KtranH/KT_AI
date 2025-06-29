@@ -7,12 +7,18 @@ export const imageAPI = {
   getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
   
   // Protected Routes
-  getImagesUploaded: (userId) => {
-    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+  getImagesUploaded: (userId, perPage = 10) => {
+    const params = { per_page: perPage };
+    if (userId !== null && userId !== undefined) {
+      params.user_id = userId;
+    }
     return apiClient.get('/get_images_uploaded', { params });
   },
-  getImagesLiked: (userId) => {
-    const params = userId !== null && userId !== undefined ? { user_id: userId } : {};
+  getImagesLiked: (userId, perPage = 10) => {
+    const params = { per_page: perPage };
+    if (userId !== null && userId !== undefined) {
+      params.user_id = userId;
+    }
     return apiClient.get('/get_images_liked', { params });
   },
   getImagesLikedPage: (url) => apiClient.get(url),

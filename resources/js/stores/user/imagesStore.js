@@ -132,6 +132,9 @@ export const useImageStore = defineStore('image',
                         } else if (response.data.data && Array.isArray(response.data.data.data)) {
                             // Structure với pagination: response.data.data.data là array
                             dataToProcess = response.data.data.data
+                        } else if (response.data.data && Array.isArray(response.data.data.page)) {
+                            // Structure mới: response.data.data.page là array
+                            dataToProcess = response.data.data.page
                         } else if (response.data.images && Array.isArray(response.data.images)) {
                             // Structure mới: response.data.images là array URLs
                             // Trong trường hợp này, cần tạo object từ response.data.data và response.data.images
@@ -267,31 +270,38 @@ export const useImageStore = defineStore('image',
                 try {
                     const response = await imageAPI.getImagesByFeature(id, page)             
                     if (response.data && response.data.success) {
-                        // Lấy dữ liệu từ response - xử lý structure mới
+                        // Xử lý cấu trúc dữ liệu mới: response.data.data.data chứa array images
                         let imageData = [];
                         
-                        if (response.data.data && Array.isArray(response.data.data)) {
-                            // Structure cũ: response.data.data là array
-                            imageData = response.data.data;
-                        } else if (response.data.data && Array.isArray(response.data.data.data)) {
-                            // Structure với pagination: response.data.data.data là array
-                            imageData = response.data.data.data;
-                        } else if (response.data.images && Array.isArray(response.data.images)) {
-                            // Structure mới: response.data.images là array URLs
-                            if (response.data.data) {
-                                imageData = [{
-                                    ...response.data.data,
-                                    image_url: response.data.images,
-                                    user: response.data.user
-                                }];
-                            }
-                        }
-                        
-                        // Xử lý dữ liệu đặc biệt cho tính năng này (thêm currentSlideIndex)
+                        if (response.data.data && response.data.data.data && Array.isArray(response.data.data.data.data)) {
+                            // Structure mới: response.data.data.data là array images từ Laravel paginator
+                            imageData = response.data.data.data.data;
+                        } 
+
+                        // Xử lý dữ liệu - thêm currentSlideIndex và parse image_url nếu cần
                         const processedData = imageData.map(image => {
+                            // Xử lý image_url nếu là JSON string
+                            let imageUrls = [];
+                            if (image.image_url) {
+                                if (typeof image.image_url === 'string') {
+                                    try {
+                                        // Thử parse JSON
+                                        const parsed = JSON.parse(image.image_url);
+                                        imageUrls = Array.isArray(parsed) ? parsed : [image.image_url];
+                                    } catch (e) {
+                                        // Nếu không parse được, coi như là URL đơn
+                                        imageUrls = [image.image_url];
+                                    }
+                                } else if (Array.isArray(image.image_url)) {
+                                    imageUrls = image.image_url;
+                                }
+                            }
+                            
                             return {
                                 ...image,
-                                currentSlideIndex: 0
+                                currentSlideIndex: 0,
+                                url: imageUrls,
+                                image_url: imageUrls
                             };
                         });
                         
@@ -302,23 +312,24 @@ export const useImageStore = defineStore('image',
                             this.imagesByFeature = [...this.imagesByFeature, ...processedData];
                         }
                         
-                        // Cập nhật thông tin phân trang
-                        if (response.data.data && response.data.data.pagination) {
-                            this.currentPage = response.data.data.pagination.current_page;
-                            this.lastPage = response.data.data.pagination.last_page;
-                            this.totalImages = response.data.data.pagination.total;
-                        } else if (response.data.pagination) {
+                        // Cập nhật thông tin phân trang - ưu tiên pagination từ response.data.pagination
+                        if (response.data.pagination) {
                             this.currentPage = response.data.pagination.current_page;
                             this.lastPage = response.data.pagination.last_page;
                             this.totalImages = response.data.pagination.total;
+                        } else if (response.data.data) {
+                            // Fallback: lấy từ Laravel paginator response
+                            this.currentPage = response.data.data.current_page || 1;
+                            this.lastPage = response.data.data.last_page || 1;
+                            this.totalImages = response.data.data.total || 0;
                         }
                     } else {
                         console.error('Error:', response.statusText)
-                        this.error_message = response.data.message
+                        this.error_message = response.data?.message || 'Không thể tải dữ liệu'
                     }
                 } catch (error) {
                     console.error('Error fetching images:', error)
-                    this.error_message = 'An error occurred'
+                    this.error_message = error.message || 'Đã xảy ra lỗi khi tải dữ liệu'
                 } finally {
                     this.isLoading = false
                 }

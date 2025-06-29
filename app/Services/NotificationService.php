@@ -27,7 +27,7 @@ class NotificationService extends BaseService
         $this->notificationRepository = $notificationRepository;
         $this->userRepository = $userRepository;
     }
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): NotificationCollection
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
             $user = Auth::user();
