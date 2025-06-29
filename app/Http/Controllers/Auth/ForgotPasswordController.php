@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ErrorMessages;
 use App\Services\ForgotPasswordService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordController extends Controller
 {
@@ -38,14 +38,10 @@ class ForgotPasswordController extends Controller
      */
     public function sendResetLinkEmail(Request $request): JsonResponse
     {
-        try
-        {
-            return $this->forgotPasswordService->sendResetLinkEmail($request);
-        }
-        catch (ValidationException $e)
-        {
-            return $this->handleValidationException($e);
-        }
+        return $this->executeServiceJsonMethod(
+            fn() => $this->forgotPasswordService->sendResetLinkEmail($request),
+            ErrorMessages::FORGOT_PASSWORD_SEND_ERROR
+        );
     }
 
     /**
@@ -56,14 +52,10 @@ class ForgotPasswordController extends Controller
      */
     public function verifyCode(Request $request): JsonResponse
     {
-        try
-        {
-            return $this->forgotPasswordService->verifyCode($request);
-        }
-        catch (ValidationException $e)
-        {
-            return $this->handleValidationException($e);
-        }
+        return $this->executeServiceJsonMethod(
+            fn() => $this->forgotPasswordService->verifyCode($request),
+            ErrorMessages::FORGOT_PASSWORD_VERIFY_ERROR
+        );
     }
 
     /**
@@ -74,28 +66,9 @@ class ForgotPasswordController extends Controller
      */
     public function reset(Request $request): JsonResponse
     {
-        try
-        {
-            return $this->forgotPasswordService->reset($request);
-        }
-        catch (ValidationException $e)
-        {
-            return $this->handleValidationException($e);
-        }
-    }
-
-    /**
-     * Handle validation exception
-     *
-     * @param ValidationException $e
-     * @return JsonResponse
-     */
-    private function handleValidationException(ValidationException $e): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'errors' => $e->errors()
-        ], 422);
+        return $this->executeServiceJsonMethod(
+            fn() => $this->forgotPasswordService->reset($request),
+            ErrorMessages::FORGOT_PASSWORD_RESET_ERROR
+        );
     }
 }

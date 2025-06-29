@@ -40,4 +40,17 @@ class SuccessMessages
     const IMAGE_JOB_DELETE_SUCCESS = 'Xóa tiến trình thành công';
     const IMAGE_JOB_RETRY_SUCCESS = 'Thử lại tiến trình thành công';
     const IMAGE_JOB_CANCEL_SUCCESS = 'Hủy tiến trình thành công';
+
+    // Google related success messages
+    const GOOGLE_REDIRECT_SUCCESS = 'Tạo URL đăng nhập Google thành công';
+    const GOOGLE_CALLBACK_SUCCESS = 'Xử lý callback từ Google thành công';
+    const GOOGLE_AUTH_SUCCESS = 'Đăng nhập Google thành công';
+    const GOOGLE_LOGIN_SUCCESS = 'Đăng nhập Google thành công';
+
+    // Mail related success messages
+    const MAIL_VERIFY_SUCCESS = 'Xác thực email thành công';
+    const MAIL_RESEND_SUCCESS = 'Gửi lại mã xác thực email thành công';
+    const MAIL_SEND_SUCCESS = 'Gửi email thành công';
+    const MAIL_SEND_PASSWORD_CHANGE_SUCCESS = 'Gửi email đặt lại mật khẩu thành công';
+    const MAIL_SEND_PASSWORD_CHANGE_VERIFICATION_SUCCESS = 'Gửi email xác thực đặt lại mật khẩu thành công';
 }

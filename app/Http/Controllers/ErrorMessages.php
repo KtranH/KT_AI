@@ -57,4 +57,22 @@ class ErrorMessages
     const IMAGE_JOB_DELETE_ERROR = 'Lỗi khi xóa tiến trình';
     const IMAGE_JOB_RETRY_ERROR = 'Lỗi khi thử lại tiến trình';
     const IMAGE_JOB_CANCEL_ERROR = 'Lỗi khi hủy tiến trình';
+
+    // Google related errors
+    const GOOGLE_REDIRECT_ERROR = 'Lỗi khi tạo URL đăng nhập Google';
+    const GOOGLE_CALLBACK_ERROR = 'Lỗi khi xử lý callback từ Google';
+    const GOOGLE_AUTH_ERROR = 'Lỗi khi đăng nhập Google';
+    const GOOGLE_LOGIN_ERROR = 'Lỗi khi đăng nhập Google';
+
+    // Mail related errors
+    const MAIL_VERIFY_ERROR = 'Lỗi khi xác thực email';
+    const MAIL_RESEND_ERROR = 'Lỗi khi gửi lại mã xác thực email';
+    const MAIL_SEND_ERROR = 'Lỗi khi gửi email';
+    const MAIL_SEND_PASSWORD_CHANGE_ERROR = 'Lỗi khi gửi email đặt lại mật khẩu';
+    const MAIL_SEND_PASSWORD_CHANGE_VERIFICATION_ERROR = 'Lỗi khi gửi email xác thực đặt lại mật khẩu';
+
+    // Forgot Password related errors
+    const FORGOT_PASSWORD_SEND_ERROR = 'Lỗi khi gửi email khôi phục mật khẩu';
+    const FORGOT_PASSWORD_VERIFY_ERROR = 'Lỗi khi xác thực mã khôi phục mật khẩu';
+    const FORGOT_PASSWORD_RESET_ERROR = 'Lỗi khi đặt lại mật khẩu';
 } 

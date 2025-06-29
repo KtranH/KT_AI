@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -21,7 +23,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Check authentication status
+     * Kiểm tra trạng thái xác thực
      * 
      * @return JsonResponse
      */
@@ -35,7 +37,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Register a new user
+     * Đăng ký người dùng mới
      * 
      * @param SignUpRequest $request
      * @return JsonResponse
@@ -50,7 +52,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Login user
+     * Đăng nhập người dùng
      * 
      * @param LoginRequest $request
      * @return JsonResponse
@@ -65,7 +67,7 @@ class AuthController extends Controller
     }
 
     /**
-     * API Login for testing purposes (Postman, API clients)
+     * API Login cho testing (Postman, API clients)
      * Không yêu cầu Turnstile verification
      * 
      * @param Request $request
@@ -81,7 +83,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout user
+     * Đăng xuất người dùng
      * 
      * @param Request $request
      * @return JsonResponse
@@ -94,7 +96,7 @@ class AuthController extends Controller
             ErrorMessages::LOGOUT_ERROR
         );
 
-        // Add CSRF token cookie to response for logout
+        // Thêm CSRF token cookie vào response khi logout
         if ($result->getStatusCode() === 200) {
             $data = $result->getData(true);
             if (isset($data['data']['csrf_token'])) {

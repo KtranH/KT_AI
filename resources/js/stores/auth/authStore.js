@@ -246,7 +246,7 @@ export const useAuthStore = () => {
   const handleLoginByGoogle = async () => {
     try {
       const response = await googleAPI.getAuthUrl()
-      const googleAuthUrl = response.data.url
+      const googleAuthUrl = response.data.data.url
 
       const popup = window.open(googleAuthUrl, 'Google Login', 'width=500,height=600')
 

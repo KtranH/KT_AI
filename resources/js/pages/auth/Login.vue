@@ -143,6 +143,8 @@
             <SocialLoginButton 
               provider="Google" 
               icon="/img/google.png"
+              :loading="loading"
+              :formTurnstileToken="form.turnstileToken"
               @click="handleLoginByGoogle"
             >
             </SocialLoginButton>
