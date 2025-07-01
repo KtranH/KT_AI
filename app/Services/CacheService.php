@@ -53,7 +53,7 @@ class CacheService
     public function cacheFeature(AIFeature $feature): void
     {
         $key = sprintf(self::FEATURE, $feature->id);
-        Cache::put($key, $feature, now()->addMinutes(self::LONG_TTL));
+        Cache::put($key, $feature, now()->addMinutes(self::DEFAULT_TTL));
     }
     /**
      * Cache cho nhiều features

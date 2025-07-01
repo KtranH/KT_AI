@@ -256,13 +256,7 @@ export default {
         'update',
         'navigate-to-user'
     ],
-    setup(props, { emit }) {
-        console.log("CommentItem props.comment:", props.comment)
-        console.log("comment.avatar:", props.comment?.avatar)
-        console.log("comment.username:", props.comment?.username)
-        console.log("comment.text:", props.comment?.text)
-        console.log("comment.user:", props.comment?.user)
-        
+    setup(props, { emit }) {        
         const { likeComment, likeReply } = useLikes()
         // Tham chiếu tới DOM của phản hồi và phản hồi lồng nhau
         const replyRef = ref(null)

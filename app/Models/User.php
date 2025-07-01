@@ -63,12 +63,6 @@ class User extends Authenticatable
         $this->notify(new ResetPasswordNotification($code));
     }
 
-    // Relationship với UserSession (1-nhiều)
-    public function sessions()
-    {
-        return $this->hasMany(UserSession::class);
-    }
-
     // Relationship với Image (1-nhiều)
     public function images()
     {
