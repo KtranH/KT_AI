@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
+use App\Models\AIFeature;
 
 class CacheService
 {
@@ -12,7 +14,8 @@ class CacheService
     const USER_LAST_IMAGE_CHECK = 'user_%d_last_image_check';
     const USER_PROFILE = 'user_profile_%d';
     const IMAGE_LIKES_COUNT = 'image_likes_count_%d';
-    
+    const FEATURES = 'features';
+    const FEATURE = 'feature_%d';
     // Default TTL in minutes
     const DEFAULT_TTL = 5;
     const LONG_TTL = 60;
@@ -44,7 +47,44 @@ class CacheService
         $key = sprintf(self::IMAGE_COMMENTS_COUNT, $imageId);
         Cache::forget($key);
     }
-    
+    /**
+     * Cache cho 1 feature
+     */
+    public function cacheFeature(AIFeature $feature): void
+    {
+        $key = sprintf(self::FEATURE, $feature->id);
+        Cache::put($key, $feature, now()->addMinutes(self::LONG_TTL));
+    }
+    /**
+     * Cache cho nhiều features
+     */
+    public function cacheFeatures(Collection $features): void
+    {
+        Cache::put(self::FEATURES, $features, now()->addMinutes(self::LONG_TTL));
+    }
+    /**
+     * Get feature from cache
+     */
+    public function getFeature(int $id): ?AIFeature
+    {
+        $key = sprintf(self::FEATURE, $id);
+        return Cache::get($key) ?? null;
+    }
+    /**
+     * Get features from cache
+     */
+    public function getFeatures()
+    {
+        return Cache::get(self::FEATURES);
+    }
+    /**
+     * Clear features cache
+     */
+    public function clearFeatures(): void
+    {
+        Cache::forget(self::FEATURES);
+    }
+
     /**
      * Cache user profile
      */
