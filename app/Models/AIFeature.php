@@ -16,7 +16,8 @@ class AIFeature extends Model
         'description',
         'category',
         'thumbnail_url',
-        'status_feature'
+        'status_feature',
+        'input_requirements'
     ];
 
     protected $casts = [

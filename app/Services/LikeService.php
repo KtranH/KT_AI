@@ -9,7 +9,6 @@ use App\Models\Image;
 use App\Models\Interaction;
 use App\Notifications\LikeImageNotification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class LikeService extends BaseService
 {
@@ -51,12 +50,13 @@ class LikeService extends BaseService
      */
     public function getLikes(int $id): array
     {
-        $likes = $this->likeRepository->getLikes($id);
-        
-        return [
-            'like' => LikeResource::collection($likes),
-            'count' => $likes->count()
-        ];
+        return $this->executeWithExceptionHandling(function() use ($id) {
+            $likes = $this->likeRepository->getLikes($id);
+            return [
+                'like' => LikeResource::collection($likes),
+                'count' => $likes->count()
+            ];
+        }, "Getting likes for image ID: {$id}");
     }
     
     /**

@@ -167,7 +167,6 @@ export default {
         const mainImage = ref(null)
         const secondaryImage = ref(null)
         const route = useRoute()
-        const router = useRouter()
         const decoded_value = ref(null)
         const error_message = ref(null)
         const isGenerating = ref(false)

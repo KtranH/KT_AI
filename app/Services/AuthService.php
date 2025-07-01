@@ -10,7 +10,10 @@ use Illuminate\Validation\ValidationException;
 use App\Repositories\UserRepository;
 use App\Services\TurnStileService;
 use App\Services\MailService;
-
+use App\Http\Requests\Auth\PostmanRequest;
+use App\Http\Requests\Auth\SignUpRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\AuthResource;
 
 class AuthService extends BaseService
 {
@@ -42,9 +45,11 @@ class AuthService extends BaseService
      * @param Request $request
      * @return array
      */
-    public function register(Request $request): array
+    public function register(SignUpRequest $request): array
     {
         return $this->executeInTransactionSafely(function() use ($request) {
+            // Validate input
+            $request->validated();
             // Xác thực Turnstile
             $turnstileResponse = $this->turnStileService->verifyTurnstile(
                 $request->input('cf-turnstile-response'), 
@@ -64,11 +69,7 @@ class AuthService extends BaseService
                 throw ExternalServiceException::emailServiceError('Failed to send verification email');
             }
             
-            return [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'verification_sent' => true
-            ];
+            return AuthResource::registration($user, 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.');
         }, "Registering user with email: {$request->input('email')}");
     }
     
@@ -78,9 +79,12 @@ class AuthService extends BaseService
      * @param Request $request
      * @return array
      */
-    public function login(Request $request): array
+    public function login(LoginRequest $request): array
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
+            // Validate input
+            $request->validated();
+
             // Xác thực Turnstile
             $turnstileResponse = $this->turnStileService->verifyTurnstile(
                 $request->input('cf-turnstile-response'), 
@@ -118,12 +122,14 @@ class AuthService extends BaseService
 
             $token = $user->createToken($tokenName)->plainTextToken;
 
-            return [
-                'user' => $user,
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'remember' => $request->boolean('remember')
-            ];
+            return new AuthResource(
+                $user, 
+                $token, 
+                'Bearer', 
+                $request->boolean('remember'),
+                null,
+                'Đăng nhập thành công'
+            );
         }, "Login attempt for email: {$request->input('email')}");
     }
 
@@ -134,16 +140,10 @@ class AuthService extends BaseService
      * @param Request $request
      * @return array
      */
-    public function apiLogin(Request $request): array
+    public function apiLogin(PostmanRequest $request): array
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
-            // Validate input
-            $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|string',
-                'remember' => 'boolean'
-            ]);
-
+            $request->validated();
             if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
                 throw BusinessException::invalidPermissions('incorrect credentials');
             }
@@ -163,12 +163,14 @@ class AuthService extends BaseService
             $tokenName = $request->boolean('remember') ? 'api_token_remember' : 'api_token';
             $token = $user->createToken($tokenName)->plainTextToken;
 
-            return [
-                'user' => $user->only('id', 'name', 'email', 'is_verified', 'created_at', 'updated_at'),
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'expires_in' => config('sanctum.expiration') * 60 // Convert minutes to seconds
-            ];
+            return new AuthResource(
+                $user,
+                $token,
+                'Bearer',
+                $request->boolean('remember'),
+                config('sanctum.expiration') * 60, // Convert minutes to seconds
+                'API đăng nhập thành công'
+            );
         }, "API login attempt for email: {$request->input('email')}");
     }
 
@@ -186,10 +188,7 @@ class AuthService extends BaseService
                 $user->tokens()->delete();
             }
             
-            return [
-                'success' => true,
-                'message' => 'Đăng xuất thành công'
-            ];
+            return AuthResource::logout('Đăng xuất thành công');
         }, "Logging out user ID: " . ($request->user()->id ?? 'unknown'));
     }
 }

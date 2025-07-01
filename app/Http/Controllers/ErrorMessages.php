@@ -75,4 +75,10 @@ class ErrorMessages
     const FORGOT_PASSWORD_SEND_ERROR = 'Lỗi khi gửi email khôi phục mật khẩu';
     const FORGOT_PASSWORD_VERIFY_ERROR = 'Lỗi khi xác thực mã khôi phục mật khẩu';
     const FORGOT_PASSWORD_RESET_ERROR = 'Lỗi khi đặt lại mật khẩu';
+
+    // Notification related errors
+    const NOTIFICATION_LOAD_ERROR = 'Lỗi khi tải dữ liệu thông báo';
+    const NOTIFICATION_MARK_AS_READ_ERROR = 'Lỗi khi đánh dấu thông báo đã đọc';
+    const NOTIFICATION_MARK_ALL_AS_READ_ERROR = 'Lỗi khi đánh dấu tất cả thông báo đã đọc';
+    const NOTIFICATION_DELETE_ERROR = 'Lỗi khi xóa thông báo';
 } 

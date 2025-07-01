@@ -9,6 +9,7 @@ use App\Jobs\CheckImageJobStatus;
 use App\Models\ImageJob;
 use App\Models\User;
 use App\Services\ComfyUIService;
+use App\Http\Resources\ImageJobResource;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -75,9 +76,10 @@ class ImageJobService extends BaseService
             ->delay(now()->addSeconds(15));
             
         return [
+            'job' => new ImageJobResource($imageJob),
             'job_id' => $imageJob->id,
-                'status' => $imageJob->status,
-            ];
+            'status' => $imageJob->status,
+        ];
         }, "Creating image job for user ID: {$user->id}");
     }
 
@@ -90,9 +92,9 @@ class ImageJobService extends BaseService
             $activeJobs = $this->imageJobRepository->getActiveJobsByUser($user->id);
 
         return [
-            'active_jobs' => $activeJobs,
+            'active_jobs' => ImageJobResource::collection($activeJobs),
             'count' => $activeJobs->count(),
-            ];
+        ];
         }, "Getting active jobs for user ID: {$user->id}");
     }
 
@@ -105,9 +107,9 @@ class ImageJobService extends BaseService
             $completedJobs = $this->imageJobRepository->getCompletedJobsByUser($user->id);
 
         return [
-            'completed_jobs' => $completedJobs,
+            'completed_jobs' => ImageJobResource::collection($completedJobs),
             'count' => $completedJobs->count(),
-            ];
+        ];
         }, "Getting completed jobs for user ID: {$user->id}");
     }
 
@@ -120,9 +122,9 @@ class ImageJobService extends BaseService
             $failedJobs = $this->imageJobRepository->getFailedJobsByUser($user->id);
 
         return [
-            'failed_jobs' => $failedJobs,
+            'failed_jobs' => ImageJobResource::collection($failedJobs),
             'count' => $failedJobs->count(),
-            ];
+        ];
         }, "Getting failed jobs for user ID: {$user->id}");
     }
 
@@ -148,8 +150,8 @@ class ImageJobService extends BaseService
         }
 
         return [
-            'job' => $job
-            ];
+            'job' => new ImageJobResource($job)
+        ];
         }, "Checking job status for job ID: {$jobId} and user ID: {$user->id}");
     }
 

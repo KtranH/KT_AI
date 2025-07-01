@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRules;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Http\Resources\PasswordResetResource;
 
 class ForgotPasswordService extends BaseService
 {
@@ -87,10 +88,10 @@ class ForgotPasswordService extends BaseService
 
             if ($user) {
                 $user->sendPasswordResetNotification($verificationCode);
-                return ['message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn.'];
+                return PasswordResetResource::sendCode($request->email, 'Chúng tôi đã gửi mã xác nhận đến email của bạn.');
             }
 
-            return ['message' => 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.'];
+            return PasswordResetResource::sendCode($request->email, 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.');
         }, "Sending password reset email to: {$request->email}");
     }
 
@@ -161,10 +162,7 @@ class ForgotPasswordService extends BaseService
             $token = Str::random(64);
             Redis::setex("password_reset_token:{$request->email}", 600, $token);
 
-            return [
-                'message' => 'Mã xác thực hợp lệ',
-                'token' => $token
-            ];
+            return PasswordResetResource::verifyCodeSuccess($request->email, $token, 'Mã xác thực hợp lệ');
         }, "Verifying password reset code for email: {$request->email}");
     }
 
@@ -195,7 +193,7 @@ class ForgotPasswordService extends BaseService
             // Cập nhật mật khẩu trong transaction
             $this->updatePasswordInTransaction($user, $request->password, $request->email);
 
-            return ['message' => 'Mật khẩu đã được đặt lại thành công'];
+            return PasswordResetResource::resetSuccess($request->email, 'Mật khẩu đã được đặt lại thành công');
         }, "Resetting password for email: {$request->email}");
     }
 

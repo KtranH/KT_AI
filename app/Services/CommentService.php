@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
+use App\Http\Resources\CommentResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -32,9 +33,22 @@ class CommentService extends BaseService
     
     public function getComments(int $imageId, Request $request)
     {
-        $page = $request->input('page', 1);
-        $commentId = $request->input('comment_id');
-        return $this->commentRepository->getComments($imageId, $commentId, $page);
+        return $this->executeWithExceptionHandling(function() use ($imageId, $request) {
+            $comments = $this->commentRepository->getComments($imageId, $request->input('comment_id'), $request->input('page'));
+            
+            // Format comments using CommentResource
+            $formattedComments = CommentResource::collection($comments['comments'] ?? $comments);
+            
+            // Return with proper structure
+            if (isset($comments['hasMore'])) {
+                return [
+                    'comments' => $formattedComments,
+                    'hasMore' => $comments['hasMore']
+                ];
+            }
+            
+            return $formattedComments;
+        }, "Getting comments for image ID: {$imageId}");
     }
     
     public function storeComment(StoreCommentRequest $request)
@@ -56,7 +70,7 @@ class CommentService extends BaseService
                 'user_id' => Auth::id()
             ]);
 
-            return $comment;
+            return new CommentResource($comment);
         }, "Creating comment for image ID: {$request->input('image_id')}");
     }
     
@@ -83,7 +97,7 @@ class CommentService extends BaseService
                 'user_id' => Auth::id()
             ]);
 
-            return $reply;
+            return new CommentResource($reply);
         }, "Creating reply for comment ID: {$comment->id}");
     }
     

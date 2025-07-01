@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\ExternalServiceException;
 use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
+use App\Http\Resources\AuthResource;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
@@ -71,12 +72,16 @@ class GoogleService extends BaseService
                 'email' => $user->email
             ]);
             
-            return [
-                'success' => true,
-                'message' => 'Đăng nhập thành công',
-                'user' => $user,
-                'token' => $token
-            ];
+            $authResource = new AuthResource(
+                $user,
+                $token,
+                'Bearer',
+                false,
+                null,
+                'Đăng nhập Google thành công'
+            );
+            
+            return $authResource->toArray(request());
         }, 'Processing Google OAuth callback');
     }
 

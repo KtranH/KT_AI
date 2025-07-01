@@ -26,79 +26,77 @@
         >
       </div>
       
-      <div ref="masonryContainer" class="masonry-grid">
-        <!-- Image cells -->
-        <div 
-          v-for="(image, index) in images" 
-          :key="index" 
-          class="masonry-item relative border border-gray-200 rounded-lg overflow-hidden group"
-        >
-        <!-- Phần hiển thị chủ bài viết -->
-          <div class="p-2 flex items-center justify-between">
-            <div class="flex items-center">
-              <img :src="image.user.avatar_url" class="w-8 h-8 rounded-full mx-2" alt="User Avatar">
-              <p class="text-sm font-medium text-gray-900 truncate w-40">{{ image.user.name }}</p>
-            </div>
-            <div class="ml-2 flex gap-2">
-              <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-heart text-red-500"></i> {{ image.sum_like }}</p>
-              <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-comment text-gray-500"></i> {{ image.sum_comment }}</p>
-            </div>
-          </div> 
+      <!-- Image cells -->
+      <div 
+        v-for="(image, index) in images" 
+        :key="index" 
+        class="masonry-item relative border border-gray-200 rounded-lg overflow-hidden group"
+      >
+      <!-- Phần hiển thị chủ bài viết -->
+        <div class="p-2 flex items-center justify-between">
+          <div class="flex items-center">
+            <img :src="image.user.avatar_url" class="w-8 h-8 rounded-full mx-2" alt="User Avatar">
+            <p class="text-sm font-medium text-gray-900 truncate w-40">{{ image.user.name }}</p>
+          </div>
+          <div class="ml-2 flex gap-2">
+            <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-heart text-red-500"></i> {{ image.sum_like }}</p>
+            <p class="text-sm font-medium text-gray-900"><i class="fa-solid fa-comment text-gray-500"></i> {{ image.sum_comment }}</p>
+          </div>
+        </div> 
+        
+        <!-- Image carousel - Hiển thị slide ảnh cho mỗi image -->
+        <div class="w-full h-full relative">
+          <div 
+            v-for="(imageUrl, imgIndex) in image.image_url" 
+            :key="imgIndex"
+            :class="[
+              imgIndex === (image.currentSlideIndex || 0) ? 'opacity-100 z-10' : 'opacity-0 z-0',
+              image.image_url.length > 1 ? 'absolute inset-0 h-full transition-opacity duration-300 ease-in-out' : ''
+            ]"
+          >
+            <!-- Thêm sự kiện nhấp vào ảnh -->
+            <img 
+              :src="imageUrl" 
+              class="object-cover w-full h-full cursor-pointer"
+              @click="goToImageDetail(image.id)"
+              @load="onImageLoaded"
+              loading="lazy"
+            >
+          </div>
           
-          <!-- Image carousel - Hiển thị slide ảnh cho mỗi image -->
-          <div class="w-full h-full relative">
-            <div 
-              v-for="(imageUrl, imgIndex) in image.image_url" 
-              :key="imgIndex"
-              :class="[
-                imgIndex === (image.currentSlideIndex || 0) ? 'opacity-100 z-10' : 'opacity-0 z-0',
-                image.image_url.length > 1 ? 'absolute inset-0 h-full transition-opacity duration-300 ease-in-out' : ''
-              ]"
+          <!-- Navigation arrows (chỉ hiển thị khi có nhiều ảnh) -->
+          <template v-if="image.image_url && image.image_url.length > 1">
+            <button 
+              class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
+              @click.stop="navigateImageSlide(index, 'prev')"
+              v-show="(image.currentSlideIndex || 0) > 0"
             >
-              <!-- Thêm sự kiện nhấp vào ảnh -->
-              <img 
-                :src="imageUrl" 
-                class="object-cover w-full h-full cursor-pointer"
-                @click="goToImageDetail(image.id)"
-                @load="onImageLoaded"
-                loading="lazy"
-              >
-            </div>
-            
-            <!-- Navigation arrows (chỉ hiển thị khi có nhiều ảnh) -->
-            <template v-if="image.image_url && image.image_url.length > 1">
-              <button 
-                class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImageSlide(index, 'prev')"
-                v-show="(image.currentSlideIndex || 0) > 0"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button 
-                class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
-                @click.stop="navigateImageSlide(index, 'next')"
-                v-show="(image.currentSlideIndex || 0) < image.image_url.length - 1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </template>
-            
-            <!-- Indicator dots nếu có nhiều ảnh -->
-            <div 
-              v-if="image.image_url && image.image_url.length > 1" 
-              class="absolute bottom-1 left-0 right-0 flex justify-center space-x-1 z-20"
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button 
+              class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition z-20"
+              @click.stop="navigateImageSlide(index, 'next')"
+              v-show="(image.currentSlideIndex || 0) < image.image_url.length - 1"
             >
-              <div 
-                v-for="(_, dotIndex) in image.image_url" 
-                :key="dotIndex" 
-                class="w-1.5 h-1.5 rounded-full transition-colors duration-200"
-                :class="dotIndex === (image.currentSlideIndex || 0) ? 'bg-white' : 'bg-white/50'"
-              ></div>
-            </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </template>
+          
+          <!-- Indicator dots nếu có nhiều ảnh -->
+          <div 
+            v-if="image.image_url && image.image_url.length > 1" 
+            class="absolute bottom-1 left-0 right-0 flex justify-center space-x-1 z-20"
+          >
+            <div 
+              v-for="(_, dotIndex) in image.image_url" 
+              :key="dotIndex" 
+              class="w-1.5 h-1.5 rounded-full transition-colors duration-200"
+              :class="dotIndex === (image.currentSlideIndex || 0) ? 'bg-white' : 'bg-white/50'"
+            ></div>
           </div>
         </div>
       </div>

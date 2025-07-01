@@ -1,7 +1,7 @@
 <template>
     <div class="flex-1 overflow-y-auto">
         <!-- Không có bình luận -->
-        <div v-if="comments.length === 0" class="flex justify-center items-center h-full">
+        <div v-if="!comments || comments.length === 0" class="flex justify-center items-center h-full">
             <p class="text-gray-500 text-center">Chưa có bình luận nào.<br>Hãy là người đầu tiên bình luận!</p>
         </div>
 

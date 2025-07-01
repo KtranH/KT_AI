@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Interfaces\FeatureRepositoryInterface;
 use App\Services\BaseService;
+use App\Http\Resources\AIFeatureResource;
 
 class FeatureService extends BaseService
 {
@@ -14,13 +15,15 @@ class FeatureService extends BaseService
     public function getFeatures()
     {
         return $this->executeWithExceptionHandling(function() {
-            return $this->featureRepository->getFeatures();
+            $features = $this->featureRepository->getFeatures();
+            return AIFeatureResource::collection($features);
         }, "Getting features");
     }
     public function getFeatureById($id)
     {
         return $this->executeWithExceptionHandling(function() use ($id) {
-            return $this->featureRepository->getFeatureById($id);
+            $feature = $this->featureRepository->getFeatureById($id);
+            return new AIFeatureResource($feature);
         }, "Getting feature by ID: {$id}");
     }
     public function increaseSumImg($id)

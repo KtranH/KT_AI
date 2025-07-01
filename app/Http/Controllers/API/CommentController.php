@@ -35,21 +35,7 @@ class CommentController extends Controller
     public function getComments(int $imageId, Request $request): JsonResponse
     {
         return $this->executeServiceMethod(
-            function() use ($imageId, $request) {
-                $result = $this->commentService->getComments($imageId, $request);
-                
-                if (isset($result['replies'])) {
-                    return [
-                        'replies' => ReplyResource::collection($result['replies']),
-                        'hasMore' => $result['hasMore'],
-                    ];
-                }
-                
-                return [
-                    'comments' => CommentResource::collection($result['comments']),
-                    'hasMore' => $result['hasMore']
-                ];
-            },
+            fn() => $this->commentService->getComments($imageId, $request),
             null,
             ErrorMessages::COMMENT_LOAD_ERROR
         );
@@ -64,10 +50,7 @@ class CommentController extends Controller
     public function store(StoreCommentRequest $request): JsonResponse
     {
         return $this->executeServiceMethod(
-            function() use ($request) {
-                $comment = $this->commentService->storeComment($request);
-                return new CommentResource($comment);
-            },
+            fn() => $this->commentService->storeComment($request),
             SuccessMessages::SUCCESS_CREATE,
             ErrorMessages::COMMENT_CREATE_ERROR
         );
@@ -83,10 +66,7 @@ class CommentController extends Controller
     public function storeReply(StoreReplyRequest $request, Comment $comment): JsonResponse
     {
         return $this->executeServiceMethod(
-            function() use ($request, $comment) {
-                $reply = $this->commentService->storeReply($request, $comment);
-                return new ReplyResource($reply);
-            },
+            fn() => $this->commentService->storeReply($request, $comment),
             SuccessMessages::SUCCESS_CREATE,
             ErrorMessages::REPLY_CREATE_ERROR
         );
@@ -101,15 +81,7 @@ class CommentController extends Controller
     public function destroy(Comment $comment): JsonResponse
     {
         return $this->executeServiceMethod(
-            function() use ($comment) {
-                $result = $this->commentService->destroy($comment);
-                if (!$result) {
-                    return response()->json([
-                        'message' => 'Không được phép xóa bình luận này'
-                    ], 403);
-                }
-                return ['message' => 'Xóa bình luận thành công'];
-            },
+            fn() => $this->commentService->destroy($comment),
             null,
             ErrorMessages::COMMENT_DELETE_ERROR
         );
@@ -124,20 +96,11 @@ class CommentController extends Controller
      */
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
-        try {
-            return $this->executeServiceMethod(
-                function() use ($request, $comment) {
-                    $updatedComment = $this->commentService->update($request, $comment);
-                    return new CommentResource($updatedComment);
-                },
-                SuccessMessages::SUCCESS_UPDATE,
-                ErrorMessages::COMMENT_UPDATE_ERROR
-            );
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 403);
-        }
+        return $this->executeServiceMethod(
+            fn() => $this->commentService->update($request, $comment),
+            SuccessMessages::SUCCESS_UPDATE,
+            ErrorMessages::COMMENT_UPDATE_ERROR
+        );
     }
     
     /**

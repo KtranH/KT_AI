@@ -14,6 +14,7 @@ use App\Http\Requests\User\UpdateAvatarRequest;
 use App\Http\Requests\User\UpdateCoverImageRequest;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\CheckPasswordRequest;
+use App\Http\Resources\UploadResource;
 
 /**
  * Service class xử lý các chức năng liên quan đến User
@@ -208,10 +209,14 @@ class UserService extends BaseService
             // Cập nhật thông qua repository
             $user = $this->userRepository->updateAvatar($fullPath);
 
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
+            return response()->json(
+                UploadResource::avatar(
+                    $fullPath,
+                    $file->getClientOriginalName(),
+                    $file->getSize(),
+                    'Cập nhật avatar thành công'
+                )
+            );
         }, "Updating avatar for user ID: " . Auth::id());
     }
 
@@ -242,10 +247,14 @@ class UserService extends BaseService
             // Cập nhật thông qua repository
             $user = $this->userRepository->updateCoverImage($fullPath);
 
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
+            return response()->json(
+                UploadResource::coverImage(
+                    $fullPath,
+                    $file->getClientOriginalName(),
+                    $file->getSize(),
+                    'Cập nhật ảnh bìa thành công'
+                )
+            );
         }, "Updating cover image for user ID: " . Auth::id());
     }
 }

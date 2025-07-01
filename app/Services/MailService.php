@@ -8,6 +8,8 @@ use App\Exceptions\ExternalServiceException;
 use App\Exceptions\BusinessException;
 use App\Interfaces\UserRepositoryInterface;
 use App\Mail\VerificationMail;
+use App\Http\Resources\AuthResource;
+use App\Http\Resources\MailVerificationResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -149,10 +151,7 @@ class MailService extends BaseService
                 'user_id' => $user->id
             ]);
 
-            return response()->json([
-                'message' => 'Xác thực email thành công.',
-                'user' => $user
-            ]);
+            return response()->json(AuthResource::verification('Xác thực email thành công.'));
         }, "Verifying email for: {$request->email}");
     }
 
@@ -190,9 +189,12 @@ class MailService extends BaseService
 
             $this->updateResendCounters($request->email);
 
-            return response()->json([
-                'message' => 'Đã gửi lại mã xác thực.',
-            ]);
+            return response()->json(
+                MailVerificationResource::resendVerification(
+                    $request->email,
+                    'Đã gửi lại mã xác thực'
+                )
+            );
         }, "Resending verification for: {$request->email}");
     }
 
@@ -219,10 +221,12 @@ class MailService extends BaseService
             // Lưu thời gian gửi
             Redis::setex("password_change_last_sent:{$user->email}", 600, time());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã gửi mã xác thực đến email của bạn'
-            ]);
+            return response()->json(
+                MailVerificationResource::passwordChangeVerification(
+                    $user->email,
+                    'Đã gửi mã xác thực đến email của bạn'
+                )
+            );
         }, "Sending password change verification code for user ID: " . Auth::id());
     }
 

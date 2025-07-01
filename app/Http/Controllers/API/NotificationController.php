@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Services\NotificationService;
+use App\Http\Controllers\ErrorMessages;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -21,9 +22,13 @@ class NotificationController extends Controller
      * @param Request $request
      * @return ResourceCollection
      */
-    public function index(Request $request): ResourceCollection
+    public function index(Request $request): JsonResponse
     {
-        return $this->notificationService->index($request);
+        return $this->executeServiceMethod(
+            fn() => $this->notificationService->index($request),
+            null,
+            ErrorMessages::NOTIFICATION_LOAD_ERROR
+        );
     }
     /**
      * Đánh dấu thông báo đã đọc
@@ -33,7 +38,11 @@ class NotificationController extends Controller
      */
     public function markAsRead(string $id): JsonResponse
     {
-        return $this->notificationService->markAsRead($id);
+        return $this->executeServiceMethod(
+            fn() => $this->notificationService->markAsRead($id),
+            null,
+            ErrorMessages::NOTIFICATION_MARK_AS_READ_ERROR
+        );
     }
     /**
      * Đánh dấu tất cả thông báo đã đọc
@@ -42,7 +51,11 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(): JsonResponse
     {
-        return $this->notificationService->markAllAsRead();
+        return $this->executeServiceMethod(
+            fn() => $this->notificationService->markAllAsRead(),
+            null,
+            ErrorMessages::NOTIFICATION_MARK_ALL_AS_READ_ERROR
+        );
     }
     /**
      * Xóa một thông báo
@@ -52,6 +65,10 @@ class NotificationController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        return $this->notificationService->destroy($id);
+        return $this->executeServiceMethod(
+            fn() => $this->notificationService->destroy($id),
+            null,
+            ErrorMessages::NOTIFICATION_DELETE_ERROR
+        );
     }
 }

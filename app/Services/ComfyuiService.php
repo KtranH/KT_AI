@@ -11,7 +11,6 @@ use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\ImageJob;
-use Exception;
 use Illuminate\Support\Facades\Http;
 
 class ComfyUIService extends BaseService
