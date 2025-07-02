@@ -88,7 +88,15 @@ export const useAuthStore = () => {
 
       if (!token.value || !user.value) return false
 
-      const response = await authAPI.check()
+      // Thêm timeout cho API call để tránh bị treo
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+      )
+
+      const response = await Promise.race([
+        authAPI.check(),
+        timeoutPromise
+      ])
 
       // Cấu trúc mới: {success: true, data: {authenticated: true, user: {...}}, message: null}
       if (response.data && response.data.success && response.data.data) {
@@ -109,8 +117,18 @@ export const useAuthStore = () => {
         return false
       }
     } catch (error) {
-      clearAuthData()
-      console.error('Error checking auth:', error)
+      if (error.message === 'Auth check timeout') {
+        console.warn('Auth check timed out - proceeding without authentication check')
+      } else {
+        console.error('Error checking auth:', error)
+      }
+      
+      // Nếu có lỗi network hoặc timeout, vẫn giữ token cục bộ một thời gian ngắn
+      // thay vì xóa ngay lập tức, trừ khi là lỗi 401/403
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        clearAuthData()
+      }
+      
       return false
     }
   }
@@ -142,15 +160,12 @@ export const useAuthStore = () => {
         
         saveAuthData(loginData.user, loginData.token, loginData.remember)
         
-        // Sử dụng router.push thay vì window.location để tránh reload trang
-        // và thêm một khoảng thời gian ngắn để đảm bảo dữ liệu đã được lưu
         setTimeout(() => {
           router.push(router.currentRoute.value.query.redirect || '/dashboard')
         }, 100)
         
         return loginData
       } else {
-        // Fallback cho response structure cũ (backward compatibility)
         if (response.data.needs_verification) {
           return response.data
         }
@@ -163,7 +178,6 @@ export const useAuthStore = () => {
         return response.data
       }
     } catch (error) {
-      // Lỗi đã được xử lý tự động bởi interceptor, không cần xử lý thêm lỗi CSRF ở đây nữa
       throw error
     }
   }
@@ -254,9 +268,9 @@ export const useAuthStore = () => {
       const messageHandler = (event) => {
         if (event.origin !== window.location.origin) return
 
-        const { success, token, user } = event.data
+        const { success, user, auth, message } = event.data
 
-        if (success) {
+        if (success && user && auth && auth.token) {
           // Thử đóng popup, nếu không được thì bỏ qua lỗi
           try {
             popup.close()
@@ -265,13 +279,15 @@ export const useAuthStore = () => {
             // Popup sẽ tự đóng hoặc user đóng thủ công
           }
           
-          // Lưu thông tin đăng nhập trước, sau đó mới chuyển hướng
-          saveAuthData(user, token, true)
+          // Lưu thông tin đăng nhập với cấu trúc đúng
+          saveAuthData(user, auth.token, auth.remember || true)
 
           // Sử dụng router.push() thay vì window.location.reload()
-          router.push('/dashboard')
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 100)
         } else {
-          console.error('Đăng nhập thất bại:', event.data.message)
+          console.error('Đăng nhập Google thất bại:', message || event.data.message || 'Lỗi không xác định')
         }
         
         // Xóa event listener

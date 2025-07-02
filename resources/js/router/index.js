@@ -80,7 +80,7 @@ const routes = [
     path: '/features',
     name: 'features',
     component: Features,
-    meta: { requiresAuth: true, title: 'KT_AI - Tính năng' }
+    meta: { requiresAuth: true, title: 'KT_AI - Tính năng', keepAlive: true }
   },
   {
     path: '/createimage/:encodedID',
@@ -187,17 +187,41 @@ router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title || 'KT_AI - Sáng tạo ảnh với AI';
   const auth = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const isGuestRoute = to.matched.some(record => record.meta.guest)
+  
+  if (isGuestRoute) {
+    // Nếu đã đăng nhập và cố gắng truy cập guest route, chuyển hướng đến dashboard
+    try {
+      const isAuthenticated = await auth.checkAuth()
+      if (isAuthenticated && to.path !== '/') {
+        next({ path: '/dashboard' })
+        return
+      }
+    } catch (error) {
+      console.warn('Auth check failed for guest route:', error)
+    }
+    next()
+    return
+  }
   
   if (requiresAuth) {
-    const isAuthenticated = await auth.checkAuth()
-    
-    if (!isAuthenticated) {
+    try {
+      const isAuthenticated = await auth.checkAuth()
+      
+      if (!isAuthenticated) {
+        next({ 
+          path: '/login', 
+          query: { redirect: to.fullPath } 
+        })
+      } else {
+        next()
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
       next({ 
         path: '/login', 
         query: { redirect: to.fullPath } 
       })
-    } else {
-      next()
     }
   } else {
     next()

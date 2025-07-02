@@ -26,6 +26,10 @@ Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
 // Turnstile Config Route - Không yêu cầu xác thực vì cần trước khi đăng nhập
 Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']);
 
+// Google OAuth Routes
+Route::get('/google/url', [GoogleController::class, 'redirectUrl']);
+Route::get('/google/callback', [GoogleController::class, 'handleCallback']);
+
 // Protected Auth Routes
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

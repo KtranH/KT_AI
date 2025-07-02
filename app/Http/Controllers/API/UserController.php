@@ -135,19 +135,6 @@ class UserController extends Controller
     }
 
     /**
-     * Check user credits
-     * 
-     * @return JsonResponse
-     */
-    public function checkCredits(): JsonResponse
-    {
-        return $this->executeServiceJsonMethod(
-            fn() => $this->userService->checkCredits(),
-            ErrorMessages::USER_LOAD_ERROR
-        );
-    }
-
-    /**
      * Check current password
      * 
      * @param CheckPasswordRequest $request

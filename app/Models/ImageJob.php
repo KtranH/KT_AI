@@ -25,6 +25,7 @@ class ImageJob extends Model
         'comfy_prompt_id',
         'error_message',
         'progress', // thêm cột progress để lưu tiến độ (%)
+        'credits_refunded', // flag để tránh duplicate refund credits
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class ImageJob extends Model
         'feature_id' => 'integer',
         'user_id' => 'integer',
         'progress' => 'integer',
+        'credits_refunded' => 'boolean',
     ];
 
     protected $appends = [

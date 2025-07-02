@@ -65,17 +65,7 @@ export function useImageGen() {
         }
     }
 
-    // Kiểm tra credits
-    const checkCredits = async (user) => {
-        try {
-            const response = await profileAPI.checkCredits()
-            if (response.data && response.data.success) {
-                user.value.remaining_credits = response.data.data.remaining_credits || response.data.remaining_credits
-            }
-        } catch (error) {
-            console.error('Lỗi khi kiểm tra credits:', error)
-        }
-    }
+
 
     // Tạo ảnh
     const generateImage = async (params) => {
@@ -94,13 +84,6 @@ export function useImageGen() {
             feature,
             activeJobs
         } = params
-
-        // Kiểm tra credits
-        await checkCredits(user)
-        if (user.value.remaining_credits < 1) {
-            toast.error('Bạn không có đủ credits để tạo ảnh')
-            return
-        }
 
         // Kiểm tra các điều kiện
         if (!prompt.value.trim()) {
@@ -165,9 +148,6 @@ export function useImageGen() {
                 
                 // Cập nhật danh sách tiến trình
                 await fetchActiveJobs(activeJobs)
-                
-                // Cập nhật credits
-                await checkCredits(user)
             } else {
                 toast.error(response.data?.message || 'Lỗi khi tạo ảnh')
             }
@@ -191,7 +171,7 @@ export function useImageGen() {
         fetchActiveJobs,
         checkCompletedJobs,
         cancelJob,
-        checkCredits,
-        generateImage
+        generateImage,
+        generateRandomSeed
     }
 }

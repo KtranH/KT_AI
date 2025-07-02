@@ -13,5 +13,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/update-name', [UserController::class, 'updateName']);
     Route::patch('/update-password', [UserController::class, 'updatePassword']);
     Route::post('/check-password', [UserController::class, 'checkPassword']);
-    Route::get('/check-credits', [UserController::class, 'checkCredits']);
 }); 

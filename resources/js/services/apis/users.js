@@ -23,5 +23,4 @@ export const profileAPI = {
   
   // Utilities
   checkPassword: (data) => apiClient.post('/check-password', data),
-  checkCredits: () => apiClient.get('/check-credits'),
 } 

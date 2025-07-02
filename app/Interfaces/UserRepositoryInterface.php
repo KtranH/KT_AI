@@ -13,11 +13,7 @@ interface UserRepositoryInterface
      */
     public function checkStatus(): array;
 
-    /**
-     * Kiểm tra credits còn lại
-     * @return JsonResponse Kết quả kiểm tra
-     */
-    public function checkCredits(): JsonResponse;
+
 
     /**
      * Kiểm tra email
@@ -53,20 +49,6 @@ interface UserRepositoryInterface
      * @return void
      */
     public function increaseSumLike(int $userId): void;
-
-    /**
-     * Tăng số lượng credits khi người dùng tạo ảnh thất bại
-     * @param int $id ID của user
-     * @return ?User User
-     */
-    public function increaseCredits(int $id): ?User;
-
-    /**
-     * Giảm số lượng credits khi người dùng tạo ảnh
-     * @param int $id ID của user
-     * @return ?User User
-     */
-    public function decreaseCredits(int $id): ?User;
 
     /**
      * Giảm số lượng ảnh khi người dùng xóa

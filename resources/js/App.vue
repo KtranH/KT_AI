@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading">
+  <div v-if="isLoading && showLoadingForRoute">
     <Loading />
   </div>
   <div v-else>
@@ -47,19 +47,33 @@ export default {
 
     const showSidebar = computed(() => {
       // Các route không hiển thị sidebar
-      const noSidebarRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password']; 
+      const noSidebarRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email']; 
       // Kiểm tra xem route hiện tại có nằm trong danh sách không hiển thị sidebar không
       return !noSidebarRoutes.includes(route.path);
     });
 
-    onMounted(() => {
-      // Giảm thời gian loading xuống để tránh blocking UI
-      setTimeout(() => {
-        isLoading.value = false;
-      }, 300);
+    // Chỉ hiển thị loading cho các trang yêu cầu authentication
+    const showLoadingForRoute = computed(() => {
+      const guestRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/'];
+      return !guestRoutes.includes(route.path);
     });
 
-    return { isLoading, showSidebar };
+    onMounted(() => {
+      const loadingTime = showLoadingForRoute.value ? 300 : 100;
+      setTimeout(() => {
+        isLoading.value = false;
+      }, loadingTime);
+
+      // Fallback để đảm bảo loading luôn tắt sau tối đa 2 giây
+      setTimeout(() => {
+        if (isLoading.value) {
+          console.warn('Force disable loading after 2 seconds');
+          isLoading.value = false;
+        }
+      }, 2000);
+    });
+
+    return { isLoading, showSidebar, showLoadingForRoute };
   }
 }
 </script>

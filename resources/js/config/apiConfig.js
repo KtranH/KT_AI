@@ -9,7 +9,6 @@ export const refreshCsrfToken = async () => {
       withCredentials: true // Quan trọng để cookies được lưu
     })
     
-    // Cookie XSRF-TOKEN đã được tự động cập nhật bởi Laravel
     // Lấy token từ cookie để cập nhật header
     const cookies = document.cookie.split(';')
     const xsrfCookie = cookies.find(cookie => cookie.trim().startsWith('XSRF-TOKEN='))
@@ -46,7 +45,7 @@ export const getCsrfTokenFromCookie = () => {
 const apiClient = axios.create({
   baseURL: '/api', // Base URL của API
   timeout: 30000, // Timeout mặc định là 30 giây
-  withCredentials: true, // Quan trọng để cookies được gửi trong mọi request
+  withCredentials: true, // Cookies được gửi trong mọi request
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
@@ -136,7 +135,6 @@ apiClient.interceptors.response.use(
       // Kiểm tra nếu là API check và đã đăng nhập qua Google
       if (error.config && error.config.url === '/check' && (localStorage.getItem('token') || sessionStorage.getItem('token'))) {
         console.log('Auth check validation error, đã đăng nhập qua Google');
-        // Trả về kết quả giả để không ảnh hưởng đến luồng đăng nhập
         return Promise.resolve({
           data: {
             authenticated: true,

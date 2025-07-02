@@ -66,15 +66,6 @@ class UserService extends BaseService
     }
 
     /**
-     * Kiểm tra số credits của user hiện tại
-     * @return mixed
-     */
-    public function checkCredits()
-    {
-        return $this->userRepository->checkCredits();
-    }
-
-    /**
      * Kiểm tra mật khẩu hiện tại của user
      * @param CheckPasswordRequest $request
      * @return \Illuminate\Http\JsonResponse

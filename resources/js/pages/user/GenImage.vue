@@ -189,7 +189,7 @@ export default {
         ])
         
         // Composables
-        const { fetchActiveJobs, checkCompletedJobs, checkCredits, generateImage, cancelJob } = useImageGen()
+        const { fetchActiveJobs, checkCompletedJobs, generateImage, cancelJob } = useImageGen()
         
         // Function để hủy job
         const handleCancelJob = async (jobId) => {
@@ -269,7 +269,6 @@ export default {
             await get_feature()
             await fetchActiveJobs(activeJobs)
             await checkCompletedJobs(successfulJob, notifiedJobIds) // Kiểm tra ngay khi tải trang
-            await checkCredits(user) // Kiểm tra credits khi load trang
             
             // Thiết lập interval kiểm tra trạng thái các tiến trình
             checkInterval.value = setInterval(async () => {
