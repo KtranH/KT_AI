@@ -353,7 +353,6 @@ export default {
             textOriginal.value = editText.value
         }
 
-        // Xem thử giá trị của editText có thay đổi không
         watch(editText, (newValue) => {
             if(newValue !== textOriginal.value && newValue !== '') {
                 isNotNewValue.value = false
@@ -399,7 +398,6 @@ export default {
             textOriginal.value = editReplyText.value
         }
 
-        // Xem thử giá trị của editReplyText
         watch(editReplyText, (newValue) => {
             if(newValue !== textOriginal.value && newValue !== '') {
                 isNotNewValue.value = false

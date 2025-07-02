@@ -68,12 +68,15 @@ export default function useComments(imageId) {
                 content: newComment.value.trim()
             }
             const response = await commentAPI.createComment(commentData)
+            
+            // Xử lý nested response structure
+            const newCommentData = response.data.data || response.data
 
             // Đánh dấu là bình luận mới để hiển thị highlight
-            response.data.is_new = true
+            newCommentData.is_new = true
 
             // Thêm comment mới vào đầu danh sách
-            comments.value.unshift(response.data)
+            comments.value.unshift(newCommentData)
             newComment.value = ''
             toast.success('Đã thêm bình luận thành công!')
         } catch (err) {
@@ -147,8 +150,9 @@ export default function useComments(imageId) {
 
             // Gọi API tạo phản hồi
             const response = await commentAPI.createReply(targetCommentId, replyData)
-
-            console.log('Kết quả phản hồi:', response.data)
+            
+            // Xử lý nested response structure cho reply
+            const newReplyData = response.data.data || response.data
 
             // Thêm phản hồi mới vào danh sách
             if (!parentComment.replies) {
@@ -156,14 +160,14 @@ export default function useComments(imageId) {
             }
 
             // Đánh dấu là phản hồi mới để hiển thị highlight
-            response.data.is_new = true
-            parentComment.replies.push(response.data)
+            newReplyData.is_new = true
+            parentComment.replies.push(newReplyData)
 
             // Nếu đây là phản hồi cho một bình luận khác (không phải bình luận gốc)
             // và có origin_comment, đưa bình luận gốc lên đầu danh sách
-            if (response.data.origin_comment && response.data.origin_comment !== parentComment.id) {
+            if (newReplyData.origin_comment && newReplyData.origin_comment !== parentComment.id) {
                 // Tìm bình luận gốc trong danh sách
-                const originCommentIndex = comments.value.findIndex(c => c.id === response.data.origin_comment)
+                const originCommentIndex = comments.value.findIndex(c => c.id === newReplyData.origin_comment)
                 if (originCommentIndex !== -1) {
                     // Lấy bình luận gốc ra khỏi danh sách
                     const originComment = comments.value[originCommentIndex]

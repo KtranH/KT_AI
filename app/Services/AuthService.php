@@ -79,7 +79,7 @@ class AuthService extends BaseService
      * @param Request $request
      * @return array
      */
-    public function login(LoginRequest $request): array
+    public function login(LoginRequest $request): AuthResource
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
             // Validate input

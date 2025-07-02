@@ -106,11 +106,11 @@ export default {
         nameUser:
         {
             type: String,
-            default: 'Lỗi 404'
+            default: 'Đang tải...'
         },
         title: {
             type: String,
-            default: 'Lỗi 404'
+            default: 'Đang tải...'
         }
     },
     emits: ['navigate-to-user'],

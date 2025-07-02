@@ -128,7 +128,6 @@ export default {
         const handleSubmitReply = () => {
             if (!canSubmit.value) return
 
-            console.log(`Đang gửi phản hồi cho ${props.replyToUsername}:`, replyText.value)
             submitReply()
         }
 

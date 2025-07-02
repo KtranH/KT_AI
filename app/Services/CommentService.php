@@ -56,6 +56,9 @@ class CommentService extends BaseService
         return $this->executeInTransactionSafely(function() use ($request) {
             $comment = $this->commentRepository->storeComment($request->validated());
             $comment->is_new = true;
+            
+            // Load user relationship cho CommentResource
+            $comment->load('user', 'replies.user');
 
             // Clear cache cho image comment count
             $this->clearImageCommentCache($comment->image_id);
@@ -79,6 +82,9 @@ class CommentService extends BaseService
         return $this->executeInTransactionSafely(function() use ($request, $comment) {
             $reply = $this->commentRepository->storeReply($request->validated(), $comment);
             $reply->is_new = true;
+            
+            // Load user relationship cho CommentResource
+            $reply->load('user');
 
             // Clear cache cho image comment count  
             $this->clearImageCommentCache($reply->image_id);

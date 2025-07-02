@@ -37,58 +37,60 @@ class ImageJobService extends BaseService
      */
     public function createImageJob(array $data, User $user): array
     {
-        // Kiểm tra giới hạn tiến trình
-        $activeJobsCount = $this->imageJobRepository->countActiveJobsByUser($user->id);
-        if ($activeJobsCount >= 5) {
-            throw ValidationException::withMessages([
-                'limit' => ['Bạn đã đạt đến giới hạn 5 tiến trình đang hoạt động. Vui lòng đợi cho đến khi một số tiến trình hoàn thành.']
-            ]);
-        }
+        return $this->executeWithExceptionHandling(function() use ($data, $user) {
+            // Kiểm tra giới hạn tiến trình
+            $activeJobsCount = $this->imageJobRepository->countActiveJobsByUser($user->id);
+            if ($activeJobsCount >= 5) {
+                throw ValidationException::withMessages([
+                    'limit' => ['Bạn đã đạt đến giới hạn 5 tiến trình đang hoạt động. Vui lòng đợi cho đến khi một số tiến trình hoàn thành.']
+                ]);
+            }
 
-        // Sử dụng CreditService để trừ credits và tạo job atomically
-        $imageJob = $this->creditService->deductCreditsForImageJob($user, function($user) use ($data) {
-            // Xử lý upload ảnh
-            $mainImagePath = $this->handleImageUpload($data['main_image'] ?? null);
-            $secondaryImagePath = $this->handleImageUpload($data['secondary_image'] ?? null);
+            // Sử dụng CreditService để trừ credits và tạo job atomically
+            $imageJob = $this->creditService->deductCreditsForImageJob($user, function($user) use ($data) {
+                // Xử lý upload ảnh
+                $mainImagePath = $this->handleImageUpload($data['main_image'] ?? null);
+                $secondaryImagePath = $this->handleImageUpload($data['secondary_image'] ?? null);
 
-            // Tạo tiến trình
-            $jobData = [
-                'user_id' => $user->id,
-                'feature_id' => $data['feature_id'],
-                'prompt' => $data['prompt'],
-                'width' => $data['width'],
-                'height' => $data['height'],
-                'seed' => $data['seed'],
-                'style' => $data['style'] ?? null,
-                'main_image' => $mainImagePath,
-                'secondary_image' => $secondaryImagePath,
-                'status' => 'pending',
-                'progress' => 0,
-                'credits_refunded' => false,
+                // Tạo tiến trình
+                $jobData = [
+                    'user_id' => $user->id,
+                    'feature_id' => $data['feature_id'],
+                    'prompt' => $data['prompt'],
+                    'width' => $data['width'],
+                    'height' => $data['height'],
+                    'seed' => $data['seed'],
+                    'style' => $data['style'] ?? null,
+                    'main_image' => $mainImagePath,
+                    'secondary_image' => $secondaryImagePath,
+                    'status' => 'pending',
+                    'progress' => 0,
+                    'credits_refunded' => false,
+                ];
+
+                return $this->imageJobRepository->create($jobData);
+            });
+
+            // Gửi yêu cầu đến ComfyUI
+            $promptId = $this->comfyUIService->createImage($imageJob);
+
+            if (!$promptId) {
+                // Nếu tạo ảnh thất bại, hoàn lại credits
+                $this->creditService->refundCreditsForFailedJob($imageJob, 'Lỗi khi gửi yêu cầu tới ComfyUI');
+                throw new \Exception('Lỗi khi tạo ảnh với ComfyUI: ' . ($imageJob->error_message ?? 'Lỗi không xác định'));
+            }
+
+            // Đưa vào queue để kiểm tra tiến trình
+            dispatch(new CheckImageJobStatus($imageJob->id, $promptId))
+                ->onQueue('image-processing')
+                ->delay(now()->addSeconds(15));
+                
+            return [
+                'job' => new ImageJobResource($imageJob),
+                'job_id' => $imageJob->id,
+                'status' => $imageJob->status,
             ];
-
-            return $this->imageJobRepository->create($jobData);
-        });
-
-        // Gửi yêu cầu đến ComfyUI
-        $promptId = $this->comfyUIService->createImage($imageJob);
-
-        if (!$promptId) {
-            // Nếu tạo ảnh thất bại, hoàn lại credits
-            $this->creditService->refundCreditsForFailedJob($imageJob, 'Lỗi khi gửi yêu cầu tới ComfyUI');
-            throw new \Exception('Lỗi khi tạo ảnh với ComfyUI: ' . ($imageJob->error_message ?? 'Lỗi không xác định'));
-        }
-
-        // Đưa vào queue để kiểm tra tiến trình
-        dispatch(new CheckImageJobStatus($imageJob->id, $promptId))
-            ->onQueue('image-processing')
-            ->delay(now()->addSeconds(15));
-            
-        return [
-            'job' => new ImageJobResource($imageJob),
-            'job_id' => $imageJob->id,
-            'status' => $imageJob->status,
-        ];
+        }, "Creating image job for user ID: {$user->id}");
     }
 
     /**

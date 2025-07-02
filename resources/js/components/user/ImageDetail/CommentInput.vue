@@ -81,7 +81,6 @@ export default {
         const submitComment = () => {
             if (!canSubmit.value) return
             
-            console.log('Đang thêm bình luận:', commentText.value)
             emit('add-comment')
             emit('update:newComment', '')
         }
