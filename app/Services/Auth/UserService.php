@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Auth;
 
 use App\Exceptions\BusinessException;
 use App\Exceptions\ExternalServiceException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
-use App\Services\R2StorageService;
-use App\Services\MailService;
+use App\Services\External\R2StorageService;
+use App\Services\External\MailService;
+use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Requests\User\UpdateNameRequest;
 use App\Http\Requests\User\UpdateAvatarRequest;

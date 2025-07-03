@@ -8,7 +8,7 @@ use App\Http\Resources\ImageResource;
 use App\Models\Image;
 use App\Http\Requests\Image\UpdateImageRequest;
 use App\Http\Requests\Image\StoreImageRequest;
-use App\Services\ImageService;
+use App\Services\Business\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Business;
+
 use App\Interfaces\LikeRepositoryInterface;
 use App\Interfaces\ImageRepositoryInterface;
+use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Resources\LikeResource;
 use App\Models\Image;

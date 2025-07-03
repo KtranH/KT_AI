@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ErrorMessages;
-use App\Services\ForgotPasswordService;
+use App\Services\Auth\ForgotPasswordService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

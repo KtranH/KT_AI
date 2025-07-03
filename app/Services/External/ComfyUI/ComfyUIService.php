@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\External\ComfyUI;
 
+use App\Services\BaseService;
 use App\Repositories\ImageJobsRepository;
-use App\Services\R2StorageService;
-use App\Services\ComfyUITemplateService;
-use App\Services\ComfyUIApiService;
-use App\Services\ComfyUIJobService;
+use App\Services\External\R2StorageService;
+use App\Services\External\ComfyUI\ComfyUITemplateService;
+use App\Services\External\ComfyUI\ComfyUIApiService;
+use App\Services\External\ComfyUI\ComfyUIJobService;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

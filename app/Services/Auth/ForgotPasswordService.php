@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Auth;
 
 use App\Exceptions\BusinessException;
 use App\Exceptions\ExternalServiceException;
 use App\Interfaces\UserRepositoryInterface;
+use App\Services\Auth\TurnStileService;
+use App\Services\External\MailService;
+use App\Services\BaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;

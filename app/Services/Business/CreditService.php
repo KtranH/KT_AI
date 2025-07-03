@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Business;
 
 use App\Exceptions\BusinessException;
 use App\Interfaces\UserRepositoryInterface;
+use App\Services\BaseService;
 use App\Models\ImageJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;

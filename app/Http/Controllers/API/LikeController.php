@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\ErrorMessages;
 use App\Http\Controllers\SuccessMessages;
 use App\Http\Resources\LikeResource;
-use App\Services\LikeService;
+use App\Services\Business\LikeService;
 use Illuminate\Http\JsonResponse;
 
 class LikeController extends Controller

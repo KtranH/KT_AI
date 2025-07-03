@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Auth;
 
 use App\Exceptions\ExternalServiceException;
 use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Resources\AuthResource;
+use App\Services\BaseService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;

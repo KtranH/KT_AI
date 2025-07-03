@@ -4,9 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Carbon\Carbon;
-use App\Services\ComfyUITemplateService;
-use App\Services\ComfyUIApiService;
-use App\Services\ComfyUIJobService;
+use App\Services\External\ComfyUI\ComfyUITemplateService;
+use App\Services\External\ComfyUI\ComfyUIApiService;
+use App\Services\External\ComfyUI\ComfyUIJobService;
 use App\Interfaces\ImageJobRepositoryInterface;
 use App\Repositories\ImageJobsRepository;
 use App\Models\Image;

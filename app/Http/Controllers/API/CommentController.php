@@ -8,7 +8,7 @@ use App\Http\Controllers\SuccessMessages;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
-use App\Services\CommentService;
+use App\Services\Business\CommentService;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

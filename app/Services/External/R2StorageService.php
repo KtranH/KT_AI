@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\External;
+
+use App\Services\BaseService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;

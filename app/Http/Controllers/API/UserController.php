@@ -10,7 +10,7 @@ use App\Http\Requests\User\UpdateAvatarRequest;
 use App\Http\Requests\User\UpdateCoverImageRequest;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\CheckPasswordRequest;
-use App\Services\UserService;
+use App\Services\Auth\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

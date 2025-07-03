@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ErrorMessages;
 use App\Http\Controllers\SuccessMessages;
-use App\Services\ImageJobService;
+use App\Services\Business\ImageJobService;
 use App\Http\Requests\Image\JobImageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +64,21 @@ class ImageJobController extends Controller
             ErrorMessages::IMAGE_JOB_LOAD_ERROR
         );
     }
+
+    /**
+     * Lấy danh sách các tiến trình thất bại của người dùng
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getFailedJobs(Request $request): JsonResponse
+    {
+        return $this->executeServiceMethod(
+            fn() => $this->imageJobService->getFailedJobs(Auth::user()),
+            null,
+            ErrorMessages::IMAGE_JOB_LOAD_ERROR
+        );
+    }
     
     /**
      * Kiểm tra trạng thái của một tiến trình cụ thể
@@ -106,22 +121,7 @@ class ImageJobController extends Controller
             ErrorMessages::IMAGE_JOB_CANCEL_ERROR
         );
     }
-    
-    /**
-     * Lấy danh sách các tiến trình thất bại của người dùng
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getFailedJobs(Request $request): JsonResponse
-    {
-        return $this->executeServiceMethod(
-            fn() => $this->imageJobService->getFailedJobs(Auth::user()),
-            null,
-            ErrorMessages::IMAGE_JOB_LOAD_ERROR
-        );
-    }
-    
+        
     /**
      * Thử lại một tiến trình thất bại
      * 

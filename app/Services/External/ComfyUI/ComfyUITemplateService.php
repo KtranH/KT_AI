@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\External\ComfyUI;
 
+use App\Services\BaseService;
 use App\Models\ImageJob;
-use App\Services\ComfyUIApiService;
+use App\Services\External\ComfyUI\ComfyUIApiService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 

@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Business;
 
 use App\Interfaces\ImageJobRepositoryInterface;
 use App\Jobs\CheckImageJobStatus;
 use App\Models\ImageJob;
 use App\Models\User;
-use App\Services\ComfyUIService;
-use App\Services\CreditService;
+use App\Services\External\ComfyUI\ComfyuiService;
+use App\Services\Business\CreditService;
+use App\Services\BaseService;
 use App\Http\Resources\ImageJobCollection;
 use App\Http\Resources\ImageJobResource;
 use Illuminate\Support\Facades\Auth;
@@ -22,12 +23,12 @@ use Illuminate\Validation\ValidationException;
 class ImageJobService extends BaseService
 {
     protected ImageJobRepositoryInterface $imageJobRepository;
-    protected ComfyUIService $comfyUIService;
+    protected ComfyuiService $comfyUIService;
     protected CreditService $creditService;
 
     public function __construct(
         ImageJobRepositoryInterface $imageJobRepository,
-        ComfyUIService $comfyUIService,
+        ComfyuiService $comfyUIService,
         CreditService $creditService,
     ) {
         $this->imageJobRepository = $imageJobRepository;

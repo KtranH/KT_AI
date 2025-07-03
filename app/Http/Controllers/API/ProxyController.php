@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\R2StorageService;
+use App\Services\External\R2StorageService;
 use Illuminate\Http\JsonResponse;
 
 class ProxyController extends Controller

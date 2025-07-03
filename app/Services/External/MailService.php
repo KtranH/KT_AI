@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\External;
 
 use App\Exceptions\ExternalServiceException;
 use App\Exceptions\BusinessException;
 use App\Interfaces\UserRepositoryInterface;
 use App\Mail\VerificationMail;
 use App\Http\Resources\AuthResource;
+use App\Services\BaseService;
 use App\Http\Resources\MailVerificationResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

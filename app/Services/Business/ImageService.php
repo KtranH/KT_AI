@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Business;
 
 use App\Exceptions\BusinessException;
 use App\Interfaces\ImageRepositoryInterface;
-use App\Services\R2StorageService;
+use App\Services\External\R2StorageService;
+use App\Services\BaseService;
 use App\Http\Requests\Image\UpdateImageRequest;
 use App\Models\Image;
 use Illuminate\Http\Request;

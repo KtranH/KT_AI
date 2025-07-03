@@ -9,7 +9,7 @@ use App\Http\Controllers\ErrorMessages;
 use App\Http\Controllers\SuccessMessages;
 use App\Http\Requests\Auth\SignUpRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Services\AuthService;
+use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

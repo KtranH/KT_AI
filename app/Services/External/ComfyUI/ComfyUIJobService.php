@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\External\ComfyUI;
 
+use App\Services\BaseService;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ExternalServiceException;
 use App\Models\ImageJob;
+use App\Services\External\R2StorageService;
 use App\Notifications\ImageGenerationFailedNotification;
 use App\Notifications\ImageGeneratedNotification;
 use Illuminate\Support\Facades\Log;

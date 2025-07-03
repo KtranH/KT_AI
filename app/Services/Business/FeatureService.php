@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Business;
 use App\Interfaces\FeatureRepositoryInterface;
 use App\Services\BaseService;
 use App\Http\Resources\AIFeatureResource;
-use App\Services\CacheService;
+use App\Services\Infrastructure\CacheService;
 use Illuminate\Support\Facades\Log;
 
 class FeatureService extends BaseService

@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Business;
+
 use App\Interfaces\NotificationRepositoryInterface;
 use App\Http\Resources\NotificationCollection;
+use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

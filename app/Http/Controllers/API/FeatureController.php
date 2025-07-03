@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ErrorMessages;
-use App\Services\FeatureService;
+use App\Services\Business\FeatureService;
 use Illuminate\Http\JsonResponse;
 
 class FeatureController extends Controller

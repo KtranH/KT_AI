@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Business;
+
 use App\Exceptions\BusinessException;
 use App\Interfaces\CommentRepositoryInterface;
-use App\Services\NotificationService;
-use App\Services\CacheService;
+use App\Services\BaseService;
+use App\Services\Business\NotificationService;
+use App\Services\Infrastructure\CacheService;
 use App\Models\Comment;
 use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;

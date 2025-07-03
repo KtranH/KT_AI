@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Auth;
 
 use App\Exceptions\BusinessException;
 use App\Exceptions\ExternalServiceException;
@@ -8,8 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use App\Repositories\UserRepository;
-use App\Services\TurnStileService;
-use App\Services\MailService;
+use App\Services\Auth\TurnStileService;
+use App\Services\External\MailService;
+use App\Services\BaseService;
 use App\Http\Requests\Auth\PostmanRequest;
 use App\Http\Requests\Auth\SignUpRequest;
 use App\Http\Requests\Auth\LoginRequest;

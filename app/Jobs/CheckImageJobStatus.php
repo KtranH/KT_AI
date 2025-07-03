@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\ImageJob;
-use App\Services\ComfyUIService;
-use App\Services\CreditService;
+use App\Services\External\ComfyUI\ComfyuiService;
+use App\Services\Business\CreditService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,11 +42,11 @@ class CheckImageJobStatus implements ShouldQueue
 
     /**
      * Thực thi job
-     * @param ComfyUIService $comfyuiService Dịch vụ ComfyUI
+     * @param ComfyuiService $comfyuiService Dịch vụ ComfyUI
      * @param CreditService $creditService Service quản lý credits
      * @return void
      */
-    public function handle(ComfyUIService $comfyuiService, CreditService $creditService): void
+    public function handle(ComfyuiService $comfyuiService, CreditService $creditService): void
     {
         
         // Lấy thông tin job từ database

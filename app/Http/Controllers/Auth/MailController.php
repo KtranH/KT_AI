@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\MailService;
+use App\Services\External\MailService;
 use App\Http\Controllers\ErrorMessages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
