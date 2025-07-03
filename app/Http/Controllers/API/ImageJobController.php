@@ -59,7 +59,7 @@ class ImageJobController extends Controller
     public function getCompletedJobs(Request $request): JsonResponse
     {
         return $this->executeServiceMethod(
-            fn() => $this->imageJobService->getCompletedJobs(Auth::user()),
+            fn() => $this->imageJobService->getCompletedJobs($request),
             null,
             ErrorMessages::IMAGE_JOB_LOAD_ERROR
         );

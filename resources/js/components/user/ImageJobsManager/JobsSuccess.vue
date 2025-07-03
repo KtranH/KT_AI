@@ -51,30 +51,50 @@
             </div>
         </div>
     </div>
+    <ButtonMore 
+        v-if="hasMorePages" 
+        :has-more-pages="hasMorePages" 
+        :loading="isLoading" 
+        @load-more="handleLoadMore"
+      />
 </template>
 
 <script>
 import { formatDate, downloadImage } from '@/utils';
+import ButtonMore from '@/components/common/ButtonMore.vue';
 
 export default {
     name: 'JobsSuccess',
+    components: {
+        ButtonMore
+    },
     props: {
         completedJobs: {
             type: Array,
             required: true
+        },
+        hasMorePages: {
+            type: Boolean,
+            required: true,
+        },
+        isLoading: {
+            type: Boolean,
+            required: true,
         }
     },
-    emits: ['view-image'],
+    emits: ['view-image', 'load-more'],
     setup(props, { emit }) {
-
         const viewImage = (job) => {
             emit('view-image', job);
         };
-
+        const handleLoadMore = () => {
+            emit('load-more');
+        };
         return {
             formatDate,
             viewImage,
-            downloadImage
+            downloadImage,
+            handleLoadMore,
         };
     }
 }

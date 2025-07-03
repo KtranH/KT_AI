@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Interfaces\ImageJobRepositoryInterface;
 use App\Models\ImageJob;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 class ImageJobsRepository implements ImageJobRepositoryInterface
 {
@@ -39,15 +40,21 @@ class ImageJobsRepository implements ImageJobRepositoryInterface
      */
     public function getActiveJobsByUser(int $userId): Collection
     {
-        return ImageJob::getActiveJobsByUser($userId);
+        return ImageJob::where('user_id', $userId)
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
     /**
      * Lấy danh sách tiến trình đã hoàn thành của user
      */
-    public function getCompletedJobsByUser(int $userId): Collection
+    public function getCompletedJobsByUser(int $userId): Builder
     {
-        return ImageJob::getCompletedJobsByUser($userId);
+        $query = ImageJob::query();
+        return $query->where('user_id', $userId)
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc');
     }
 
     /**

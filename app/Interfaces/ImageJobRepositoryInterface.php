@@ -4,6 +4,7 @@ namespace App\Interfaces;
 
 use App\Models\ImageJob;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 interface ImageJobRepositoryInterface
 {
@@ -39,9 +40,9 @@ interface ImageJobRepositoryInterface
     /**
      * Lấy danh sách tiến trình đã hoàn thành của user
      * @param int $userId ID của user
-     * @return Collection Danh sách tiến trình đã hoàn thành
+     * @return Builder Danh sách tiến trình đã hoàn thành
      */
-    public function getCompletedJobsByUser(int $userId): Collection;
+    public function getCompletedJobsByUser(int $userId): Builder;
 
     /**
      * Lấy danh sách tiến trình thất bại của user

@@ -7,13 +7,23 @@
       <!-- Tab Navigation -->
       <div class="flex border-b border-gray-200 mb-6">
         <button 
-          class="py-3 px-6 font-medium text-lg transition-colors duration-200 relative"
+          class="py-3 px-6 font-medium text-lg transition-colors duration-200 relative flex items-center gap-2"
           :class="activeTab === 'active' 
             ? 'text-blue-600 border-b-2 border-blue-600' 
             : 'text-gray-500 hover:text-gray-700'"
           @click="activeTab = 'active'"
         >
-          Đang thực thi
+          <span>Đang thực thi</span>
+          <button 
+            v-if="activeTab === 'active'"
+            @click.stop="refreshActiveJobs"
+            :disabled="isRefreshingActive"
+            class="text-xs bg-blue-100 hover:bg-blue-200 disabled:bg-gray-300 px-2 py-1 rounded transition-colors"
+            title="Làm mới"
+          >
+            <span v-if="isRefreshingActive" class="animate-spin">⟳</span>
+            <span v-else>↻</span>
+          </button>
           <span 
             v-if="activeJobs.length > 0" 
             class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
@@ -22,22 +32,42 @@
           </span>
         </button>
         <button 
-          class="py-3 px-6 font-medium text-lg transition-colors duration-200"
+          class="py-3 px-6 font-medium text-lg transition-colors duration-200 relative flex items-center gap-2"
           :class="activeTab === 'completed' 
             ? 'text-blue-600 border-b-2 border-blue-600' 
             : 'text-gray-500 hover:text-gray-700'"
           @click="activeTab = 'completed'"
         >
-          Đã hoàn thành
+          <span>Đã hoàn thành</span>
+          <button 
+            v-if="activeTab === 'completed'"
+            @click.stop="refreshCompletedJobsManually"
+            :disabled="isRefreshingCompleted"
+            class="text-xs bg-blue-100 hover:bg-blue-200 disabled:bg-gray-300 px-2 py-1 rounded transition-colors"
+            title="Làm mới"
+          >
+            <span v-if="isRefreshingCompleted" class="animate-spin">⟳</span>
+            <span v-else>↻</span>
+          </button>
         </button>
         <button 
-          class="py-3 px-6 font-medium text-lg transition-colors duration-200 relative"
+          class="py-3 px-6 font-medium text-lg transition-colors duration-200 relative flex items-center gap-2"
           :class="activeTab === 'failed' 
             ? 'text-blue-600 border-b-2 border-blue-600' 
             : 'text-gray-500 hover:text-gray-700'"
           @click="activeTab = 'failed'"
         >
-          Thất bại
+          <span>Thất bại</span>
+          <button 
+            v-if="activeTab === 'failed'"
+            @click.stop="refreshFailedJobs"
+            :disabled="isRefreshingFailed"
+            class="text-xs bg-blue-100 hover:bg-blue-200 disabled:bg-gray-300 px-2 py-1 rounded transition-colors"
+            title="Làm mới"
+          >
+            <span v-if="isRefreshingFailed" class="animate-spin">⟳</span>
+            <span v-else>↻</span>
+          </button>
           <span 
             v-if="failedJobs.length > 0" 
             class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
@@ -67,7 +97,10 @@
       <JobsSuccess 
         v-else-if="activeTab === 'completed' && completedJobs.length > 0"
         :completed-jobs="completedJobs"
+        :has-more-pages="hasMorePages"
+        :is-loading="isLoadingMore"
         @view-image="viewImage"
+        @load-more="handleLoadMore"
       />
       
       <!-- Failed Jobs Tab Content -->
@@ -95,9 +128,9 @@ import JobsFailed from '../../components/user/ImageJobsManager/JobsFailed.vue'
 import EmptyJob from '../../components/user/ImageJobsManager/EmptyJob.vue'
 import LoadingState from '../../components/common/LoadingState.vue'
 import DetailsJob from '../../components/user/ImageJobsManager/DetailsJob.vue'
-import { ref, onMounted, onBeforeUnmount, computed, onErrorCaptured } from 'vue';
+import { useImageJob } from '@/composables/user/useImageJob'
+import { ref, onMounted, computed, onErrorCaptured, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { comfyuiAPI } from '@/services/api';
 
 export default {
   name: 'ImageJobsManager',
@@ -111,107 +144,82 @@ export default {
     DetailsJob
   },
   setup() {
+    const { fetchActiveJobs, fetchCompletedJobs, fetchFailedJobs, fetchAllJobs, isLoading, isLoadingMore, hasMorePages, hasLoadedMore, loadMoreCompletedJobs } = useImageJob();
+
     const activeTab = ref('active');
     const activeJobs = ref([]);
     const completedJobs = ref([]);
     const failedJobs = ref([]);
-    const isLoading = ref(true);
     const previewImage = ref(null);
-    const refreshInterval = ref(null);
+    const isRefreshingActive = ref(false);
+    const isRefreshingCompleted = ref(false);
+    const isRefreshingFailed = ref(false);
     
     // Computed properties để đảm bảo safe access
     const safeActiveJobs = computed(() => Array.isArray(activeJobs.value) ? activeJobs.value : []);
     const safeCompletedJobs = computed(() => Array.isArray(completedJobs.value) ? completedJobs.value : []);
     const safeFailedJobs = computed(() => Array.isArray(failedJobs.value) ? failedJobs.value : []);
     
-    // Fetch active jobs
-    const fetchActiveJobs = async () => {
-      try {
-        const response = await comfyuiAPI.getActiveJobs();
-        if (response.data.success) {
-          activeJobs.value = response.data.data?.active_jobs || [];
-        } else {
-          activeJobs.value = [];
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy tiến trình đang hoạt động:', error);
-        toast.error('Không thể tải danh sách tiến trình đang hoạt động');
-        activeJobs.value = [];
-      }
-    };
-    
-    // Fetch completed jobs
-    const fetchCompletedJobs = async () => {
-      try {
-        const response = await comfyuiAPI.getCompletedJobs();
-        if (response.data.success) {
-          completedJobs.value = response.data.data?.completed_jobs || [];
-        } else {
-          completedJobs.value = [];
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy tiến trình đã hoàn thành:', error);
-        toast.error('Không thể tải danh sách tiến trình đã hoàn thành');
-        completedJobs.value = [];
-      } finally {
-        isLoading.value = false;
-      }
-    };
-    
-    // Fetch failed jobs
-    const fetchFailedJobs = async () => {
-      try {
-        const response = await comfyuiAPI.getFailedJobs();
-        if (response.data.success) {
-          failedJobs.value = response.data.data?.failed_jobs || [];
-        } else {
-          failedJobs.value = [];
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy tiến trình thất bại:', error);
-        toast.error('Không thể tải danh sách tiến trình thất bại');
-        failedJobs.value = [];
-      }
-    };
-    
-    // Fetch all jobs
-    const fetchAllJobs = async () => {
-      try {
-        isLoading.value = true;
-        await Promise.all([fetchActiveJobs(), fetchCompletedJobs(), fetchFailedJobs()]);
-      } catch (error) {
-        console.error('Error fetching all jobs:', error);
-        toast.error('Không thể tải danh sách công việc');
-      } finally {
-        isLoading.value = false;
-      }
-    };    
-
-    // View image details
+        // View image details
     const viewImage = (job) => {
       previewImage.value = job;
     };
-    
-    onMounted(() => {
-      fetchAllJobs();
-      
-      // Set up interval to refresh jobs status every 10 seconds
-      refreshInterval.value = setInterval(() => {
-        if (activeTab.value === 'active') {
-          fetchActiveJobs();
-        } else if (activeTab.value === 'completed') {
-          fetchCompletedJobs();
-        } else if (activeTab.value === 'failed') {
-          fetchFailedJobs();
-        }
-      }, 10000);
-    });
-    
-    onBeforeUnmount(() => {
-      // Clear interval when component is unmounted
-      if (refreshInterval.value) {
-        clearInterval(refreshInterval.value);
+     
+    // Tải thêm jobs
+    const handleLoadMore = async () => {
+      await loadMoreCompletedJobs(completedJobs);
+    };
+
+    // Refresh các loại jobs
+    const refreshActiveJobs = async () => {
+      if (isRefreshingActive.value) return;
+      try {
+        isRefreshingActive.value = true;
+        await fetchActiveJobs(activeJobs);
+        toast.success('Đã làm mới danh sách tiến trình đang thực thi');
+      } catch (error) {
+        toast.error('Lỗi khi làm mới');
+      } finally {
+        isRefreshingActive.value = false;
       }
+    };
+
+    const refreshCompletedJobsManually = async () => {
+      if (isRefreshingCompleted.value) return;
+      try {
+        isRefreshingCompleted.value = true;
+        await fetchCompletedJobs(completedJobs);
+        toast.success('Đã làm mới danh sách tiến trình đã hoàn thành');
+      } catch (error) {
+        toast.error('Lỗi khi làm mới');
+      } finally {
+        isRefreshingCompleted.value = false;
+      }
+    };
+
+    const refreshFailedJobs = async () => {
+      if (isRefreshingFailed.value) return;
+      try {
+        isRefreshingFailed.value = true;
+        await fetchFailedJobs(failedJobs);
+        toast.success('Đã làm mới danh sách tiến trình thất bại');
+      } catch (error) {
+        toast.error('Lỗi khi làm mới');
+      } finally {
+        isRefreshingFailed.value = false;
+      }
+    };
+
+    // Xem lại danh sách tiến trình đã hoàn thành
+    watch(activeTab, (newTab, oldTab) => {
+      if (newTab === 'completed' && oldTab !== 'completed') {
+        // Tải lại danh sách tiến trình đã hoàn thành
+        hasLoadedMore.value = false;
+      }
+    });
+
+    onMounted(async () => {
+      await fetchAllJobs(activeJobs, completedJobs, failedJobs);
     });
     
     // Error boundary để bắt lỗi unhandled
@@ -228,17 +236,25 @@ export default {
       return false;
     });
     
-    return {
-      activeTab,
-      activeJobs: safeActiveJobs,
-      completedJobs: safeCompletedJobs,
-      failedJobs: safeFailedJobs,
-      isLoading,
-      previewImage,
-      fetchActiveJobs,
-      fetchFailedJobs,
-      viewImage,
-    };
+          return {
+        activeTab,
+        activeJobs: safeActiveJobs,
+        completedJobs: safeCompletedJobs,
+        failedJobs: safeFailedJobs,
+        isLoading,
+        isLoadingMore,
+        hasMorePages,
+        hasLoadedMore,
+        previewImage,
+        isRefreshingActive,
+        isRefreshingCompleted,
+        isRefreshingFailed,
+        viewImage,
+        handleLoadMore,
+        refreshActiveJobs,
+        refreshCompletedJobsManually,
+        refreshFailedJobs,
+      };
   }
 };
 </script>

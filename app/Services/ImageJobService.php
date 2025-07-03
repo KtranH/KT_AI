@@ -10,7 +10,10 @@ use App\Models\ImageJob;
 use App\Models\User;
 use App\Services\ComfyUIService;
 use App\Services\CreditService;
+use App\Http\Resources\ImageJobCollection;
 use App\Http\Resources\ImageJobResource;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -111,16 +114,19 @@ class ImageJobService extends BaseService
     /**
      * Lấy danh sách tiến trình đã hoàn thành
      */
-    public function getCompletedJobs(User $user): array
+    public function getCompletedJobs(Request $request): ImageJobCollection
     {
-        return $this->executeWithExceptionHandling(function() use ($user) {
-            $completedJobs = $this->imageJobRepository->getCompletedJobsByUser($user->id);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $user = Auth::user();
+            $perPage = (int)$request->input('per_page', 10);
+            $page = (int)$request->input('page', 1);
+            
+            // Lấy Query Builder từ model và phân trang
+            $query = $this->imageJobRepository->getCompletedJobsByUser($user->id);
+            $jobs = $query->paginate($perPage, ['*'], 'page', $page);
 
-        return [
-            'completed_jobs' => ImageJobResource::collection($completedJobs),
-            'count' => $completedJobs->count(),
-        ];
-        }, "Getting completed jobs for user ID: {$user->id}");
+            return new ImageJobCollection($jobs);
+        }, "Getting completed jobs for user ID: " . Auth::id());
     }
 
     /**

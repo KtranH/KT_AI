@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\BusinessException;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Services\R2StorageService;
+use App\Http\Requests\Image\UpdateImageRequest;
 use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -100,7 +101,7 @@ class ImageService extends BaseService
         }, "Getting paginated images by type: {$typeImage} for ID: {$id}");
     }
     
-    // Giữ lại method cũ cho backward compatibility
+    /*
     private function getImagesByType(string $typeImage, $id = null)
     {
         if ($typeImage === 'liked') {
@@ -113,7 +114,7 @@ class ImageService extends BaseService
             return $this->imageRepository->getImagesUploaded($id);
         }
         return collect();
-    }
+    }*/
     
     /**
      * Kiểm tra nếu có dữ liệu mới cho user
@@ -177,12 +178,16 @@ class ImageService extends BaseService
             return $this->imageRepository->storeImage($uploadedPaths, $user, $data);
         }, "Storing image for feature ID: {$featureId}, user: " . Auth::user()?->email);
     }
-    public function updateImage(array $request, Image $image)
+    public function updateImage(UpdateImageRequest $request, Image $image)
     {
-        return $this->imageRepository->updateImage($image, $request['title'], $request['prompt']);
+        return $this->executeInTransactionSafely(function() use ($image, $request) {
+            return $this->imageRepository->updateImage($image, $request['title'], $request['prompt']);
+        }, "Updating image: " . $image->id);
     }
     public function deleteImage(Image $image): bool
     {
-        return $this->imageRepository->deleteImage($image);
+        return $this->executeInTransactionSafely(function() use ($image) {
+            return $this->imageRepository->deleteImage($image);
+        }, "Deleting image: " . $image->id);
     }
 }

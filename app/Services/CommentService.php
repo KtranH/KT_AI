@@ -132,7 +132,7 @@ class CommentService extends BaseService
     
     public function toggleLike(Comment $comment): array
     {
-        return $this->executeWithExceptionHandling(function() use ($comment) {
+        return $this->executeInTransactionSafely(function() use ($comment) {
             $userId = Auth::id();
             if (!$userId) {
                 throw BusinessException::invalidPermissions('like comment (not authenticated)');

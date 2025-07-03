@@ -8,7 +8,15 @@ export const imageJobsAPI = {
     }
   }),
   getActiveJobs: () => apiClient.get('/image-jobs/active'),
-  getCompletedJobs: () => apiClient.get('/image-jobs/completed'),
+  getCompletedJobs: (page = 1, perPage = 10) => apiClient.get('/image-jobs/completed',
+    {
+      params: {
+        paginate: true,
+        per_page: perPage,
+        page: page
+      }
+    }
+  ),
   getFailedJobs: () => apiClient.get('/image-jobs/failed'),
   checkJobStatus: (jobId) => apiClient.get(`/image-jobs/${jobId}`),
   cancelJob: (jobId) => apiClient.delete(`/image-jobs/${jobId}`),

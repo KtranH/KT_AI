@@ -86,26 +86,4 @@ class ImageJob extends Model
             ->whereIn('status', ['pending', 'processing'])
             ->count();
     }
-
-    /**
-     * Lấy các tiến trình đang hoạt động của người dùng
-     */
-    public static function getActiveJobsByUser(int $userId)
-    {
-        return self::where('user_id', $userId)
-            ->whereIn('status', ['pending', 'processing'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-    }
-
-    /**
-     * Lấy các tiến trình đã hoàn thành của người dùng
-     */
-    public static function getCompletedJobsByUser(int $userId)
-    {
-        return self::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->orderBy('created_at', 'desc')
-            ->get();
-    }
 } 
