@@ -6,7 +6,7 @@ use App\Exceptions\BusinessException;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Services\External\R2StorageService;
 use App\Services\BaseService;
-use App\Http\Requests\Image\UpdateImageRequest;
+use App\Http\Requests\V1\Content\UpdateImageRequest;
 use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

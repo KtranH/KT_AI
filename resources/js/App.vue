@@ -27,9 +27,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import Sidebar from './components/layouts/SidebarLayout.vue';
-import Header from './components/layouts/HeaderLayout.vue';
-import Loading from './components/layouts/LoadingLayout.vue';
+import { AppSidebar as Sidebar, AppHeader as Header, AppLoading as Loading } from './components/layouts';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 

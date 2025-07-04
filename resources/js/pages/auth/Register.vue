@@ -152,11 +152,9 @@
 <script>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTurnstile } from '@/composables/auth/useTurnstile'
+import { useTurnstile } from '@/composables/features/auth/useTurnstile'
 import axios from 'axios'
-import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
-import AlertMessage from '@/components/auth/AlertMessage.vue'
-import SocialLoginButton from '@/components/auth/SocialLoginButton.vue'
+import { AuthFormHeader, AlertMessage, SocialLoginButton } from '@/components/features/auth'
 
 export default {
   name: 'Register',

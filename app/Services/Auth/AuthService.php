@@ -11,9 +11,9 @@ use App\Repositories\UserRepository;
 use App\Services\Auth\TurnStileService;
 use App\Services\External\MailService;
 use App\Services\BaseService;
-use App\Http\Requests\Auth\PostmanRequest;
-use App\Http\Requests\Auth\SignUpRequest;
-use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\V1\Auth\PostmanRequest;
+use App\Http\Requests\V1\Auth\SignUpRequest;
+use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Resources\AuthResource;
 
 class AuthService extends BaseService

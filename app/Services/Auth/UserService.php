@@ -10,11 +10,11 @@ use App\Services\External\R2StorageService;
 use App\Services\External\MailService;
 use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
-use App\Http\Requests\User\UpdateNameRequest;
-use App\Http\Requests\User\UpdateAvatarRequest;
-use App\Http\Requests\User\UpdateCoverImageRequest;
-use App\Http\Requests\User\UpdatePasswordRequest;
-use App\Http\Requests\User\CheckPasswordRequest;
+use App\Http\Requests\V1\User\UpdateNameRequest;
+use App\Http\Requests\V1\User\UpdateAvatarRequest;
+use App\Http\Requests\V1\User\UpdateCoverImageRequest;
+use App\Http\Requests\V1\User\UpdatePasswordRequest;
+use App\Http\Requests\V1\User\CheckPasswordRequest;
 use App\Http\Resources\UploadResource;
 
 /**

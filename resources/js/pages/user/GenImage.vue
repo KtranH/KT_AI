@@ -5,7 +5,7 @@
         <div class="min-h-screen bg-gray-50">
             <div class="container mx-auto p-6">
                 <!-- Nút quay lại -->
-                <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full"/>
+                <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full"/>
                 <div class="flex items-center justify-left mt-8 mb-2">
                     <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2">{{ feature.title }}</h1>
                     <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
@@ -114,14 +114,9 @@
 </div>
 </template>
 <script>
-import GuideSection  from '@/components/user/GenImage/GuideSection.vue'
-import ImageParameters  from '@/components/user/GenImage/ImageParameters.vue'
-import ImageUploader  from '@/components/user/GenImage/ImageUploader.vue'
-import PromptInput  from '@/components/user/GenImage/PromptInput.vue'
-import ImageGalleryLayout  from '@/components/user/GenImage/ImageGalleryLayout.vue'
-import ButtonBackVue from '../../components/common/ButtonBack.vue'
-import ImageReview from '@/components/user/GenImage/ImageReview.vue'
-import { useImageGen } from '@/composables/user/useImageGen'
+import { GuideSection, ImageParameters, ImageUploader, PromptInput, ImageGalleryLayout, ImageReview } from '@/components/features/images'
+import { ButtonBack } from '@/components/base'
+import { useImageGen } from '@/composables/features/images/useImageGen'
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usefeaturesStore } from '@/stores/user/featuresStore'
@@ -137,7 +132,7 @@ export default {
         PromptInput,
         ImageUploader,
         ImageReview,
-        ButtonBackVue
+        ButtonBack
     },
     setup() {
         // State

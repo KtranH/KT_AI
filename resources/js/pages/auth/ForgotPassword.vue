@@ -243,12 +243,10 @@
 </template>
 
 <script>
-import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
-import AlertMessage from '@/components/auth/AlertMessage.vue'
-import VerificationCodeInput from '@/components/auth/VerificationCodeInput.vue'
+import { AuthFormHeader, AlertMessage, VerificationCodeInput } from '@/components/features/auth'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useForgotPassword } from '@/composables/auth/useForgotPassword'
-import { useTurnstile } from '@/composables/auth/useTurnstile'
+import { useForgotPassword } from '@/composables/features/auth/useForgotPassword'
+import { useTurnstile } from '@/composables/features/auth/useTurnstile'
 import { toast} from 'vue-sonner'
 
 export default {

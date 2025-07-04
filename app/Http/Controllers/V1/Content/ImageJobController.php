@@ -8,7 +8,7 @@ use App\Http\Controllers\V1\BaseV1Controller;
 use App\Http\Controllers\Constants\ErrorMessages;
 use App\Http\Controllers\Constants\SuccessMessages;
 use App\Services\Business\ImageJobService;
-use App\Http\Requests\Image\JobImageRequest;
+use App\Http\Requests\V1\Content\GenerateImageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
@@ -25,10 +25,10 @@ class ImageJobController extends BaseV1Controller
     /**
      * Tạo mới một job tạo ảnh AI
      * 
-     * @param JobImageRequest $request
+     * @param GenerateImageRequest $request
      * @return JsonResponse
      */
-    public function create(JobImageRequest $request): JsonResponse
+    public function create(GenerateImageRequest $request): JsonResponse
     {
         return $this->executeServiceMethodV1(
             fn() => $this->imageJobService->createImageJob($request->validated(), Auth::user()),

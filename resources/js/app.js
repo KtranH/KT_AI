@@ -9,7 +9,7 @@ import 'fullpage.js/dist/fullpage.css'
 import 'aos/dist/aos.css'
 import 'sweetalert2/dist/sweetalert2.min.css'
 import { createPinia } from 'pinia'
-import { registerGlobalComponents } from './components/common'
+import { registerGlobalComponents } from './components'
 import { clickOutside } from './directives/clickOutside'
 import { createApp } from 'vue'
 import PrimeVue from 'primevue/config';

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
-      <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
+      <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
       <h1 class="text-3xl font-bold text-gray-800 mb-8">Quản lý tiến trình tạo ảnh</h1>
       
       <!-- Tab Navigation -->
@@ -94,7 +94,7 @@
       />
       
       <!-- Completed Jobs Tab Content -->
-      <JobsSuccess 
+      <JobsCompleted 
         v-else-if="activeTab === 'completed' && completedJobs.length > 0"
         :completed-jobs="completedJobs"
         :has-more-pages="hasMorePages"
@@ -104,7 +104,7 @@
       />
       
       <!-- Failed Jobs Tab Content -->
-      <JobsFailed 
+      <JobsError 
         v-else-if="activeTab === 'failed' && failedJobs.length > 0"
         :failed-jobs="failedJobs"
         @job-retried="fetchFailedJobs"
@@ -121,24 +121,19 @@
 </template>
 
 <script>
-import ButtonBackVue from '../../components/common/ButtonBack.vue'
-import JobsActive from '../../components/user/ImageJobsManager/JobsActive.vue'
-import JobsSuccess from '../../components/user/ImageJobsManager/JobsSuccess.vue'
-import JobsFailed from '../../components/user/ImageJobsManager/JobsFailed.vue'
-import EmptyJob from '../../components/user/ImageJobsManager/EmptyJob.vue'
-import LoadingState from '../../components/common/LoadingState.vue'
-import DetailsJob from '../../components/user/ImageJobsManager/DetailsJob.vue'
-import { useImageJob } from '@/composables/user/useImageJob'
+import { ButtonBack, LoadingState } from '@/components/base'
+import { JobsActive, JobsCompleted, JobsError, EmptyJob, DetailsJob } from '@/components/features/images'
+import { useImageJob } from '@/composables/features/images/useImageJob'
 import { ref, onMounted, computed, onErrorCaptured, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 export default {
   name: 'ImageJobsManager',
   components: {
-    ButtonBackVue,
+    ButtonBack,
     JobsActive,
-    JobsSuccess,
-    JobsFailed,
+    JobsCompleted,
+    JobsError,
     EmptyJob,
     LoadingState,
     DetailsJob

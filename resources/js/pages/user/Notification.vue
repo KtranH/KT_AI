@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto py-8 px-4 md:px-6">
-    <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
+    <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
     <div class="max-w-4xl mx-auto">
       <h1 class="text-2xl font-bold text-gray-800 mb-6">Thông báo của bạn</h1>
       
@@ -102,16 +102,15 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useNotifications } from '@/composables/user/useNotifications'
+import { useNotifications } from '@/composables/core/useNotifications'
 import { formatTimev2 } from '@/utils'
-import useImage from '@/composables/user/useImage'
-import ButtonBackVue from '../../components/common/ButtonBack.vue'
-import ButtonMore from '../../components/common/ButtonMore.vue'
+import useImage from '@/composables/features/images/useImage'
+import { ButtonBack, ButtonMore } from '@/components/base'
 
 export default {
   name: 'NotificationsPage',
   components: {
-    ButtonBackVue,
+    ButtonBack,
     ButtonMore
   },
   setup() {

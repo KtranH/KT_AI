@@ -6,7 +6,6 @@ namespace App\Http\Controllers\V1\Social;
 
 use App\Http\Controllers\V1\BaseV1Controller;
 use App\Http\Controllers\Constants\ErrorMessages;
-use App\Http\Controllers\Constants\SuccessMessages;
 use App\Services\Business\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

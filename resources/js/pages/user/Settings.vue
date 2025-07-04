@@ -18,9 +18,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
-import ProfileInfo from '@/components/user/Settings/ProfileInfo.vue'
-import ChangePassword from '@/components/user/Settings/ChangePassword.vue'
-import ActivityHistory from '@/components/user/Settings/ActivityHistory.vue'
+import { ProfileInfo, ChangePassword, ActivityHistory } from '@/components/features/user-profile'
 
 export default {
   name: 'Settings',

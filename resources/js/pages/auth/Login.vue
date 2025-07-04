@@ -159,10 +159,8 @@
 import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
-import { useTurnstile } from '@/composables/auth/useTurnstile'
-import AuthFormHeader from '@/components/auth/AuthFormHeader.vue'
-import AlertMessage from '@/components/auth/AlertMessage.vue'
-import SocialLoginButton from '@/components/auth/SocialLoginButton.vue'
+import { useTurnstile } from '@/composables/features/auth/useTurnstile'
+import { AuthFormHeader, AlertMessage, SocialLoginButton } from '@/components/features/auth'
 
 export default {
   name: 'Login',

@@ -6,7 +6,7 @@
     <div class="max-w-7xl mx-auto">
       <div class="flex justify-between items-center mb-8">
         <div class="flex items-center">
-          <ButtonBackVue customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full" />
+          <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full" />
           <h1 class="text-2xl ml-2 md:text-3xl font-bold bg-gradient-text-v2">
             Tải ảnh lên
           </h1>
@@ -40,7 +40,7 @@
                 >(tối đa 5 ảnh, mỗi ảnh tối đa 2MB)</span
               >
             </h2>
-            <ImageUploader />
+            <ImageInfoUploader />
           </div>
         </div>
 
@@ -61,18 +61,17 @@
 </template>
 
 <script>
-import ButtonBackVue from "@/components/common/ButtonBack.vue";
-import ImageUploader from "@/components/user/Upload/ImageUploader.vue";
-import ImageInfoForm from "@/components/user/Upload/ImageInfoForm.vue";
+import { ButtonBack } from "@/components/base";
+import { ImageInfoUploader, ImageInfoForm } from "@/components/features/images";
 import { computed, provide } from "vue";
-import { useImageUpload } from "@/composables/user/useImageUpload";
+import { useImageUpload } from "@/composables/features/images/useImageUpload";
 import { useRoute } from "vue-router";
 
 export default {
   components: {
-    ImageUploader,
+    ImageInfoUploader,
     ImageInfoForm,
-    ButtonBackVue
+    ButtonBack
   },
   setup() {
     // Tạo một instance duy nhất của useImageUpload

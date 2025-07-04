@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import ImageViewer from '@/components/user/ImageDetail/ImageViewer.vue'
-import CommentSection from '@/components/user/ImageDetail/CommentSection.vue'
+import { ImageViewer } from '@/components/features/images'
+import { CommentSection } from '@/components/features/comments'
 import { useRoute, useRouter } from 'vue-router'
 import { decodedID } from '@/utils'
 import { useAuthStore } from '@/stores/auth/authStore'

@@ -6,7 +6,7 @@ import { useLikeStore } from '@/stores/user/likeStore'
 import { refreshCsrfToken } from '../../config/apiConfig'
 
 // Import biến toàn cục từ useNotifications
-import '@/composables/user/useNotifications'
+import '@/composables/core/useNotifications'
 
 // Reactive state
 const parseUserData = () => {

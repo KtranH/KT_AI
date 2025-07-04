@@ -179,7 +179,7 @@
           <p class="text-gray-700">Đang tải dữ liệu...</p>
         </div>
         <template v-else>
-          <ImageListVue 
+          <ImageListLayout 
             :filter="activeTab" 
             :user-id="currentUserId"
           />
@@ -191,8 +191,7 @@
 
 <script>
 import AOS from 'aos'
-import ImageListVue from '@/components/user/Dashboard/ImageListLayout.vue'
-import UploadImageModal from '@/components/user/Dashboard/UploadImageModal.vue'
+import { ImageListLayout, UploadImageModal } from '@/components/features/dashboard'
 import dayjs from 'dayjs'
 import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -204,7 +203,7 @@ import { profileAPI } from '@/services/api'
 export default {
   name: 'Dashboard',
   components: {
-    ImageListVue,
+    ImageListLayout,
     UploadImageModal
   },
   setup() {

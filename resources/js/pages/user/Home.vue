@@ -4,20 +4,16 @@
     <HeroSection />
     <FeaturesSection />
     <CreationToolsPreview />
-    <GallerySection />
+    <PopularGallery />
     <CallToActionSection />
-    <FooterSection />
+    <AppFooter />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import HeroSection from '@/components/user/Home/HeroSection.vue';
-import FeaturesSection from '@/components/user/Home/FeaturesSection.vue';
-import CreationToolsPreview from '@/components/user/Home/CreationToolsPreview.vue';
-import GallerySection from '@/components/user/Home/GallerySection.vue';
-import CallToActionSection from '@/components/user/Home/CallToActionSection.vue';
-import FooterSection from '@/components/layouts/FooterLayout.vue';
+import { HeroSection, FeaturesSection, CreationToolsPreview, PopularGallery, CallToActionSection } from '@/components/ui'
+import { AppFooter } from '@/components/layouts'
 
 const scrollY = ref(0);
 
