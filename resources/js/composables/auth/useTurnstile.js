@@ -32,10 +32,25 @@ export function useTurnstile(siteKeyParam = null) {
     
     try {
       const response = await turnstileAPI.getConfig()
-      turnstileSiteKey.value = response.data.siteKey
+      
+      // Backend trả về format: {success: true, data: {siteKey: "..."}, message: "..."}
+      if (response.data && response.data.data && response.data.data.siteKey) {
+        turnstileSiteKey.value = response.data.data.siteKey
+      } else {
+        console.error('Invalid response format:', response)
+        turnstileError.value = 'Định dạng phản hồi không hợp lệ từ server'
+      }
     } catch (error) {
       console.error('Failed to fetch Turnstile siteKey:', error)
-      turnstileError.value = 'Không thể lấy cấu hình bảo mật. Vui lòng làm mới trang.'
+      if (error.response) {
+        console.error('Error response:', error.response.data)
+        turnstileError.value = `Lỗi server: ${error.response.status} - ${error.response.data?.message || 'Không thể lấy cấu hình bảo mật'}`
+      } else if (error.request) {
+        console.error('Error request:', error.request)
+        turnstileError.value = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.'
+      } else {
+        turnstileError.value = 'Không thể lấy cấu hình bảo mật. Vui lòng làm mới trang.'
+      }
     }
   }
 
@@ -60,7 +75,6 @@ export function useTurnstile(siteKeyParam = null) {
       const checkTurnstile = setInterval(() => {
         if (window.turnstile) {
           clearInterval(checkTurnstile)
-          console.log('Turnstile loaded from existing script')
           renderTurnstileWidget()
         }
       }, 100)

@@ -6,7 +6,7 @@ use App\Interfaces\LikeRepositoryInterface;
 use App\Interfaces\ImageRepositoryInterface;
 use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
-use App\Http\Resources\LikeResource;
+use App\Http\Resources\V1\Social\LikeResource;
 use App\Models\Image;
 use App\Models\Interaction;
 use App\Notifications\LikeImageNotification;

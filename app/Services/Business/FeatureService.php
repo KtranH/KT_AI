@@ -3,7 +3,7 @@
 namespace App\Services\Business;
 use App\Interfaces\FeatureRepositoryInterface;
 use App\Services\BaseService;
-use App\Http\Resources\AIFeatureResource;
+use App\Http\Resources\V1\Content\AIFeatureResource;
 use App\Services\Infrastructure\CacheService;
 use Illuminate\Support\Facades\Log;
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\ImageJobController;
+use App\Http\Controllers\V1\Content\ImageJobController;
 use Illuminate\Support\Facades\Route;
 
 // Protected Image Jobs Routes

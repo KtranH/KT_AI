@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Redis;
-use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\V1\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -15,7 +14,7 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::routes(['middleware' => ['web', 'auth:sanctum']]);
 
 // Google OAuth Callback Route (phải là web route)
-Route::get('/auth/google/callback', [GoogleController::class, 'handleCallback']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleCallback']);
 
 // SPA Routes
 Route::get('/{any}', function () {

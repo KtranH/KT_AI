@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\ImageController;
+use App\Http\Controllers\V1\Content\ImageController;
 use Illuminate\Support\Facades\Route;
 
 // Public Image Routes
@@ -13,8 +13,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/upload_images/{featureId}', [ImageController::class, 'store']);
     
     // Image Routes
-    Route::get('/get_images_uploaded', [ImageController::class, 'getImagesUploaded']);
-    Route::get('/get_images_liked', [ImageController::class, 'getImagesLiked']);
+    Route::get('/get_images_uploaded', [ImageController::class, 'getUploadedImages']);
+    Route::get('/get_images_liked', [ImageController::class, 'getLikedImages']);
     Route::get('/check_new_images', [ImageController::class, 'checkNewImages']);
     Route::delete('/images/{image}', [ImageController::class, 'destroy']);
     Route::patch('/images/{image}', [ImageController::class, 'update']);

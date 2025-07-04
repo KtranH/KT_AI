@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\FeatureController;
+use App\Http\Controllers\V1\Content\FeatureController;
 use Illuminate\Support\Facades\Route;
 
 // Public Feature Routes

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\LikeController;
+use App\Http\Controllers\V1\Social\LikeController;
 use Illuminate\Support\Facades\Route;
 
 // Public Like Routes

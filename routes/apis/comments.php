@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\V1\Social\CommentController;
 use Illuminate\Support\Facades\Route;
 
 // Protected Comment Routes

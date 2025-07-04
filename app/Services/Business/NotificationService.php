@@ -3,16 +3,16 @@
 namespace App\Services\Business;
 
 use App\Interfaces\NotificationRepositoryInterface;
-use App\Http\Resources\NotificationCollection;
+use App\Http\Resources\V1\Social\NotificationCollection;
 use App\Services\BaseService;
 use App\Interfaces\UserRepositoryInterface;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Comment;
 use App\Models\User;
 use App\Notifications\AddCommentNotification;
 use App\Notifications\AddReplyNotification;
 use App\Notifications\LikeCommentNotification;
+use Illuminate\Http\Request;        
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 

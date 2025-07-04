@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Reply\StoreReplyRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
-use App\Http\Resources\CommentResource;
+use App\Http\Resources\V1\Social\CommentResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\StatisticsController;
+use App\Http\Controllers\V1\System\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 // Protected Statistics Routes
