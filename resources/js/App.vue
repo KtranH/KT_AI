@@ -30,7 +30,6 @@ import { useRoute } from 'vue-router';
 import { AppSidebar as Sidebar, AppHeader as Header, AppLoading as Loading } from './components/layouts';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
-
 export default {
   name: 'App',
   components: {

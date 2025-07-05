@@ -15,7 +15,7 @@ use App\Http\Requests\V1\User\UpdateAvatarRequest;
 use App\Http\Requests\V1\User\UpdateCoverImageRequest;
 use App\Http\Requests\V1\User\UpdatePasswordRequest;
 use App\Http\Requests\V1\User\CheckPasswordRequest;
-use App\Http\Resources\UploadResource;
+use App\Http\Resources\V1\Content\UploadResource;
 
 /**
  * Service class xử lý các chức năng liên quan đến User

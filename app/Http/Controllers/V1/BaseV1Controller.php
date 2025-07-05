@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Constants\ResponseCode;
 use App\Http\Controllers\Constants\ErrorMessages;
 use App\Http\Controllers\Constants\SuccessMessages;
 

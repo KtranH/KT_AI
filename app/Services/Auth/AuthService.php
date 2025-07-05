@@ -14,7 +14,7 @@ use App\Services\BaseService;
 use App\Http\Requests\V1\Auth\PostmanRequest;
 use App\Http\Requests\V1\Auth\SignUpRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
-use App\Http\Resources\AuthResource;
+use App\Http\Resources\V1\Auth\AuthResource;
 
 class AuthService extends BaseService
 {
@@ -64,7 +64,7 @@ class AuthService extends BaseService
                 );
             }
 
-            $user = $this->userRepository->store($request->all());
+            $user = $this->userRepository->store($request);
             
             if (!$this->mailService->sendMail($user)) {
                 throw ExternalServiceException::emailServiceError('Failed to send verification email');

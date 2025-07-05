@@ -7,7 +7,7 @@ namespace App\Services\Auth;
 use App\Exceptions\ExternalServiceException;
 use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
-use App\Http\Resources\AuthResource;
+use App\Http\Resources\V1\Auth\AuthResource;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;

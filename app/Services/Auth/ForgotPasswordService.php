@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\Exceptions\BusinessException;
-use App\Exceptions\ExternalServiceException;
 use App\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\TurnStileService;
 use App\Services\External\MailService;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRules;
 use Illuminate\Auth\Events\PasswordReset;
-use App\Http\Resources\PasswordResetResource;
+use App\Http\Resources\V1\Auth\PasswordResetResource;
 
 class ForgotPasswordService extends BaseService
 {
