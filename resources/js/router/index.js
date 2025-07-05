@@ -1,28 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 // Home Pages
-import Home from '../pages/user/Home.vue'
+import Home from '../pages/public/Home.vue'
 // Auth Forms
 import Login from '../pages/auth/Login.vue'
 import Register from '../pages/auth/Register.vue'
 import VerifyEmail from '../pages/auth/VerifyEmail.vue'
 import ForgotPassword from '../pages/auth/ForgotPassword.vue'
 // Dashboard Pages
-import Dashboard from '../pages/user/Dashboard.vue'
+import Dashboard from '../pages/dashboard/Dashboard.vue'
 // Features Pages
-import Features from '../pages/user/Features.vue'
+import Features from '../pages/ai-features/Features.vue'
 // Image Pages
-import CreateImage from '../pages/user/GenImage.vue'
-import Detail from '../pages/user/ImageDetail.vue'
+import CreateImage from '../pages/ai-features/GenImage.vue'
+import Detail from '../pages/social/ImageDetail.vue'
 // Error Pages
 import Error404 from '../pages/errors/error404.vue'
 // Settings Pages
 import Settings from '../pages/user/Settings.vue'
 // Upload Pages
-import Upload from '../pages/user/Upload.vue'
+import Upload from '../pages/social/Upload.vue'
 // User routes
 //import Profile from '../pages/user/ProfilePage.vue'
-import Notifications from '../pages/user/Notification.vue'
+import Notifications from '../pages/social/Notification.vue'
 // Test Pages (Development only)
 // import TestLayout from '../pages/test/TestLayout.vue'
 // import Test1 from '../pages/test/Test1.vue'
@@ -32,7 +32,7 @@ import Notifications from '../pages/user/Notification.vue'
 // Statistics Pages
 import StatisticsPage from '../pages/user/StatisticsPage.vue';
 // Image Jobs Management
-import ImageJobsManager from '../pages/user/ImageJobsManager.vue';
+import ImageJobsManager from '../pages/ai-features/ImageJobsManager.vue';
 
 const routes = [
   {
