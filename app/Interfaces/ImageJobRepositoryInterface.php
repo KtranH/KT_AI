@@ -47,9 +47,9 @@ interface ImageJobRepositoryInterface
     /**
      * Lấy danh sách tiến trình thất bại của user
      * @param int $userId ID của user
-     * @return Collection Danh sách tiến trình thất bại
+     * @return Builder Danh sách tiến trình thất bại
      */
-    public function getFailedJobsByUser(int $userId): Collection;
+    public function getFailedJobsByUser(int $userId): Builder;
 
     /**
      * Cập nhật tiến trình

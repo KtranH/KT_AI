@@ -60,12 +60,12 @@ class ImageJobsRepository implements ImageJobRepositoryInterface
     /**
      * Lấy danh sách tiến trình thất bại của user
      */
-    public function getFailedJobsByUser(int $userId): Collection
+    public function getFailedJobsByUser(int $userId): Builder
     {
-        return ImageJob::where('user_id', $userId)
+        $query = ImageJob::query();
+        return $query->where('user_id', $userId)
             ->where('status', 'failed')
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderBy('created_at', 'desc');
     }
 
     /**

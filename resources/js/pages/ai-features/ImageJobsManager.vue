@@ -78,7 +78,7 @@
       </div>
       
       <!-- Loading State -->
-      <LoadingState v-if="isLoading" />
+      <LoadingState v-if="isLoadingSuccess && activeTab === 'completed' || isLoadingFailed && activeTab === 'failed'" />
       
       <!-- Empty State -->
       <EmptyJob 
@@ -97,16 +97,19 @@
       <JobsCompleted 
         v-else-if="activeTab === 'completed' && completedJobs.length > 0"
         :completed-jobs="completedJobs"
-        :has-more-pages="hasMorePages"
-        :is-loading="isLoadingMore"
+        :has-more-pages="hasMorePagesSuccess"
+        :is-loading="isLoadingMoreSuccess"
         @view-image="viewImage"
-        @load-more="handleLoadMore"
+        @load-more="handleLoadMoreSuccess"
       />
       
       <!-- Failed Jobs Tab Content -->
       <JobsError 
         v-else-if="activeTab === 'failed' && failedJobs.length > 0"
         :failed-jobs="failedJobs"
+        :has-more-pages="hasMorePagesFailed"
+        :is-loading="isLoadingMoreFailed"
+        @load-more="handleLoadMoreFailed"
         @job-retried="fetchFailedJobs"
       />
       
@@ -139,7 +142,7 @@ export default {
     DetailsJob
   },
   setup() {
-    const { fetchActiveJobs, fetchCompletedJobs, fetchFailedJobs, fetchAllJobs, isLoading, isLoadingMore, hasMorePages, hasLoadedMore, loadMoreCompletedJobs } = useImageJob();
+    const { fetchActiveJobs, fetchCompletedJobs, fetchFailedJobs, fetchAllJobs, isLoadingSuccess, isLoadingFailed, isLoadingMoreSuccess, isLoadingMoreFailed, hasMorePagesSuccess, hasMorePagesFailed, hasLoadedMoreSuccess, hasLoadedMoreFailed, loadMoreCompletedJobs, loadMoreFailedJobs } = useImageJob();
 
     const activeTab = ref('active');
     const activeJobs = ref([]);
@@ -161,8 +164,13 @@ export default {
     };
      
     // Tải thêm jobs
-    const handleLoadMore = async () => {
+    const handleLoadMoreSuccess = async () => {
       await loadMoreCompletedJobs(completedJobs);
+    };
+
+    // Tải thêm failed jobs
+    const handleLoadMoreFailed = async () => {
+      await loadMoreFailedJobs(failedJobs);
     };
 
     // Refresh các loại jobs
@@ -208,8 +216,11 @@ export default {
     // Xem lại danh sách tiến trình đã hoàn thành
     watch(activeTab, (newTab, oldTab) => {
       if (newTab === 'completed' && oldTab !== 'completed') {
-        // Tải lại danh sách tiến trình đã hoàn thành
-        hasLoadedMore.value = false;
+        // Reset state cho completed jobs
+        hasLoadedMoreSuccess.value = false;
+      } else if (newTab === 'failed' && oldTab !== 'failed') {
+        // Reset state cho failed jobs
+        hasLoadedMoreFailed.value = false;
       }
     });
 
@@ -231,24 +242,32 @@ export default {
       return false;
     });
     
-          return {
+      return {
         activeTab,
         activeJobs: safeActiveJobs,
         completedJobs: safeCompletedJobs,
         failedJobs: safeFailedJobs,
-        isLoading,
-        isLoadingMore,
-        hasMorePages,
-        hasLoadedMore,
+        isLoadingSuccess,
+        isLoadingFailed,
+        isLoadingMoreSuccess,
+        isLoadingMoreFailed,
+        hasMorePagesSuccess,
+        hasMorePagesFailed,
+        hasLoadedMoreSuccess,
+        hasLoadedMoreFailed,
         previewImage,
         isRefreshingActive,
         isRefreshingCompleted,
         isRefreshingFailed,
         viewImage,
-        handleLoadMore,
+        handleLoadMoreSuccess,
+        handleLoadMoreFailed,
         refreshActiveJobs,
         refreshCompletedJobsManually,
         refreshFailedJobs,
+        fetchActiveJobs,
+        fetchCompletedJobs,
+        fetchFailedJobs,
       };
   }
 };

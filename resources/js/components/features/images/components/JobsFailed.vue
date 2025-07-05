@@ -40,26 +40,44 @@
             </div>
         </div>
     </div>
+    <ButtonMore 
+        v-if="hasMorePages" 
+        :has-more-pages="hasMorePages" 
+        :loading="isLoading" 
+        @load-more="handleLoadMore"
+      />
 </template>
 
 <script>
 import { toast } from 'vue-sonner';
-import { comfyuiAPI } from '@/services/api';
+import { imageJobsAPI } from '@/services/api';
 import { formatDate } from '@/utils';
+import { ButtonMore } from '@/components/base';
 
 export default {
     name: 'JobsFailed',
+    components: {
+        ButtonMore
+    },
     props: {
         failedJobs: {
             type: Array,
             required: true
+        },
+        hasMorePages: {
+            type: Boolean,
+            required: true,
+        },
+        isLoading: {
+            type: Boolean,
+            required: true,
         }
     },
-    emits: ['job-retried'],
+    emits: ['job-retried', 'load-more'],
     setup(props, { emit }) {
         const retryJob = async (jobId) => {
             try {
-                const response = await comfyuiAPI.retryJob(jobId);
+                const response = await imageJobsAPI.retryJob(jobId);
                 if (response.data.success) {
                     toast.success('Đã thử lại tiến trình thành công');
                     emit('job-retried');
@@ -70,9 +88,14 @@ export default {
             }
         };
 
+        const handleLoadMore = () => {
+            emit('load-more');
+        };
+
         return {
             formatDate,
-            retryJob
+            retryJob,
+            handleLoadMore
         };
     }
 }

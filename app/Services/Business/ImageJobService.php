@@ -133,16 +133,18 @@ class ImageJobService extends BaseService
     /**
      * Lấy danh sách tiến trình thất bại
      */
-    public function getFailedJobs(User $user): array
+    public function getFailedJobs(Request $request): ImageJobCollection
     {
-        return $this->executeWithExceptionHandling(function() use ($user) {
-            $failedJobs = $this->imageJobRepository->getFailedJobsByUser($user->id);
+        return $this->executeWithExceptionHandling(function() use ($request) {
+            $user = Auth::user();
+            $perPage = (int)$request->input('per_page', 10);
+            $page = (int)$request->input('page', 1);
+            
+            $query = $this->imageJobRepository->getFailedJobsByUser($user->id);
+            $jobs = $query->paginate($perPage, ['*'], 'page', $page);
 
-        return [
-            'failed_jobs' => ImageJobResource::collection($failedJobs),
-            'count' => $failedJobs->count(),
-        ];
-        }, "Getting failed jobs for user ID: {$user->id}");
+            return new ImageJobCollection($jobs);
+        }, "Getting failed jobs for user ID: " . Auth::id());
     }
 
     /**

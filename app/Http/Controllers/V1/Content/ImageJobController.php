@@ -69,12 +69,13 @@ class ImageJobController extends BaseV1Controller
     /**
      * Lấy danh sách jobs thất bại của user
      * 
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getFailedJobs(): JsonResponse
+    public function getFailedJobs(Request $request): JsonResponse
     {
         return $this->executeServiceMethodV1(
-            fn() => $this->imageJobService->getFailedJobs(Auth::user()),
+            fn() => $this->imageJobService->getFailedJobs($request),
             null,
             ErrorMessages::IMAGE_JOB_LOAD_ERROR
         );

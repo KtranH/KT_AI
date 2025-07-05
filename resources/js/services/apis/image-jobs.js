@@ -17,11 +17,19 @@ export const imageJobsAPI = {
       }
     }
   ),
-  getFailedJobs: () => apiClient.get('/image-jobs/failed'),
+  getFailedJobs: (page = 1, perPage = 10) => apiClient.get('/image-jobs/failed',
+    {
+      params: {
+        paginate: true,
+        per_page: perPage,
+        page: page
+      }
+    }
+  ),
   checkJobStatus: (jobId) => apiClient.get(`/image-jobs/${jobId}`),
   cancelJob: (jobId) => apiClient.delete(`/image-jobs/${jobId}`),
   retryJob: (jobId) => apiClient.post(`/image-jobs/${jobId}/retry`),
 }
 
-// === BACKWARD COMPATIBILITY ===
-export const comfyuiAPI = imageJobsAPI // Alias for backward compatibility 
+// Có thể gọi comfyui hoặc imageJobsAPI
+export const comfyuiAPI = imageJobsAPI 
