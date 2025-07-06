@@ -22,11 +22,12 @@ class FeatureService extends BaseService
     public function getFeatures(): mixed
     {
         return $this->executeWithExceptionHandling(function() {
-            $features = $this->cacheService->getFeatures();
+            /*$features = $this->cacheService->getFeatures();
             if ($features) {
                 return AIFeatureResource::collection($features);
-            }
+            }*/
             $features = $this->featureRepository->getFeatures();
+            Log::info("Features: " . $features);
             $this->cacheService->cacheFeatures($features);
             return AIFeatureResource::collection($features);
         }, "Getting features");

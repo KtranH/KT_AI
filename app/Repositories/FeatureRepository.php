@@ -6,6 +6,7 @@ use App\Interfaces\FeatureRepositoryInterface;
 use App\Models\AIFeature;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class FeatureRepository implements FeatureRepositoryInterface
 {
@@ -16,9 +17,7 @@ class FeatureRepository implements FeatureRepositoryInterface
      */
     public function getFeatures(): Collection
     {
-        $features = Cache::remember('features', 60 * 60, function () {
-            return AIFeature::where('status_feature', 'active')->get();
-        });
+        $features = AIFeature::where('status_feature', 'active')->get();
         return $features;
     }
 

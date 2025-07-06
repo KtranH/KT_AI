@@ -41,7 +41,7 @@ class ErrorMessages
     const R2_ONLY_SUPPORT = 'Chỉ hỗ trợ URL từ R2.dev';
     
     // Generic messages
-    const VALIDATION_ERROR = 'Dữ liệu không hợp lệ';
+    const VALIDATION_ERROR = 'Dữ liệu đầu vào không hợp lệ';
     const PERMISSION_DENIED = 'Không có quyền thực hiện thao tác này';
     const SYSTEM_ERROR = 'Lỗi hệ thống';
 
