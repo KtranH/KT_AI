@@ -145,7 +145,7 @@
               icon="/img/google.png"
               :loading="loading"
               :formTurnstileToken="form.turnstileToken"
-              @click="handleLoginByGoogle"
+              @click="startHandleLoginByGoogle"
             >
             </SocialLoginButton>
           </div>
@@ -224,6 +224,17 @@ export default {
     const authStore = useAuthStore();
     const { handleLoginByGoogle } = authStore;
     
+    const startHandleLoginByGoogle = async () => {
+      loading.value = true;
+      try{
+        await handleLoginByGoogle(() => {
+          loading.value = false;
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    } 
+
     const handleSubmit = async () => {
       if (!form.turnstileToken) {
         turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
@@ -265,7 +276,8 @@ export default {
       handleLoginByGoogle,
       turnstileSiteKey,
       turnstileWidget,
-      turnstileError
+      turnstileError,
+      startHandleLoginByGoogle
     }
   }
 }

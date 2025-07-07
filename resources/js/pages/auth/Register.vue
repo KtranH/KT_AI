@@ -141,6 +141,9 @@
               url="/api/auth/google/url"
               icon="/img/google.png"
               text="Google"
+              :loading="loading"
+              :formTurnstileToken="turnstileToken"
+              @click="startHandleLoginByGoogle"
             />
           </div>
         </div>
@@ -153,8 +156,9 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTurnstile } from '@/composables/features/auth/useTurnstile'
-import axios from 'axios'
 import { AuthFormHeader, AlertMessage, SocialLoginButton } from '@/components/features/auth'
+import { useAuthStore } from '@/stores/auth/authStore'
+import axios from 'axios'
 
 export default {
   name: 'Register',
@@ -199,6 +203,20 @@ export default {
     const togglePassword = () => {
       showPassword.value = !showPassword.value
     }
+
+    const authStore = useAuthStore();
+    const { handleLoginByGoogle } = authStore;
+
+    const startHandleLoginByGoogle = async () => {
+      loading.value = true;
+      try{
+        await handleLoginByGoogle(() => {
+          loading.value = false;
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    } 
 
     const handleSubmit = async () => {
       if (form.password !== form.password_confirmation) {
@@ -255,7 +273,8 @@ export default {
       togglePassword,
       turnstileWidget,
       turnstileToken,
-      turnstileError
+      turnstileError,
+      startHandleLoginByGoogle
     }
   }
 }

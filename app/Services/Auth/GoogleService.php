@@ -32,9 +32,7 @@ class GoogleService extends BaseService
     {
         return $this->executeWithExceptionHandling(function() {
             $redirectUrl = Socialite::driver('google')->redirect()->getTargetUrl();
-            
             $this->logAction('Google OAuth redirect URL generated');
-            
             return [
                 'url' => $redirectUrl
             ];
@@ -81,7 +79,7 @@ class GoogleService extends BaseService
                 null,
                 'Đăng nhập Google thành công'
             );
-            
+
             return $authResource->toArray(request());
         }, 'Processing Google OAuth callback');
     }

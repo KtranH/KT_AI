@@ -191,9 +191,10 @@
 
 <script>
 import AOS from 'aos'
-import { ImageListLayout, UploadImageModal } from '@/components/features/dashboard'
 import dayjs from 'dayjs'
-import { onMounted, ref, onBeforeUnmount, computed } from 'vue'
+import ImageUser from '@/components/features/dashboard/components/ImageUser.vue'
+import { ImageListLayout, UploadImageModal } from '@/components/features/dashboard'
+import { onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
@@ -204,7 +205,8 @@ export default {
   name: 'Dashboard',
   components: {
     ImageListLayout,
-    UploadImageModal
+    UploadImageModal,
+    ImageUser
   },
   setup() {
     //State
@@ -245,6 +247,7 @@ export default {
     const previewVisible = ref(false)
     const currentPreviewImage = ref("")
     const previewType = ref("")
+    
     const activeTab = ref('uploaded') // Mặc định là 'uploaded'
     
     // Thêm state để kiểm soát việc render ImageListVue
@@ -413,6 +416,22 @@ export default {
       // Xóa event listener
       window.removeEventListener('beforeunload', handleBeforeUnload)
     })
+
+    // Xem profile người khác
+    watch(
+      () => route.query.userId,
+      async (newUserId, oldUserId) => {
+        if (newUserId && newUserId !== oldUserId && newUserId !== auth.user.value.id.toString()) {
+          await loadUserProfile(newUserId)
+        } else if (!newUserId || newUserId === auth.user.value.id.toString()) {
+          // Nếu quay lại profile của chính mình
+          user.value = auth.user.value
+          avatar.value = user.value.avatar_url
+          coverImage.value = user.value.cover_image_url
+          isOtherUserProfile.value = false
+        }
+      }
+    )
 
     return {
       user,

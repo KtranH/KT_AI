@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Broadcast;
 // Thêm route cho xác thực kênh broadcast
 Broadcast::routes(['middleware' => ['web', 'auth:sanctum']]);
 
-// Google OAuth Callback Route (phải là web route)
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleCallback']);
+// Google OAuth Callback Route
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleCallback'])->middleware('throttle:10,1');
 
 // SPA Routes
 Route::get('/{any}', function () {

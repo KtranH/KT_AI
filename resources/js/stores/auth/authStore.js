@@ -257,7 +257,7 @@ export const useAuthStore = () => {
     }
   }
 
-  const handleLoginByGoogle = async () => {
+  const handleLoginByGoogle = async (onPopupClosed) => {
     try {
       const response = await googleAPI.getAuthUrl()
       const googleAuthUrl = response.data.data.url
@@ -301,11 +301,17 @@ export const useAuthStore = () => {
         if (popup.closed) {
           clearInterval(checkClosed)
           window.removeEventListener('message', messageHandler)
+          if(typeof onPopupClosed === 'function') {
+            onPopupClosed()
+          }
         }
       }, 1000)
 
     } catch (error) {
       console.error('Lỗi trong quá trình đăng nhập Google:', error)
+      if(typeof onPopupClosed === 'function') {
+        onPopupClosed()
+      }
     }
   }
 
