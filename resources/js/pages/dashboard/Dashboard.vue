@@ -192,7 +192,6 @@
 <script>
 import AOS from 'aos'
 import dayjs from 'dayjs'
-import ImageUser from '@/components/features/dashboard/components/ImageUser.vue'
 import { ImageListLayout, UploadImageModal } from '@/components/features/dashboard'
 import { onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -205,8 +204,7 @@ export default {
   name: 'Dashboard',
   components: {
     ImageListLayout,
-    UploadImageModal,
-    ImageUser
+    UploadImageModal
   },
   setup() {
     //State

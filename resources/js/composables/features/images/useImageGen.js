@@ -8,6 +8,7 @@ export function useImageGen() {
     const fetchActiveJobs = async (activeJobs) => {
         try {
             const response = await imageJobsAPI.getActiveJobs()
+            
             if (response.data && response.data.success) {
                 // Cấu trúc mới: {success: true, data: {active_jobs: [...], count: X}, message: null}
                 activeJobs.value = response.data.data.active_jobs || []
@@ -20,28 +21,34 @@ export function useImageGen() {
     // Kiểm tra tiến trình đã hoàn thành
     const checkCompletedJobs = async (successfulJob, notifiedJobIds) => {
         try {
-            const response = await imageJobsAPI.getCompletedJobs()
+            // Lấy danh sách completed jobs mới nhất
+            const response = await imageJobsAPI.getCompletedJobs(1, 10) // Lấy 10 job mới nhất
+            
             if (response.data && response.data.success) {
-                // Cấu trúc mới: {success: true, data: {completed_jobs: [...], count: X}, message: null}
-                const completedJobs = response.data.data.completed_jobs || []
+                const completedJobs = response.data.data.jobs || []
                 
                 if (completedJobs.length > 0) {
-                    // Kiểm tra nếu có job mới hoàn thành (chưa hiển thị)
-                    const latestJob = completedJobs[0]
+                    // Tìm job mới nhất có result_image_url và chưa được thông báo
+                    const jobsWithImage = completedJobs.filter(job => 
+                        job.status === 'completed' &&
+                        (job.result_image_url || job.result_image) && 
+                        !notifiedJobIds.value.has(job.id)
+                    )
                     
-                    // Nếu job này hoàn thành trong vòng 30 giây qua
-                    const jobCreatedTime = new Date(latestJob.updated_at).getTime()
-                    const currentTime = new Date().getTime()
-                    const timeDiff = (currentTime - jobCreatedTime) / 1000 // chuyển đổi sang giây
-                    
-                    // Hiển thị job mới nhất nếu nó mới hoàn thành (trong vòng 30 giây)
-                    // và chưa hiển thị thông báo
-                    if (timeDiff < 30 && !notifiedJobIds.value.has(latestJob.id)) {
-                        successfulJob.value = latestJob
-                        // Đánh dấu job đã được thông báo
-                        notifiedJobIds.value.add(latestJob.id)
-                        // Hiển thị thông báo toast
-                        toast.success('Đã tạo ảnh thành công!')
+                    if (jobsWithImage.length > 0) {
+                        // Lấy job mới nhất (đầu tiên trong danh sách đã sắp xếp theo thời gian)
+                        const latestJobWithImage = jobsWithImage[0]
+                        
+                        // Kiểm tra thời gian tạo job (chỉ hiển thị job trong vòng 5 phút qua)
+                        const currentTime = new Date().getTime()
+                        const jobCreatedTime = new Date(latestJobWithImage.created_at).getTime()
+                        const timeDiff = (currentTime - jobCreatedTime) / 1000 // chuyển đổi sang giây
+                        
+                        if (timeDiff < 300) { // Chỉ lấy kết quả trong vòng 5 phút = 300 giây
+                            successfulJob.value = latestJobWithImage
+                            notifiedJobIds.value.add(latestJobWithImage.id)
+                            toast.success('Đã tạo ảnh thành công!')
+                        }
                     }
                 }
             }

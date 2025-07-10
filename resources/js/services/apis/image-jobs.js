@@ -11,7 +11,6 @@ export const imageJobsAPI = {
   getCompletedJobs: (page = 1, perPage = 10) => apiClient.get('/image-jobs/completed',
     {
       params: {
-        paginate: true,
         per_page: perPage,
         page: page
       }
@@ -20,7 +19,6 @@ export const imageJobsAPI = {
   getFailedJobs: (page = 1, perPage = 10) => apiClient.get('/image-jobs/failed',
     {
       params: {
-        paginate: true,
         per_page: perPage,
         page: page
       }

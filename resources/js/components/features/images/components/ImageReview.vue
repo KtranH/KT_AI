@@ -26,10 +26,15 @@
             </div>
             <div class="w-full md:w-2/3 rounded-lg overflow-hidden shadow-lg">
                 <img 
+                    v-if="successfulJob.result_image_url"
                     :src="successfulJob.result_image_url" 
                     :alt="successfulJob.prompt" 
                     class="w-full h-auto object-contain max-h-96 rounded-lg"
+                    @error="handleImageError"
                 />
+                <div v-else class="w-full h-96 bg-gray-200 flex items-center justify-center rounded-lg">
+                    <p class="text-gray-500">Không thể tải ảnh</p>
+                </div>
             </div>
         </div>
     </div>
@@ -50,8 +55,14 @@ export default {
             emit('close');
         };
 
+        const handleImageError = (event) => {
+            console.error('Lỗi khi tải ảnh:', event.target.src);
+            // Có thể thêm logic xử lý lỗi ở đây
+        };
+
         return {
-            closePreview
+            closePreview,
+            handleImageError
         }
     },
 }

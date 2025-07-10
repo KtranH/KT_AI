@@ -82,7 +82,7 @@
       
       <!-- Empty State -->
       <EmptyJob 
-        v-else-if="(activeTab === 'active' && activeJobs.length === 0) || (activeTab === 'completed' && completedJobs.length === 0)"
+        v-else-if="(activeTab === 'active' && activeJobs.length === 0) || (activeTab === 'completed' && completedJobs.length === 0) || (activeTab === 'failed' && failedJobs.length === 0)"
         :active-tab="activeTab"
       />
       

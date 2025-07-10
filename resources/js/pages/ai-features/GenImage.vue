@@ -208,6 +208,10 @@ export default {
                 feature,
                 activeJobs
             })
+            // Khởi động lại interval nếu chưa có
+            if (!checkInterval.value && activeJobs.value.length > 0) {
+                startCheckingInterval()
+            }
         }
 
         // Gọi API lấy thông tin
@@ -228,16 +232,8 @@ export default {
 
         // Function to handle closing the preview
         const handleClosePreview = () => {
-            // Lưu ID của job đang hiển thị (nếu có)
-            const currentJobId = successfulJob.value?.id;
-            
             // Đặt lại giá trị successfulJob
             successfulJob.value = null;
-            
-            // Nếu có currentJobId, xóa khỏi Set notifiedJobIds để có thể hiển thị lại nếu cần
-            if (currentJobId) {
-                notifiedJobIds.value.delete(currentJobId);
-            }
         };
 
         // Function để giới hạn kích thước của Set notifiedJobIds
@@ -250,6 +246,27 @@ export default {
             }
         };
 
+        // Function để khởi động interval kiểm tra
+        const startCheckingInterval = () => {
+            // Dừng interval cũ nếu có
+            if (checkInterval.value) {
+                clearInterval(checkInterval.value)
+            }
+            // Thiết lập interval kiểm tra trạng thái các tiến trình
+            checkInterval.value = setInterval(async () => {
+                // Luôn kiểm tra completed jobs
+                await checkCompletedJobs(successfulJob, notifiedJobIds)
+                limitNotifiedJobsSet() // Giới hạn kích thước của Set
+                // Cập nhật active jobs
+                await fetchActiveJobs(activeJobs)
+                // Nếu không còn active jobs, dừng interval
+                if (activeJobs.value.length === 0) {
+                    clearInterval(checkInterval.value)
+                    checkInterval.value = null
+                }
+            }, 15000) // Tăng lên 15 giây để giảm tải server
+        };
+
         // Mounted Hook
         onMounted(async () => {
             try {
@@ -260,17 +277,14 @@ export default {
             } catch (error) {
                 console.error('Error decoding ID:', error)
             }
-            
             await get_feature()
             await fetchActiveJobs(activeJobs)
-            await checkCompletedJobs(successfulJob, notifiedJobIds) // Kiểm tra ngay khi tải trang
-            
-            // Thiết lập interval kiểm tra trạng thái các tiến trình
-            checkInterval.value = setInterval(async () => {
-                await fetchActiveJobs(activeJobs)
-                await checkCompletedJobs(successfulJob, notifiedJobIds)
-                limitNotifiedJobsSet() // Giới hạn kích thước của Set
-            }, 5000)
+            // Luôn kiểm tra completed jobs khi component được mount
+            await checkCompletedJobs(successfulJob, notifiedJobIds)
+            // Khởi động interval nếu có active jobs
+            if (activeJobs.value.length > 0) {
+                startCheckingInterval()
+            }
         })
     
         // Xóa interval khi component bị hủy

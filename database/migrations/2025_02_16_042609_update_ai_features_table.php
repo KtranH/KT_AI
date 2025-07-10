@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('slug')->nullable()->change();
             $table->text('description')->nullable()->change();
             $table->text('prompt_template')->nullable()->change();
-            $table->integer('creadit_cost')->nullable()->change();
+            $table->integer('credit_cost')->nullable()->change();
             $table->string('thumbnail_url')->nullable()->change();
             $table->string('input_requirements')->nullable()->change();
             $table->string('category')->nullable()->change();
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('slug')->nullable(false)->change();
             $table->text('description')->nullable(false)->change();
             $table->text('prompt_template')->nullable(false)->change();
-            $table->integer('creadit_cost')->nullable(false)->change();
+            $table->integer('credit_cost')->nullable(false)->change();
             $table->string('thumbnail_url')->nullable(false)->change();
             $table->string('input_requirements')->nullable(false)->change();
             $table->string('category')->nullable(false)->change();

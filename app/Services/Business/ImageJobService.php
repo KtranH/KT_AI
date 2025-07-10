@@ -68,7 +68,7 @@ class ImageJobService extends BaseService
                     'main_image' => $mainImagePath,
                     'secondary_image' => $secondaryImagePath,
                     'status' => 'pending',
-                    'progress' => 0,
+                    'progress' => 0, // Xem tiến trình tạo ảnh
                     'credits_refunded' => false,
                 ];
 
