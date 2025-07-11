@@ -23,10 +23,10 @@ interface NotificationRepositoryInterface
 
     /**
      * Tìm kiếm thông báo
-     * @param int $id ID của thông báo
+     * @param int|string $id ID của thông báo (UUID string)
      * @return DatabaseNotification Thông báo
      */
-    public function findNotification(int $id): DatabaseNotification;
+    public function findNotification(int|string $id): DatabaseNotification;
     
     /**
      * Cập nhật thông báo đã đọc

@@ -24,7 +24,7 @@ class StoreReplyRequest extends BaseRequest
     {
         return [
             'content' => ['required', 'string', 'min:1', 'max:1000'],
-            'parent_id' => ['required', 'integer', 'exists:comments,id'],
+            'parent_id' => ['nullable', 'integer', 'exists:comments,id'],
             'origin_comment' => ['nullable', 'integer', 'exists:comments,id'],
         ];
     }
@@ -38,7 +38,6 @@ class StoreReplyRequest extends BaseRequest
             'content.required' => 'Nội dung phản hồi là bắt buộc.',
             'content.min' => 'Phản hồi phải có ít nhất 1 ký tự.',
             'content.max' => 'Phản hồi không được vượt quá 1000 ký tự.',
-            'parent_id.required' => 'ID bình luận cha là bắt buộc.',
             'parent_id.exists' => 'Bình luận cha không tồn tại.',
             'origin_comment.exists' => 'Bình luận gốc không tồn tại.',
         ]);
