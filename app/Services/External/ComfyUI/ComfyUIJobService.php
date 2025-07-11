@@ -23,6 +23,10 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Cập nhật tiến trình đã hoàn thành
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param array $historyData Dữ liệu history
+     * @param R2StorageService $r2Service Dịch vụ R2
+     * @return bool Kết quả
      */
     public function updateCompletedJob(ImageJob $job, array $historyData, R2StorageService $r2Service): bool
     {
@@ -75,6 +79,9 @@ class ComfyUIJobService extends BaseService
 
     /**
      * Trích xuất thông báo lỗi từ dữ liệu history
+     * @param array $historyData Dữ liệu history
+     * @param string $promptId ID của prompt
+     * @return string Thông báo lỗi
      */
     protected function extractErrorMessage(array $historyData, string $promptId): string
     {
@@ -91,6 +98,9 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Tìm tên file ảnh trong dữ liệu history
+     * @param array $historyData Dữ liệu history
+     * @param string $promptId ID của prompt
+     * @return ?string Kết quả
      */
     public function findImageFilenameInHistoryData(array $historyData, string $promptId): ?string
     {
@@ -116,6 +126,8 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Tìm tên file ảnh trong outputs
+     * @param array $outputs Dữ liệu outputs
+     * @return ?string Kết quả
      */
     protected function findImageFilenameInOutputs(array $outputs): ?string
     {
@@ -165,6 +177,8 @@ class ComfyUIJobService extends BaseService
 
     /**
      * Tìm tên file ảnh trong dữ liệu lồng nhau
+     * @param array $data Dữ liệu
+     * @return ?string Kết quả
      */
     protected function findImageFilenameInNestedData(array $data): ?string
     {
@@ -211,6 +225,8 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Kiểm tra xem dữ liệu history có chứa ảnh kết quả không
+     * @param array $historyData Dữ liệu history
+     * @return bool Kết quả
      */
     public function hasImagesInHistoryData(array $historyData): bool
     {
@@ -261,6 +277,8 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Kiểm tra và cập nhật trạng thái các tiến trình đang hoạt động
+     * @param R2StorageService $r2Service Dịch vụ R2
+     * @return bool Kết quả
      */
     public function checkAndUpdatePendingJobs(R2StorageService $r2Service): bool
     {
@@ -292,6 +310,9 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Xử lý một công việc đang chờ
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param R2StorageService $r2Service Dịch vụ R2
+     * @return void
      */
     protected function processPendingJob(ImageJob $job, R2StorageService $r2Service): void
     {
@@ -356,6 +377,9 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Kiểm tra xem công việc đã hoàn thành chưa
+     * @param array $historyData Dữ liệu history
+     * @param string $promptId ID của prompt
+     * @return bool Kết quả
      */
     protected function checkIfJobCompleted(array $historyData, string $promptId): bool
     {
@@ -408,6 +432,11 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Upload image data to R2 Storage
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param string $imageData Dữ liệu ảnh
+     * @param string $imageFilename Tên ảnh
+     * @param R2StorageService $r2Service Dịch vụ R2
+     * @return string Đường dẫn ảnh
      */
     protected function uploadImageToR2(ImageJob $job, string $imageData, string $imageFilename, R2StorageService $r2Service): string
     {
@@ -445,6 +474,9 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Send job notification to user
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param bool $success Kết quả
+     * @return void
      */
     protected function sendJobNotification(ImageJob $job, bool $success = true): void
     {
@@ -466,6 +498,10 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Update job progress based on API response
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param array $historyData Dữ liệu history
+     * @param R2StorageService $r2Service Dịch vụ R2
+     * @return void
      */
     protected function updateJobProgress(ImageJob $job, array $historyData, R2StorageService $r2Service): void
     {
@@ -502,6 +538,9 @@ class ComfyUIJobService extends BaseService
     
     /**
      * Mark job as failed with error message and send notification
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param string $errorMessage Lỗi tạo ảnh
+     * @return void
      */
     protected function markJobAsFailed(ImageJob $job, string $errorMessage): void
     {

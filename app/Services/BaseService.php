@@ -28,6 +28,8 @@ abstract class BaseService
     
     /**
      * Validate ID
+     * @param mixed $id ID
+     * @return bool Kết quả
      */
     protected function validateId($id): bool
     {
@@ -36,6 +38,8 @@ abstract class BaseService
     
     /**
      * Validate email format
+     * @param string $email Email
+     * @return bool Kết quả
      */
     protected function validateEmail(string $email): bool
     {
@@ -44,6 +48,9 @@ abstract class BaseService
     
     /**
      * Log action với context
+     * @param string $action Hành động
+     * @param array $context Context
+     * @return void
      */
     protected function logAction(string $action, array $context = []): void
     {
@@ -55,6 +62,8 @@ abstract class BaseService
     
     /**
      * Clear cache by tags hoặc pattern
+     * @param string $pattern Pattern
+     * @return void
      */
     protected function clearCachePattern(string $pattern): void
     {
@@ -74,6 +83,10 @@ abstract class BaseService
     
     /**
      * Bulk operations với batch processing
+     * @param array $items Danh sách items
+     * @param callable $processor Hàm xử lý
+     * @param int $batchSize Kích thước batch
+     * @return array Danh sách kết quả
      */
     protected function processBatch(array $items, callable $processor, int $batchSize = 100): array
     {

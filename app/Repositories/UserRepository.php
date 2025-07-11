@@ -334,6 +334,8 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * Tìm user theo ID (có thể null)
+     * @param int $userId ID của user
+     * @return ?User User
      */
     public function findById(int $userId): ?User
     {
@@ -342,6 +344,8 @@ class UserRepository implements UserRepositoryInterface
     
     /**
      * Lấy user với thông tin cần thiết cho notification
+     * @param int $userId ID của user
+     * @return ?User User
      */
     public function getUserForNotification(int $userId): ?User
     {

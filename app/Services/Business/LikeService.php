@@ -31,7 +31,7 @@ class LikeService extends BaseService
     /**
      * Kiểm tra xem ảnh đã được thích hay chưa
      *
-     * @param int $id
+     * @param int $id ID của ảnh
      * @return array
      */
     public function checkLiked(int $id): array
@@ -47,7 +47,7 @@ class LikeService extends BaseService
     /**
      * Lấy danh sách likes
      *
-     * @param int $id
+     * @param int $id ID của ảnh
      * @return array
      */
     public function getLikes(int $id): array
@@ -120,8 +120,8 @@ class LikeService extends BaseService
     /**
      * Gửi thông báo khi có người thích bài đăng
      *
-     * @param \App\Models\Interaction $interaction Tương tác thích
-     * @param \App\Models\Image $image Hình ảnh được thích
+     * @param Interaction $interaction Tương tác thích
+     * @param Image $image Hình ảnh được thích
      * @return void
      */
     private function sendNotification(Interaction $interaction, Image $image): void

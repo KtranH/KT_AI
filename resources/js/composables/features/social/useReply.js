@@ -4,7 +4,7 @@ export default function useReply(props, emit) {
     // Khai báo biến lưu trữ nội dung phản hồi
     const replyText = ref('')
     
-    // Hàm gửi phản hồi
+    // Phương thức gửi phản hồi
     const submitReply = () => {
         if (!replyText.value.trim()) return
         
@@ -18,7 +18,7 @@ export default function useReply(props, emit) {
         replyText.value = ''
     }
     
-    // Hàm hủy phản hồi
+    // Phương thức hủy phản hồi
     const cancelReply = () => {
         replyText.value = ''
         emit('cancel-reply')

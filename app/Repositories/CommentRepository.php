@@ -11,10 +11,24 @@ class CommentRepository implements CommentRepositoryInterface
 {
     private const COMMENTS_PER_PAGE = 5;
     private const REPLIES_PER_PAGE = 3;
+
+    /**
+     * Lấy comment theo ID
+     * @param int $commentId ID của comment
+     * @return Comment Comment
+     */
     public function getCommentByID(int $commentId): Comment
     {
         return Comment::with(['user', 'replies.user'])->findOrFail($commentId);
     }
+
+    /**
+     * Lấy các comment của một ảnh
+     * @param int $imageId ID của ảnh
+     * @param int|null $commentId ID của comment
+     * @param int $page Trang hiện tại
+     * @return array Danh sách comment
+     */
     public function getComments(int $imageId, ?int $commentId = null, int $page = 1): array
     {
         if ($commentId) {
@@ -22,6 +36,13 @@ class CommentRepository implements CommentRepositoryInterface
         }
         return $this->getMainComments($imageId, $page);
     }
+
+    /**
+     * Lấy các phản hồi của một comment
+     * @param int $commentId ID của comment
+     * @param int $page Trang hiện tại
+     * @return array Danh sách phản hồi
+     */
     public function getReplies(int $commentId, int $page): array
     {
         $replies = Comment::with(['user'])
@@ -33,6 +54,13 @@ class CommentRepository implements CommentRepositoryInterface
             'hasMore' => $replies->hasMorePages()
         ];
     }
+
+    /**
+     * Lấy các comment gốc
+     * @param int $imageId ID của ảnh
+     * @param int $page Trang hiện tại
+     * @return array Danh sách comment gốc
+     */
     public function getMainComments(int $imageId, int $page): array
     {
         $comments = Comment::with(['user', 'replies' => function ($query) {
@@ -56,6 +84,12 @@ class CommentRepository implements CommentRepositoryInterface
             'hasMore' => $comments->hasMorePages()
         ];
     }
+
+    /**
+     * Xử lý các phản hồi lồng nhau
+     * @param Comment $comment Comment
+     * @return void
+     */
     private function processReplies($comment): void
     {
         // Không làm gì nếu không có replies
@@ -77,6 +111,12 @@ class CommentRepository implements CommentRepositoryInterface
         // Thay thế collection replies bằng collection mới đã gộp và sắp xếp
         $comment->setRelation('replies', $allReplies);
     }
+
+    /**
+     * Lấy tất cả các phản hồi lồng nhau
+     * @param array $parentIds ID của các phản hồi cha
+     * @return \Illuminate\Support\Collection Các phản hồi lồng nhau
+     */
     private function getAllNestedReplies(array $parentIds): \Illuminate\Support\Collection
     {
         if (empty($parentIds)) {
@@ -102,6 +142,12 @@ class CommentRepository implements CommentRepositoryInterface
 
         return $replies;
     }
+
+    /**
+     * Lưu comment
+     * @param array $data Dữ liệu của comment
+     * @return Comment Comment
+     */
     public function storeComment(array $data): Comment
     {
         $comment = Comment::create([
@@ -121,6 +167,13 @@ class CommentRepository implements CommentRepositoryInterface
 
         return $comment;
     }
+
+    /**
+     * Lưu phản hồi
+     * @param array $data Dữ liệu của phản hồi
+     * @param Comment $comment Comment
+     * @return Comment Comment
+     */
     public function storeReply(array $data, Comment $comment): Comment
     {
         // Determine the origin comment
@@ -159,11 +212,24 @@ class CommentRepository implements CommentRepositoryInterface
 
         return $reply;
     }
+
+    /**
+     * Cập nhật comment
+     * @param Comment $comment Comment
+     * @param string $content Nội dung của comment
+     * @return Comment Comment
+     */
     public function updateComment(Comment $comment, string $content): Comment
     {
         $comment->update(['content' => $content]);
         return $comment;
     }
+
+    /**
+     * Xóa comment
+     * @param Comment $comment Comment
+     * @return void
+     */
     public function deleteComment(Comment $comment): void
     {
         if ($comment->parent_id === null) {
@@ -173,6 +239,12 @@ class CommentRepository implements CommentRepositoryInterface
         $this->decrementImageCommentCount($comment->image_id);
         $comment->delete();
     }
+
+    /**
+     * Tăng số lượng comment của ảnh
+     * @param int $imageId ID của ảnh
+     * @return void
+     */
     public function incrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);
@@ -180,6 +252,12 @@ class CommentRepository implements CommentRepositoryInterface
             $image->increment('sum_comment');
         }
     }
+
+    /**
+     * Giảm số lượng comment của ảnh
+     * @param int $imageId ID của ảnh
+     * @return void
+     */
     public function decrementImageCommentCount(int $imageId): void
     {
         $image = Image::find($imageId);
@@ -187,6 +265,12 @@ class CommentRepository implements CommentRepositoryInterface
             $image->decrement('sum_comment');
         }
     }
+
+    /**
+     * Cập nhật comment
+     * @param Comment $comment Comment
+     * @return Comment Comment
+     */
     public function update(Comment $comment)
     {
         $comment->save();
@@ -195,6 +279,8 @@ class CommentRepository implements CommentRepositoryInterface
     
     /**
      * Tìm comment theo ID
+     * @param int $commentId ID của comment
+     * @return Comment|null Comment
      */
     public function findById(int $commentId): ?Comment
     {
@@ -203,6 +289,8 @@ class CommentRepository implements CommentRepositoryInterface
     
     /**
      * Đếm số lượng comment của một ảnh
+     * @param int $imageId ID của ảnh
+     * @return int Số lượng comment
      */
     public function countByImageId(int $imageId): int
     {
@@ -213,6 +301,8 @@ class CommentRepository implements CommentRepositoryInterface
     
     /**
      * Đưa comment gốc lên đầu bằng cách touch updated_at
+     * @param int $commentId ID của comment
+     * @return bool Kết quả
      */
     public function touchComment(int $commentId): bool
     {

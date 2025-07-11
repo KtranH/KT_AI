@@ -18,6 +18,8 @@ class ComfyUITemplateService extends BaseService
     }
     /**
      * Tải file JSON template dựa vào feature_id
+     * @param int $featureId ID feature
+     * @return array Template
      */
     public function loadJsonTemplate(int $featureId): array
     {
@@ -41,6 +43,9 @@ class ComfyUITemplateService extends BaseService
 
     /**
      * Cập nhật template JSON với ảnh tải lên
+     * @param array $template Template
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @return array Template
      */
     public function updateJsonTemplateWithImage(array $template, ImageJob $job): array
     {
@@ -81,6 +86,9 @@ class ComfyUITemplateService extends BaseService
     
     /**
      * Cập nhật template JSON với thông tin từ ImageJob
+     * @param array $template Template
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @return array Template
      */
     public function updateJsonTemplate(array $template, ImageJob $job): array
     {

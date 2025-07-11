@@ -10,9 +10,9 @@ trait ApiResponseTrait
     /**
      * Trả về response thành công
      *
-     * @param mixed|null $data
-     * @param string|null $message
-     * @param int $statusCode
+     * @param mixed|null $data Dữ liệu
+     * @param string|null $message Thông báo
+     * @param int $statusCode Mã trạng thái
      * @return JsonResponse
      */
     protected function successResponse(mixed $data = null, ?string $message = null, int $statusCode = 200): JsonResponse
@@ -27,9 +27,9 @@ trait ApiResponseTrait
     /**
      * Trả về response lỗi
      *
-     * @param string $message
-     * @param int $code
-     * @param mixed|null $errors
+     * @param string $message Thông báo
+     * @param int $code Mã trạng thái
+     * @param mixed|null $errors Lỗi
      * @return JsonResponse
      */
     protected function errorResponse(string $message, int $code = 500, mixed $errors = null): JsonResponse
@@ -44,9 +44,9 @@ trait ApiResponseTrait
     /**
      * Xử lý exception và trả về response lỗi
      *
-     * @param \Exception $exception
-     * @param string $defaultMessage
-     * @param array $context
+     * @param \Exception $exception Exception
+     * @param string $defaultMessage Thông báo mặc định
+     * @param array $context Context
      * @return JsonResponse
      */
     protected function handleException(\Exception $exception, string $defaultMessage, array $context = []): JsonResponse

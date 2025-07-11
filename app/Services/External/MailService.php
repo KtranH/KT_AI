@@ -11,6 +11,7 @@ use App\Mail\VerificationMail;
 use App\Http\Resources\V1\Auth\AuthResource;
 use App\Services\BaseService;
 use App\Http\Resources\V1\Auth\MailVerificationResource;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,8 @@ class MailService extends BaseService
 
     /**
      * Gửi email xác thực ban đầu
+     * @param User $user User
+     * @return bool Kết quả
      */
     public function sendMail($user): bool
     {
@@ -57,6 +60,8 @@ class MailService extends BaseService
 
     /**
      * Gửi lại email xác thực
+     * @param User $user User
+     * @return bool Kết quả
      */
     public function sendMailResend($user): bool
     {
@@ -83,6 +88,8 @@ class MailService extends BaseService
 
     /**
      * Gửi email xác thực đổi mật khẩu
+     * @param User $user User
+     * @return bool Kết quả
      */
     public function sendPasswordChangeVerification($user): bool
     {
@@ -109,6 +116,8 @@ class MailService extends BaseService
 
     /**
      * Xác thực email với mã xác nhận
+     * @param Request $request Request
+     * @return JsonResponse JsonResponse
      */
     public function verifyEmail(Request $request): JsonResponse
     {
@@ -158,6 +167,8 @@ class MailService extends BaseService
 
     /**
      * Gửi lại mã xác thực với rate limiting
+     * @param Request $request Request
+     * @return JsonResponse JsonResponse
      */
     public function resendVerification(Request $request): JsonResponse
     {
@@ -201,6 +212,7 @@ class MailService extends BaseService
 
     /**
      * Gửi mã xác thực đổi mật khẩu
+     * @return JsonResponse JsonResponse
      */
     public function sendPasswordChangeVerificationCode(): JsonResponse
     {
@@ -233,6 +245,8 @@ class MailService extends BaseService
 
     /**
      * Kiểm tra rate limiting cho resend verification
+     * @param string $email Email
+     * @return void
      */
     private function checkResendRateLimit(string $email): void
     {
@@ -259,6 +273,8 @@ class MailService extends BaseService
 
     /**
      * Kiểm tra rate limiting cho password change verification
+     * @param string $email Email
+     * @return void
      */
     private function checkPasswordChangeRateLimit(string $email): void
     {
@@ -270,6 +286,8 @@ class MailService extends BaseService
 
     /**
      * Cập nhật counters cho resend
+     * @param string $email Email
+     * @return void
      */
     private function updateResendCounters(string $email): void
     {
@@ -279,6 +297,8 @@ class MailService extends BaseService
 
     /**
      * Xóa các key Redis liên quan đến verification
+     * @param string $email Email
+     * @return void
      */
     private function clearVerificationKeys(string $email): void
     {

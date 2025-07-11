@@ -22,7 +22,10 @@ class CacheService
     const SHORT_TTL = 1;
     
     /**
-     * Cache comment count cho image
+     * Cache comment count cho image    
+     * @param int $imageId ID của ảnh
+     * @param int $count Số lượng comment
+     * @return void
      */
     public function cacheImageCommentCount(int $imageId, int $count): void
     {
@@ -32,6 +35,8 @@ class CacheService
     
     /**
      * Lấy comment count từ cache
+     * @param int $imageId ID của ảnh
+     * @return ?int Số lượng comment
      */
     public function getImageCommentCount(int $imageId): ?int
     {
@@ -41,6 +46,8 @@ class CacheService
     
     /**
      * Clear cache khi có comment mới
+     * @param int $imageId ID của ảnh
+     * @return void
      */
     public function clearImageCommentCache(int $imageId): void
     {
@@ -49,6 +56,8 @@ class CacheService
     }
     /**
      * Cache cho 1 feature
+     * @param AIFeature $feature Đối tượng feature
+     * @return void
      */
     public function cacheFeature(AIFeature $feature): void
     {
@@ -57,6 +66,8 @@ class CacheService
     }
     /**
      * Cache cho nhiều features
+     * @param Collection $features Danh sách feature
+     * @return void
      */
     public function cacheFeatures(Collection $features): void
     {
@@ -64,6 +75,8 @@ class CacheService
     }
     /**
      * Get feature from cache
+     * @param int $id ID của feature
+     * @return ?AIFeature Đối tượng feature
      */
     public function getFeature(int $id): ?AIFeature
     {
@@ -72,6 +85,7 @@ class CacheService
     }
     /**
      * Get features from cache
+     * @return ?Collection Danh sách feature
      */
     public function getFeatures()
     {
@@ -79,6 +93,7 @@ class CacheService
     }
     /**
      * Clear features cache
+     * @return void
      */
     public function clearFeatures(): void
     {
@@ -87,6 +102,9 @@ class CacheService
 
     /**
      * Cache user profile
+     * @param int $userId ID của người dùng
+     * @param $profile Thông tin profile
+     * @return void
      */
     public function cacheUserProfile(int $userId, $profile): void
     {
@@ -96,6 +114,8 @@ class CacheService
     
     /**
      * Clear user-related cache
+     * @param int $userId ID của người dùng
+     * @return void
      */
     public function clearUserCache(int $userId): void
     {
@@ -111,6 +131,8 @@ class CacheService
     
     /**
      * Bulk clear cache cho multiple users
+     * @param array $userIds Danh sách ID của người dùng
+     * @return void
      */
     public function bulkClearUserCache(array $userIds): void
     {
@@ -121,6 +143,11 @@ class CacheService
     
     /**
      * Cache với automatic tags
+     * @param string $key Khóa cache
+     * @param callable $callback Callback
+     * @param int $ttl Thời gian cache
+     * @param array $tags Tags
+     * @return mixed Kết quả
      */
     public function remember(string $key, callable $callback, int $ttl = self::DEFAULT_TTL, array $tags = [])
     {
@@ -143,6 +170,8 @@ class CacheService
     
     /**
      * Invalidate cache by tags
+     * @param array $tags Tags
+     * @return void
      */
     public function invalidateByTags(array $tags): void
     {

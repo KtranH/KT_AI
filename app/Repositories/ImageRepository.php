@@ -91,67 +91,6 @@ class ImageRepository implements ImageRepositoryInterface
 
         return $result;
     }
-
-    /**
-     * Lấy danh sách hình ảnh do người dùng tải lên
-     *
-     * @return Collection
-     */
-    public function getImagesUploaded($id = null): Collection
-    {
-        // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
-        $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
-        
-        if ($idIsValid) {
-            // Đảm bảo $id là số
-            $userId = is_numeric($id) ? (int)$id : $id;
-            
-            $images = Image::with('user:id,name,avatar_url')
-                ->where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
-                ->get();
-                
-        } else {
-            $images = Image::with('user:id,name,avatar_url')
-                ->where('user_id', Auth::id())
-                ->orderBy('created_at', 'desc')
-                ->get();
-        }
-
-        return $this->transformImages($images);
-    }
-    /**
-     * Lấy danh sách hình ảnh đã thích
-     *
-     * @return Collection
-     */
-    public function getImagesLiked($id = null): Collection
-    {
-        // Kiểm tra xem $id có hợp lệ không (int hoặc string nhưng có thể convert sang int)
-        $idIsValid = $id !== null && ($id === '0' || $id === 0 || !empty($id));
-        
-        if ($idIsValid) {
-            // Đảm bảo $id là số
-            $userId = is_numeric($id) ? (int)$id : $id;
-            
-            $list_images_liked = Interaction::where('user_id', $userId)
-                ->where('type_interaction', 'like')
-                ->pluck('image_id');
-                
-        } else {
-            $list_images_liked = Interaction::where('user_id', Auth::id())
-                ->where('type_interaction', 'like')
-                ->pluck('image_id');
-        }
-
-        $images = Image::with('user:id,name,avatar_url')
-            ->whereIn('id', $list_images_liked)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return $this->transformImages($images);
-    }
-
     /**
      * Lấy danh sách hình ảnh đã thích với phân trang
      *

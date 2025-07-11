@@ -38,6 +38,9 @@ class ImageJobService extends BaseService
 
     /**
      * Tạo tiến trình tạo ảnh mới
+     * @param array $data Dữ liệu
+     * @param User $user User
+     * @return array Kết quả
      */
     public function createImageJob(array $data, User $user): array
     {
@@ -99,6 +102,8 @@ class ImageJobService extends BaseService
 
     /**
      * Lấy danh sách tiến trình đang hoạt động
+     * @param User $user User
+     * @return array Kết quả
      */
     public function getActiveJobs(User $user): array
     {
@@ -114,6 +119,8 @@ class ImageJobService extends BaseService
 
     /**
      * Lấy danh sách tiến trình đã hoàn thành
+     * @param Request $request Request
+     * @return ImageJobCollection Kết quả
      */
     public function getCompletedJobs(Request $request): ImageJobCollection
     {
@@ -132,6 +139,8 @@ class ImageJobService extends BaseService
 
     /**
      * Lấy danh sách tiến trình thất bại
+     * @param Request $request Request
+     * @return ImageJobCollection Kết quả
      */
     public function getFailedJobs(Request $request): ImageJobCollection
     {
@@ -149,6 +158,9 @@ class ImageJobService extends BaseService
 
     /**
      * Kiểm tra trạng thái tiến trình
+     * @param int $jobId ID của tiến trình
+     * @param User $user User
+     * @return array Kết quả
      */
     public function checkJobStatus(int $jobId, User $user): array
     {
@@ -176,6 +188,9 @@ class ImageJobService extends BaseService
 
     /**
      * Hủy tiến trình
+     * @param int $jobId ID của tiến trình
+     * @param User $user User
+     * @return array Kết quả
      */
     public function cancelJob(int $jobId, User $user): array
     {
@@ -204,6 +219,9 @@ class ImageJobService extends BaseService
 
     /**
      * Thử lại tiến trình thất bại
+     * @param int $jobId ID của tiến trình
+     * @param User $user User
+     * @return array Kết quả
      */
     public function retryJob(int $jobId, User $user): array
     {
@@ -251,6 +269,8 @@ class ImageJobService extends BaseService
 
     /**
      * Xử lý upload ảnh
+     * @param ?UploadedFile $file File
+     * @return ?string Kết quả
      */
     private function handleImageUpload(?UploadedFile $file): ?string
     {
@@ -263,6 +283,8 @@ class ImageJobService extends BaseService
 
     /**
      * Dọn dẹp ảnh của tiến trình
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @return void
      */
     private function cleanupJobImages(ImageJob $job): void
     {

@@ -19,6 +19,8 @@ class ComfyUIApiService extends BaseService
 
     /**
      * Gửi prompt đến ComfyUI để tạo ảnh
+     * @param array $template Template
+     * @return array Kết quả
      */
     public function sendPrompt(array $template): array
     {
@@ -40,6 +42,8 @@ class ComfyUIApiService extends BaseService
     
     /**
      * Tải ảnh lên ComfyUI
+     * @param string $imagePath Đường dẫn ảnh
+     * @return ?string Kết quả
      */
     public function uploadImageToComfyUI(string $imagePath): ?string
     {
@@ -61,6 +65,8 @@ class ComfyUIApiService extends BaseService
     
     /**
      * Kiểm tra trạng thái của tiến trình
+     * @param string $comfyPromptId ID của prompt
+     * @return array Kết quả
      */
     public function checkJobStatus(string $comfyPromptId): array
     {
@@ -81,6 +87,8 @@ class ComfyUIApiService extends BaseService
     
     /**
      * Kiểm tra tiến độ xử lý của một tiến trình
+     * @param string $comfyPromptId ID của prompt
+     * @return array Kết quả
      */
     public function checkJobProgress(string $comfyPromptId): array
     {
@@ -134,6 +142,9 @@ class ComfyUIApiService extends BaseService
     
     /**
      * Tải ảnh kết quả từ ComfyUI
+     * @param string $imageFilename Tên ảnh
+     * @param string $tempPath Đường dẫn tạm
+     * @return ?string Kết quả
      */
     public function downloadResultImage(string $imageFilename, string $tempPath): ?string
     {
@@ -185,6 +196,7 @@ class ComfyUIApiService extends BaseService
     
     /**
      * Kiểm tra xem ComfyUI có khả dụng không
+     * @return bool Kết quả
      */
     public function isComfyUIAvailable(): bool
     {

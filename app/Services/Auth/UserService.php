@@ -16,6 +16,7 @@ use App\Http\Requests\V1\User\UpdateCoverImageRequest;
 use App\Http\Requests\V1\User\UpdatePasswordRequest;
 use App\Http\Requests\V1\User\CheckPasswordRequest;
 use App\Http\Resources\V1\Content\UploadResource;
+use App\Models\User;
 
 /**
  * Service class xử lý các chức năng liên quan đến User
@@ -39,7 +40,7 @@ class UserService extends BaseService
 
     /**
      * Lấy thông tin profile của user hiện tại
-     * @return mixed
+     * @return User User object
      */
     public function getUserProfile()
     {

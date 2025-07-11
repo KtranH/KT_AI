@@ -45,6 +45,11 @@ class ComfyUIService extends BaseService
     
     /**
      * Tải lên R2 từ ComfyUI
+     * 
+     * @param string $prompt_id ID prompt từ ComfyUI
+     * @param int $number_out Số lượng ảnh
+     * @param array $data Dữ liệu
+     * @return string Đường dẫn ảnh
      */
     public function uploadToR2($prompt_id, $number_out, $data)
     {
@@ -69,6 +74,9 @@ class ComfyUIService extends BaseService
     
     /**
      * Tạo ảnh thông qua ComfyUI API
+     * 
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @return ?string ID prompt từ ComfyUI
      */
     public function createImage(ImageJob $job): ?string
     {
@@ -94,6 +102,9 @@ class ComfyUIService extends BaseService
     
     /**
      * Kiểm tra trạng thái của tiến trình
+     * 
+     * @param string $comfyPromptId ID prompt từ ComfyUI
+     * @return array Thông tin trạng thái
      */
     public function checkJobStatus(string $comfyPromptId): array
     {
@@ -160,6 +171,10 @@ class ComfyUIService extends BaseService
     
     /**
      * Cập nhật tiến trình đã hoàn thành
+     * 
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param array $historyData Dữ liệu history
+     * @return bool Kết quả
      */
     public function updateCompletedJob(ImageJob $job, array $historyData): bool
     {
@@ -170,6 +185,8 @@ class ComfyUIService extends BaseService
     
     /**
      * Kiểm tra và cập nhật trạng thái các tiến trình đang hoạt động
+     * 
+     * @return void
      */
     public function checkAndUpdatePendingJobs()
     {
@@ -182,7 +199,7 @@ class ComfyUIService extends BaseService
      * Kiểm tra có hình ảnh trong dữ liệu lịch sử không
      * 
      * @param array $historyData Dữ liệu lịch sử từ ComfyUI
-     * @return bool Có hình ảnh hay không
+     * @return bool Kết quả
      */
     public function hasImagesInHistoryData(array $historyData): bool
     {

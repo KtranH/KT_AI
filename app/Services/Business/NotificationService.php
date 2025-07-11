@@ -29,6 +29,12 @@ class NotificationService extends BaseService
         $this->notificationRepository = $notificationRepository;
         $this->userRepository = $userRepository;
     }
+
+    /**
+     * Lấy danh sách thông báo
+     * @param Request $request Request object
+     * @return NotificationCollection Kết quả
+     */
     public function index(Request $request): NotificationCollection
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
@@ -56,6 +62,12 @@ class NotificationService extends BaseService
             return new NotificationCollection($notifications, $unreadCount);
         }, "Getting notifications for user ID: " . Auth::id());
     }
+
+    /**
+     * Đánh dấu thông báo đã đọc
+     * @param string $id ID của thông báo
+     * @return JsonResponse Kết quả
+     */
     public function markAsRead(string $id): JsonResponse
     {
         return $this->executeWithExceptionHandling(function() use ($id) {
@@ -77,6 +89,11 @@ class NotificationService extends BaseService
             ]);
             }, "Marking notification as read for ID: {$id}");
     }
+
+    /**
+     * Đánh dấu tất cả thông báo đã đọc
+     * @return JsonResponse Kết quả
+     */
     public function markAllAsRead()
     {
         return $this->executeWithExceptionHandling(function() {
@@ -89,6 +106,12 @@ class NotificationService extends BaseService
             ]);
         }, "Marking all notifications as read");
     }
+
+    /**
+     * Xóa thông báo
+     * @param string $id ID của thông báo
+     * @return JsonResponse Kết quả
+     */
     public function destroy(string $id): JsonResponse
     {
         return $this->executeInTransactionSafely(function() use ($id) {
@@ -113,6 +136,9 @@ class NotificationService extends BaseService
 
     /**
      * Gửi thông báo khi có bình luận mới
+     * @param Comment $comment Bình luận
+     * @param int $commenterId ID của người bình luận
+     * @return void
      */
     public function sendCommentNotification(Comment $comment, int $commenterId): void
     {
@@ -139,6 +165,10 @@ class NotificationService extends BaseService
     
     /**
      * Gửi thông báo khi có phản hồi mới
+     * @param Comment $reply Phản hồi
+     * @param Comment $parentComment Bình luận cha
+     * @param int $replierId ID của người phản hồi
+     * @return void
      */
     public function sendReplyNotification(Comment $reply, Comment $parentComment, int $replierId): void
     {
@@ -161,6 +191,9 @@ class NotificationService extends BaseService
     
     /**
      * Gửi thông báo khi có like
+     * @param Comment $comment Bình luận
+     * @param int $likerId ID của người like
+     * @return void
      */
     public function sendLikeNotification(Comment $comment, int $likerId): void
     {
@@ -181,6 +214,8 @@ class NotificationService extends BaseService
     
     /**
      * Gửi thông báo hàng loạt
+     * @param array $notifications Danh sách thông báo
+     * @return array Kết quả
      */
     public function sendBulkNotifications(array $notifications): array
     {
@@ -206,6 +241,8 @@ class NotificationService extends BaseService
     
     /**
      * Lấy thông tin user với avatar mặc định nếu cần
+     * @param int $userId ID của người dùng
+     * @return ?User Kết quả
      */
     private function getUserWithDefaultAvatar(int $userId): ?User
     {

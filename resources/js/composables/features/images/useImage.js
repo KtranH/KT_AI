@@ -85,7 +85,8 @@ export default function useImage() {
         }
         router.push(`/image/detail/${encodedID(id)}`)
     }
-    
+
+    // Phương thức fetch dữ liệu ảnh đã tải lên
     const fetchImagesUploaded = async (userId) => {
         isLoading.value = true
         hasError.value = false
@@ -99,6 +100,7 @@ export default function useImage() {
         }
     }
     
+    // Phương thức fetch dữ liệu ảnh đã thích
     const fetchImagesLiked = async (userId) => {
         isLoading.value = true
         hasError.value = false
@@ -112,6 +114,7 @@ export default function useImage() {
         }
     }
 
+    // Phương thức fetch dữ liệu ảnh theo feature
     const fetchImagesByFeature = async (id, page = 1) => {
         if (!id) return;
 
@@ -129,6 +132,7 @@ export default function useImage() {
         }
     }
 
+    // Phương thức load thêm ảnh theo feature
     const loadMoreImages = async (id) => {
         if (currentPage.value < lastPage.value) {
             const nextPage = currentPage.value + 1;
@@ -137,7 +141,7 @@ export default function useImage() {
     }
 
     // Phương thức mới để tải thêm ảnh người dùng đã tạo
-    const loadMoreUserImages = async (userId, page) => {
+    const loadMoreUserImages = async (userId, page = 1) => {
         if (page) {
             isLoading.value = true;
             hasError.value = false;
@@ -162,7 +166,7 @@ export default function useImage() {
     }
 
     // Phương thức tải thêm ảnh người dùng đã thích
-    const loadMoreLikedImages = async (userId, page) => {
+    const loadMoreLikedImages = async (userId, page = 1) => {
         if (page) {
             isLoading.value = true;
             hasError.value = false;
@@ -188,7 +192,7 @@ export default function useImage() {
     }
 
     // Phương thức tải thêm ảnh người dùng đã tạo
-    const loadMoreCreatedImages = async (userId, page) => {
+    const loadMoreCreatedImages = async (userId, page = 1) => {
         if (page) {
             isLoading.value = true;
             hasError.value = false;
@@ -213,7 +217,7 @@ export default function useImage() {
     }
 
     // Phương thức tải thêm ảnh người dùng đã tải lên
-    const loadMoreUploadedImages = async (userId, page) => {
+    const loadMoreUploadedImages = async (userId, page = 1) => {
         if (page) {
             isLoading.value = true;
             hasError.value = false;

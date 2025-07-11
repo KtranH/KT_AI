@@ -18,6 +18,7 @@ class FeatureService extends BaseService
     }
     /**
      * Lấy danh sách feature
+     * @return mixed Kết quả
      */
     public function getFeatures(): mixed
     {
@@ -33,6 +34,8 @@ class FeatureService extends BaseService
     }
     /**
      * Lấy feature theo ID
+     * @param int $id ID của feature
+     * @return mixed Kết quả
      */
     public function getFeatureById(int $id): mixed
     {
@@ -48,6 +51,8 @@ class FeatureService extends BaseService
     }
     /**
      * Tăng số lượng ảnh của feature
+     * @param int $id ID của feature
+     * @return mixed Kết quả
      */
     public function increaseSumImg(int $id): mixed
     {
@@ -57,6 +62,8 @@ class FeatureService extends BaseService
     }
     /**
      * Giảm số lượng ảnh của feature
+     * @param int $featureId ID của feature
+     * @return mixed Kết quả
      */
     public function decreaseSumImg(int $featureId): mixed
     {

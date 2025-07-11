@@ -17,12 +17,14 @@ export default function useLikes() {
     const route = useRoute()
     const lastActionTime = ref(null)
 
+    // Phương thức fetch dữ liệu likes
     const fetchLikes = async (id) => {
         await likeStore.checkLiked(id)
         await likeStore.fetchLikes(id)
         totalLikes.value = imageStore.data?.sum_like || 0
     }
 
+    // Phương thức like/unlike ảnh
     const likePost = async () => {
         try {
             const id = decodedID(route.params.encodedID)
@@ -78,6 +80,7 @@ export default function useLikes() {
         }
     }
 
+    // Phương thức like/unlike bình luận
     const likeComment = async (comment) => {
         if (isActionTooQuick(lastActionTime.value)) {
             toast.error('Hãy đợi một chút trước khi thực hiện hành động này')
@@ -104,6 +107,7 @@ export default function useLikes() {
         lastActionTime.value = new Date()
     }
 
+    // Phương thức like/unlike phản hồi
     const likeReply = async (comment, reply) => {
         if (isActionTooQuick(lastActionTime.value)) {
             toast.error('Hãy đợi một chút trước khi thực hiện hành động này')

@@ -21,14 +21,27 @@ class ImageService extends BaseService
         $this->imageRepository = $imageRepository;
         $this->r2StorageService = $r2StorageService;
     }
+
+    /**
+     * Lấy danh sách ảnh
+     * @param int $id ID của ảnh
+     * @return mixed Kết quả
+     */
     public function getImages(int $id)
     {
         return $this->imageRepository->getImages($id);
     }
+
+    /**
+     * Lấy danh sách ảnh theo feature
+     * @param int $featureId ID của feature
+     * @return mixed Kết quả
+     */
     public function getImagesByFeature(int $featureId)
     {
         return $this->imageRepository->getImagesByFeature($featureId);
     }
+
     /**
      * Xử lý phân trang và trả về kết quả JSON
      *
@@ -71,7 +84,14 @@ class ImageService extends BaseService
         }, "Paginating images - type: {$typeImage}, page: {$request->input('page', 1)}");
     }
     
-    // Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
+    /**
+     * Xử lý phân loại gọi tới loại ảnh liked,created,uploaded trong db với phân trang
+     * @param string $typeImage Loại hình ảnh (liked, created, uploaded)
+     * @param int|null $id ID của ảnh
+     * @param int $perPage Số lượng ảnh trên mỗi trang
+     * @param int $page Trang hiện tại
+     * @return mixed Kết quả
+     */
     private function getImagesByTypePaginated(string $typeImage, $id = null, $perPage = 10, $page = 1)
     {
         return $this->executeWithExceptionHandling(function() use ($typeImage, $id, $perPage, $page) {
@@ -147,6 +167,12 @@ class ImageService extends BaseService
         return $hasNewImages;
     }
     
+    /**
+     * Lưu ảnh vào database
+     * @param array $request Request object
+     * @param int $featureId ID của feature
+     * @return mixed Kết quả
+     */
     public function storeImage(array $request, $featureId)
     {
         return $this->executeWithExceptionHandling(function() use ($request, $featureId) {
@@ -179,12 +205,25 @@ class ImageService extends BaseService
             return $this->imageRepository->storeImage($uploadedPaths, $user, $data);
         }, "Storing image for feature ID: {$featureId}, user: " . Auth::user()?->email);
     }
+
+    /**
+     * Cập nhật ảnh
+     * @param UpdateImageRequest $request Request object
+     * @param Image $image Image object
+     * @return mixed Kết quả
+     */
     public function updateImage(UpdateImageRequest $request, Image $image)
     {
         return $this->executeInTransactionSafely(function() use ($image, $request) {
             return $this->imageRepository->updateImage($image, $request['title'], $request['prompt']);
         }, "Updating image: " . $image->id);
     }
+
+    /**
+     * Xóa ảnh
+     * @param Image $image Image object
+     * @return bool Kết quả
+     */
     public function deleteImage(Image $image): bool
     {
         return $this->executeInTransactionSafely(function() use ($image) {

@@ -9,6 +9,8 @@ use App\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\TurnStileService;
 use App\Services\External\MailService;
 use App\Services\BaseService;
+use App\Models\User;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;
@@ -60,6 +62,8 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Gửi email chứa mã xác nhận khôi phục mật khẩu
+     * @param Request $request Request object
+     * @return array Kết quả
      */
     public function sendResetLinkEmail(Request $request): array
     {
@@ -99,6 +103,8 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Kiểm tra rate limiting cho email
+     * @param string $email Email của người dùng
+     * @return void
      */
     protected function checkRateLimit(string $email): void
     {
@@ -116,6 +122,8 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Tạo và lưu mã xác thực
+     * @param string $email Email của người dùng
+     * @return string Mã xác thực
      */
     protected function generateAndStoreVerificationCode(string $email): string
     {
@@ -132,6 +140,8 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Xác thực mã xác nhận qua email
+     * @param Request $request Request object
+     * @return array Kết quả
      */
     public function verifyCode(Request $request): array
     {
@@ -170,6 +180,8 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Đặt lại mật khẩu
+     * @param Request $request Request object
+     * @return array Kết quả
      */
     public function reset(Request $request): array
     {
@@ -201,6 +213,10 @@ class ForgotPasswordService extends BaseService
 
     /**
      * Cập nhật mật khẩu trong transaction
+     * @param User $user User object
+     * @param string $password Mật khẩu mới
+     * @param string $email Email của người dùng
+     * @return void
      */
     protected function updatePasswordInTransaction($user, string $password, string $email): void
     {

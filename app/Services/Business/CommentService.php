@@ -32,7 +32,13 @@ class CommentService extends BaseService
         $this->notificationService = $notificationService;
         $this->cacheService = $cacheService;
     }
-    
+
+    /**
+     * Lấy các bình luận của ảnh
+     * @param int $imageId ID của ảnh
+     * @param Request $request Request
+     * @return array Kết quả
+     */
     public function getComments(int $imageId, Request $request)
     {
         return $this->executeWithExceptionHandling(function() use ($imageId, $request) {
@@ -53,6 +59,11 @@ class CommentService extends BaseService
         }, "Getting comments for image ID: {$imageId}");
     }
     
+    /**
+     * Lưu bình luận
+     * @param StoreCommentRequest $request Request
+     * @return CommentResource CommentResource
+     */
     public function storeComment(StoreCommentRequest $request)
     {
         return $this->executeInTransactionSafely(function() use ($request) {
@@ -79,6 +90,12 @@ class CommentService extends BaseService
         }, "Creating comment for image ID: {$request->input('image_id')}");
     }
     
+    /**
+     * Lưu phản hồi
+     * @param StoreReplyRequest $request Request
+     * @param Comment $comment Comment
+     * @return CommentResource CommentResource
+     */
     public function storeReply(StoreReplyRequest $request, Comment $comment)
     {
         return $this->executeInTransactionSafely(function() use ($request, $comment) {
@@ -109,6 +126,11 @@ class CommentService extends BaseService
         }, "Creating reply for comment ID: {$comment->id}");
     }
     
+    /**
+     * Xóa bình luận
+     * @param Comment $comment Comment
+     * @return bool Kết quả
+     */
     public function destroy(Comment $comment): bool
     {
         return $this->executeInTransactionSafely(function() use ($comment) {
@@ -121,6 +143,12 @@ class CommentService extends BaseService
         }, "Deleting comment ID: {$comment->id}");
     }
     
+    /**
+     * Cập nhật bình luận
+     * @param UpdateCommentRequest $request Request
+     * @param Comment $comment Comment
+     * @return CommentResource CommentResource
+     */
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
         return $this->executeInTransactionSafely(function() use ($request, $comment) {
@@ -132,6 +160,11 @@ class CommentService extends BaseService
         }, "Updating comment ID: {$comment->id}");
     }
     
+    /**
+     * Thích/bỏ thích bình luận
+     * @param Comment $comment Comment
+     * @return array Kết quả
+     */
     public function toggleLike(Comment $comment): array
     {
         return $this->executeInTransactionSafely(function() use ($comment) {
@@ -169,6 +202,8 @@ class CommentService extends BaseService
     
     /**
      * Đưa bình luận gốc lên đầu danh sách
+     * @param Comment $comment Comment
+     * @return void
      */
     private function moveOriginCommentToTop(Comment $comment): void
     {
@@ -187,6 +222,8 @@ class CommentService extends BaseService
     
     /**
      * Lấy số lượng bình luận của một ảnh (có cache)
+     * @param int $imageId ID của ảnh
+     * @return int Số lượng bình luận
      */
     public function getCommentCount(int $imageId): int
     {
@@ -205,6 +242,9 @@ class CommentService extends BaseService
     
     /**
      * Bulk like/unlike comments
+     * @param array $commentIds Danh sách ID bình luận
+     * @param int $userId ID của user
+     * @return array Kết quả
      */
     public function bulkToggleLike(array $commentIds, int $userId): array
     {
@@ -222,6 +262,9 @@ class CommentService extends BaseService
     
     /**
      * Kiểm tra quyền trước khi thực hiện action
+     * @param Comment $comment Comment
+     * @param string $action Hành động
+     * @return bool Kết quả
      */
     public function canPerformAction(Comment $comment, string $action): bool
     {
@@ -234,6 +277,8 @@ class CommentService extends BaseService
     
     /**
      * Helper methods với exception handling
+     * @param int $imageId ID của ảnh
+     * @return void
      */
     private function clearImageCommentCache(int $imageId): void
     {
@@ -242,6 +287,11 @@ class CommentService extends BaseService
         }, "Clearing comment cache for image ID: $imageId");
     }
     
+    /**
+     * Gửi thông báo bình luận
+     * @param Comment $comment Comment
+     * @return void
+     */
     private function sendCommentNotification(Comment $comment): void
     {
         $this->executeWithExceptionHandling(function() use ($comment) {
@@ -249,6 +299,12 @@ class CommentService extends BaseService
         }, "Sending comment notification for comment ID: {$comment->id}");
     }
     
+    /**
+     * Gửi thông báo phản hồi
+     * @param Comment $reply Comment
+     * @param Comment $comment Comment
+     * @return void
+     */
     private function sendReplyNotification(Comment $reply, Comment $comment): void
     {
         $this->executeWithExceptionHandling(function() use ($reply, $comment) {
@@ -256,6 +312,12 @@ class CommentService extends BaseService
         }, "Sending reply notification for reply ID: {$reply->id}");
     }
     
+    /**
+     * Gửi thông báo thích
+     * @param Comment $comment Comment
+     * @param int $userId ID của user
+     * @return void
+     */
     private function sendLikeNotification(Comment $comment, int $userId): void
     {
         $this->executeWithExceptionHandling(function() use ($comment, $userId) {
@@ -264,6 +326,10 @@ class CommentService extends BaseService
     }
 
     /**
+     * Gửi thông báo thích
+     * @param Comment $comment Comment
+     * @param User $liker User
+     * @return void
      * @deprecated Method được giữ lại để backward compatibility
      */
     public function sendNotification(Comment $comment, User $liker): void

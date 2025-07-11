@@ -22,7 +22,9 @@ class CreditService extends BaseService
 
     /**
      * Trừ credits và tạo image job trong một transaction
-     * Đây là cách an toàn để đảm bảo consistency
+     * @param User $user User
+     * @param callable $createJobCallback Callback để tạo job
+     * @return ImageJob Job
      */
     public function deductCreditsForImageJob(User $user, callable $createJobCallback): ImageJob
     {
@@ -47,6 +49,9 @@ class CreditService extends BaseService
 
     /**
      * Hoàn lại credits khi job thất bại
+     * @param ImageJob $job Tiến trình tạo ảnh
+     * @param string $reason Lý do
+     * @return void
      */
     public function refundCreditsForFailedJob(ImageJob $job, string $reason = ''): void
     {
@@ -72,6 +77,9 @@ class CreditService extends BaseService
 
     /**
      * Kiểm tra có đủ credits không
+     * @param User $user User
+     * @param int $requiredCredits Số lượng credits cần thiết
+     * @return bool Kết quả
      */
     public function hasEnoughCredits(User $user, int $requiredCredits = 1): bool
     {
@@ -80,6 +88,8 @@ class CreditService extends BaseService
 
     /**
      * Lấy số credits còn lại
+     * @param User $user User
+     * @return int Số lượng credits còn lại
      */
     public function getRemainingCredits(User $user): int
     {

@@ -43,7 +43,7 @@ class AuthService extends BaseService
     /**
      * Đăng ký user
      * 
-     * @param Request $request
+     * @param SignUpRequest $request
      * @return array
      */
     public function register(SignUpRequest $request): array
@@ -77,7 +77,7 @@ class AuthService extends BaseService
     /**
      * Đăng nhập user
      * 
-     * @param Request $request
+     * @param LoginRequest $request
      * @return array
      */
     public function login(LoginRequest $request): AuthResource
@@ -138,7 +138,7 @@ class AuthService extends BaseService
      * API Login cho testing (Postman, API clients)
      * Không yêu cầu Turnstile verification
      * 
-     * @param Request $request
+     * @param PostmanRequest $request
      * @return array
      */
     public function apiLogin(PostmanRequest $request): array
@@ -178,7 +178,7 @@ class AuthService extends BaseService
     /**
      * Đăng xuất user
      * 
-     * @param Request $request
+     * @param Request $request Request object
      * @return array
      */
     public function logout(Request $request): array

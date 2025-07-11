@@ -26,25 +26,6 @@ interface ImageRepositoryInterface
     public function getImagesByFeature(int $featureId, int $perPage = 10): array;
         
     /**
-     * Lấy danh sách hình ảnh đã thích
-     * @return Collection Danh sách hình ảnh đã thích
-     */
-    public function getImagesLiked(): Collection;
-
-    /**
-     * Lấy danh sách hình ảnh đã tải lên
-     * @return Collection Danh sách hình ảnh đã tải lên
-     */
-    public function getImagesUploaded(): Collection;
-
-    /**
-     * Lấy danh sách hình ảnh do người dùng tạo
-     * @param int|null $id ID của người dùng
-     * @return Collection Danh sách hình ảnh đã tạo
-     */
-    public function getImagesCreatedByUser($id = null): Collection;
-    
-    /**
      * Phân trang các hình ảnh đã thích
      * @param int $id ID của hình ảnh
      * @param int $perPage Số lượng hình ảnh trên mỗi trang
