@@ -1,7 +1,7 @@
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 import { useImageStore } from '@/stores/user/imagesStore'
 import { useLikeStore } from '@/stores/user/likeStore'
-import { likeAPI } from '@/services/api'
+import { commentAPI, likeAPI } from '@/services/api'
 import { decodedID } from '@/utils'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
@@ -90,17 +90,27 @@ export default function useLikes() {
             const originalLiked = comment.isLiked
             const originalLikes = comment.likes
             
-            comment.isLiked = !comment.isLiked
-            comment.likes = comment.isLiked ? comment.likes + 1 : Math.max(0, comment.likes - 1)
+            // Tính toán lại dữ liệu
+            comment.isLiked = !originalLiked
+            comment.likes = comment.isLiked ? originalLikes + 1 : Math.max(0, originalLikes - 1)
             
-            const response = await likeAPI.toggleCommentLike(comment.id)
+            // Force reactivity để cập nhật UI
+            await nextTick()
             
-            comment.likes = response.data.likes
-            comment.isLiked = response.data.isLiked
+            const response = await commentAPI.toggleCommentLike(comment.id)
+            
+            // Cập nhật dữ liệu với server
+            if (response.data && response.data.data) {
+                comment.likes = response.data.data.likes
+                comment.isLiked = response.data.data.isLiked
+                await nextTick() // Chắc chắn DOM được cập nhật
+            }
         } catch (err) {
             console.error("Lỗi khi thích/bỏ thích bình luận:", err)
+            // Quay lại trạng thái trước khi thực hiện hành động
             comment.isLiked = originalLiked
             comment.likes = originalLikes
+            await nextTick() // Chắc chắn rollback được phản ánh
             
             toast.error('Không thể thích/bỏ thích bình luận')
         }
@@ -117,17 +127,27 @@ export default function useLikes() {
             const originalLiked = reply.isLiked
             const originalLikes = reply.likes
             
-            reply.isLiked = !reply.isLiked
-            reply.likes = reply.isLiked ? reply.likes + 1 : Math.max(0, reply.likes - 1)
+            // Tính toán lại dữ liệu
+            reply.isLiked = !originalLiked
+            reply.likes = reply.isLiked ? originalLikes + 1 : Math.max(0, originalLikes - 1)
             
-            const response = await likeAPI.toggleCommentLike(reply.id)
+            // Force reactivity để cập nhật UI
+            await nextTick()
             
-            reply.likes = response.data.likes
-            reply.isLiked = response.data.isLiked
+            const response = await commentAPI.toggleCommentLike(reply.id)
+            
+            // Cập nhật dữ liệu với server
+            if (response.data && response.data.data) {
+                reply.likes = response.data.data.likes
+                reply.isLiked = response.data.data.isLiked
+                await nextTick() // Chắc chắn DOM được cập nhật
+            }
         } catch (err) {
             console.error("Lỗi khi thích/bỏ thích phản hồi:", err)
+            // Quay lại trạng thái trước khi thực hiện hành động
             reply.isLiked = originalLiked 
             reply.likes = originalLikes
+            await nextTick() // Chắc chắn rollback được phản ánh
             
             toast.error('Không thể thích/bỏ thích phản hồi')
         }

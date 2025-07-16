@@ -11,5 +11,5 @@ export const commentAPI = {
   createReply: (commentId, replyData) => apiClient.post(`/comments/${commentId}/reply`, replyData),
   updateComment: (commentId, content) => apiClient.patch(`/comments/${commentId}`, { content }),
   deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),
-  toggleLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)
+  toggleCommentLike: (commentId) => apiClient.post(`/comments/${commentId}/toggle-like`)
 } 

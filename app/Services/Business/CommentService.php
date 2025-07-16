@@ -191,6 +191,9 @@ class CommentService extends BaseService
             if (!$wasLiked && $comment->user_id !== $userId) {
                 $this->sendLikeNotification($comment, $userId);
                 $this->moveOriginCommentToTop($comment);
+            } elseif ($wasLiked && $comment->user_id !== $userId) {
+                // Xóa thông báo like khi bỏ like
+                $this->deleteLikeNotification($comment, $userId);
             }
 
             return [
@@ -323,6 +326,19 @@ class CommentService extends BaseService
         $this->executeWithExceptionHandling(function() use ($comment, $userId) {
             $this->notificationService->sendLikeNotification($comment, $userId);
         }, "Sending like notification for comment ID: {$comment->id}");
+    }
+
+    /**
+     * Xóa thông báo thích khi bỏ like
+     * @param Comment $comment Comment
+     * @param int $userId ID của user
+     * @return void
+     */
+    private function deleteLikeNotification(Comment $comment, int $userId): void
+    {
+        $this->executeWithExceptionHandling(function() use ($comment, $userId) {
+            $this->notificationService->deleteLikeNotification($comment, $userId);
+        }, "Deleting like notification for comment ID: {$comment->id}");
     }
 
     /**

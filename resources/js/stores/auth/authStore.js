@@ -28,6 +28,8 @@ const user = ref(parseUserData());
 const token = ref(localStorage.getItem('token') || null);
 const isRemembered = ref(localStorage.getItem('remember') === 'true');
 const isAuthenticated = computed(() => !!user.value && !!user.value.id);
+// Loading 
+const isAuthLoading = ref(false)
 
 export const useAuthStore = () => {
   const storeImage = useImageStore()
@@ -71,6 +73,7 @@ export const useAuthStore = () => {
   }
 
   const checkAuth = async () => {
+    isAuthLoading.value = true;
     try {
       // Nếu không remember, kiểm tra trong sessionStorage
       if (!isRemembered.value) {
@@ -79,6 +82,7 @@ export const useAuthStore = () => {
 
         if (!sessionToken || !sessionUser) {
           clearAuthData()
+          isAuthLoading.value = false;
           return false
         }
 
@@ -107,13 +111,16 @@ export const useAuthStore = () => {
           } else {
             saveAuthData(authData.user, token.value, false)
           }
+          isAuthLoading.value = false;
           return true
         } else {
           clearAuthData()
+          isAuthLoading.value = false;
           return false
         }
       } else {
         clearAuthData()
+        isAuthLoading.value = false;
         return false
       }
     } catch (error) {
@@ -128,7 +135,7 @@ export const useAuthStore = () => {
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
         clearAuthData()
       }
-      
+      isAuthLoading.value = false;
       return false
     }
   }

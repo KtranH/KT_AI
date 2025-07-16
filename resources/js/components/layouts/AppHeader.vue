@@ -26,7 +26,7 @@
 
         <!-- Auth Buttons -->
         <div class="flex items-center space-x-4">
-          <template v-if="!isAuthenticated">
+          <template v-if="auth.isAuthLoading || !isAuthenticated">
             <router-link 
               to="/login" 
               class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition"
@@ -153,6 +153,7 @@ export default {
     })
 
     return {
+      auth,
       menuItems,
       isAuthenticated: auth.isAuthenticated,
       user: auth.user,

@@ -238,6 +238,31 @@ class NotificationService extends BaseService
             return $results;
         }, "Sending bulk notifications");
     }
+
+    /**
+     * Xóa thông báo like comment khi bỏ like
+     * @param Comment $comment Bình luận
+     * @param int $unlikerId ID của người bỏ like
+     * @return void
+     */
+    public function deleteLikeNotification(Comment $comment, int $unlikerId): void
+    {
+        $this->executeWithExceptionHandling(function() use ($comment, $unlikerId) {
+            // Tìm thông báo like comment của user này
+            $commentOwner = $this->userRepository->findById($comment->user_id);
+            if (!$commentOwner) {
+                return;
+            }
+
+            // Xóa notification có type = 'like_comment', liker_id = $unlikerId, comment_id = $comment->id
+            $deletedCount = $commentOwner->notifications()
+                ->where('type', 'App\\Notifications\\LikeCommentNotification')
+                ->whereJsonContains('data->liker_id', $unlikerId)
+                ->whereJsonContains('data->comment_id', $comment->id)
+                ->delete();
+
+        }, "Deleting like notification for comment ID: {$comment->id} by user ID: {$unlikerId}");
+    }
     
     /**
      * Lấy thông tin user với avatar mặc định nếu cần
