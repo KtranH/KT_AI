@@ -151,10 +151,14 @@ export const useAuthStore = () => {
 
   const login = async (credentials) => {
     try {
+      console.log('🔐 Starting login with double protection (CSRF + Sanctum)...')
+      
       // Lấy CSRF token mới trước khi đăng nhập
       await refreshCsrfToken()
 
       const response = await authAPI.login(credentials)
+      
+      console.log('✅ Login successful with double protection')
       
       // Cấu trúc mới: {success: true, data: {user: {...}, token: "...", remember: true}, message: "Đăng nhập thành công"}
       if (response.data && response.data.success && response.data.data) {
@@ -185,12 +189,15 @@ export const useAuthStore = () => {
         return response.data
       }
     } catch (error) {
+      console.error('❌ Login failed with double protection:', error.response?.status, error.message)
       throw error
     }
   }
 
   const logout = async () => {
     try {
+      console.log('🔐 Starting logout with double protection (CSRF + Sanctum)...')
+      
       // Lấy CSRF token mới trước khi đăng xuất
       await refreshCsrfToken()
 

@@ -20,6 +20,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
@@ -29,7 +30,8 @@ class User extends Authenticatable
         'sum_img',
         'remaining_credits',
         'status_user',
-        'activities'
+        'activities',
+        'is_verified'
     ];
 
     /**
@@ -50,6 +52,15 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_verified' => 'boolean',
+            'activities' => 'array',
+            'email' => 'string',
+            'name' => 'string',
+            'avatar_url' => 'string',
+            'cover_image_url' => 'string',
+            'sum_like' => 'integer',
+            'sum_img' => 'integer',
+            'remaining_credits' => 'integer',
         ];
     }
 

@@ -75,30 +75,39 @@ class AuthService extends BaseService
     }
     
     /**
-     * Đăng nhập user
+     * Đăng nhập user với Double Protection (CSRF + Sanctum + Turnstile)
      * 
      * @param LoginRequest $request
      * @return array
      */
     public function login(LoginRequest $request): AuthResource
     {
-        return $this->executeWithExceptionHandling(function() use ($request) {
+        return $this->executeWithExceptionHandling(function() use ($request) {    
             // Validate input
             $request->validated();
 
-            // Xác thực Turnstile
+            // 1. Turnstile Protection (Anti-bot)
             $turnstileResponse = $this->turnStileService->verifyTurnstile(
                 $request->input('cf-turnstile-response'), 
                 $request->ip()
             );
 
             if (!$turnstileResponse['success']) {
+                \Log::warning('❌ Turnstile verification failed', [
+                    'email' => $request->input('email'),
+                    'ip' => $request->ip()
+                ]);
                 throw ValidationException::withMessages([
                     'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
                 ]);
             }
 
+            // 2. Xác thực tài khoản
             if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+                \Log::warning('❌ Credential authentication failed', [
+                    'email' => $request->input('email'),
+                    'ip' => $request->ip()
+                ]);
                 throw ValidationException::withMessages([
                     'email' => ['Thông tin đăng nhập không chính xác.'],
                 ]);
@@ -112,15 +121,8 @@ class AuthService extends BaseService
                 throw BusinessException::invalidPermissions('unverified email');
             }
 
-            // Tạo token Sanctum với thời hạn phù hợp với lựa chọn remember_me
-            $tokenName = 'auth_token';
-
-            if ($request->boolean('remember')) {
-                $tokenName = 'auth_token_remember';
-            } else {
-                $tokenName = 'auth_token_session';
-            }
-
+            // 3. Sanctum Token Generation
+            $tokenName = $request->boolean('remember') ? 'auth_token_remember' : 'auth_token_session';
             $token = $user->createToken($tokenName)->plainTextToken;
 
             return new AuthResource(
@@ -129,7 +131,7 @@ class AuthService extends BaseService
                 'Bearer', 
                 $request->boolean('remember'),
                 null,
-                'Đăng nhập thành công'
+                'Đăng nhập thành công với bảo mật 2 lớp'
             );
         }, "Login attempt for email: {$request->input('email')}");
     }
