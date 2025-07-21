@@ -58,12 +58,12 @@ Dưới đây là một số tính năng tạo ảnh được sử dụng trong 
 
 | STT | Tên | Ảnh | Miêu tả |
 |-----|-----|-----|---------|
-| 1 | IPAdapter | ![IPAdapter](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002341.png) | Sao chép phong cách ảnh từ người dùng tải lên |
-| 2 | HyperLora | ![HyperLora](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002359.png) | Sao chép khuôn mặt từ duy nhất một ảnh mà người dùng tải lên |
-| 3 | ACE++ | ![ACE++](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002430.png) | Sao chép và thay đổi quần áo |
-| 4 | HyperLora + ACE++ | ![HyperLora + ACE++](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002410.png) | Sao chép quần áo và khuôn mặt từ 2 ảnh mà người dùng tải lên |
-| 5 | IPAdapter Mix Styles | ![IPAdapter Mix Styles](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002420.png) | Sao chép và kết hợp nhiều phong cách hình ảnh khác nhau |
-| 6 | Convert to Anime Style | ![Convert to Anime Style](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/G5.png) | Chuyển đổi ảnh sang thể loại anime |
+| 1 | Sao chép phong cách | ![IPAdapter](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002341.png) | Sao chép phong cách ảnh từ người dùng tải lên |
+| 2 | Sao chép khuôn mặt | ![HyperLora](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002359.png) | Sao chép khuôn mặt từ duy nhất một ảnh mà người dùng tải lên |
+| 3 | Thử quần áo | ![ACE++](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002430.png) | Sao chép và thay đổi quần áo |
+| 4 | Tạo người mẫu ảo | ![HyperLora + ACE++](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002410.png) | Sao chép quần áo và khuôn mặt từ 2 ảnh mà người dùng tải lên |
+| 5 | Sao chép nhiều phong cách | ![IPAdapter Mix Styles](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002420.png) | Sao chép và kết hợp nhiều phong cách hình ảnh khác nhau |
+| 6 | Chuyển đổi ảnh sang thể loại anime | ![Convert to Anime Style](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/G5.png) | Chuyển đổi ảnh sang thể loại anime |
 
 
 ### Tính năng nổi bật
