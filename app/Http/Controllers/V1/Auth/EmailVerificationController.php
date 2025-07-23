@@ -7,7 +7,7 @@ namespace App\Http\Controllers\V1\Auth;
 use App\Http\Controllers\V1\BaseV1Controller;
 use App\Http\Controllers\Constants\ErrorMessages;
 use App\Http\Controllers\Constants\SuccessMessages;
-use App\Services\Business\MailService;
+use App\Services\External\MailService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

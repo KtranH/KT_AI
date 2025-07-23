@@ -197,7 +197,7 @@ class UserRepository implements UserRepositoryInterface
         $userModel->is_verified = true;
 
         // Cập nhật hoạt động
-        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities = json_decode($userModel->activities ?? '[]', true) ?? [];
         $activities[] = [
             'action' => 'Xác thực email thành công',
             'timestamp' => Carbon::now()->toDateTimeString(),
@@ -242,10 +242,10 @@ class UserRepository implements UserRepositoryInterface
         $userModel->avatar_url = $path;
 
         // Cập nhật hoạt động
-        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities = json_decode($userModel->activities ?? '[]', true) ?? [];
         $activities[] = [
             'action' => 'Cập nhật avatar',
-            'timestamp' => Carbon::now()->toDateTimeString(),
+            'timestamp' => Carbon::now()->toDateTimeString(),   
         ];
         $userModel->activities = json_encode($activities);
 
@@ -272,7 +272,7 @@ class UserRepository implements UserRepositoryInterface
         $userModel->cover_image_url = $path;
 
         // Cập nhật hoạt động
-        $activities = json_decode($userModel->activities, true) ?? [];
+        $activities = json_decode($userModel->activities ?? '[]', true) ?? [];
         $activities[] = [
             'action' => 'Cập nhật ảnh bìa',
             'timestamp' => Carbon::now()->toDateTimeString(),
@@ -314,7 +314,7 @@ class UserRepository implements UserRepositoryInterface
             return false;
         }
 
-        return Hash::check($current_password, $userModel->password);
+        return Hash::check($current_password ?? 'unknown', $userModel->password ?? 'unknown');
     }
 
     /**

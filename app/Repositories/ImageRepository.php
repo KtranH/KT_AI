@@ -29,7 +29,7 @@ class ImageRepository implements ImageRepositoryInterface
             throw new \Exception("Không tìm thấy ảnh với ID: {$id}");
         }
         return [
-            'images' => is_string($image->image_url) ? json_decode($image->image_url, true) : $image->image_url,
+            'images' => is_string($image->image_url) ? json_decode($image->image_url ?? '[]', true) : $image->image_url,
             'data' => $image->only('id', 'prompt', 'features_id', 'sum_like', 'sum_comment', 'created_at', 'updated_at', 'title')
             + [
                 'ai_feature' => [
@@ -39,8 +39,8 @@ class ImageRepository implements ImageRepositoryInterface
             ],
             'user' => [
                 'id' => $image->user->id,
-                'name' => $image->user->name,
-                'avatar_url' => $image->user->avatar_url
+                'name' => $image->user->name ?? 'unknown',
+                'avatar_url' => $image->user->avatar_url ?? 'unknown'
             ]
         ];
     }

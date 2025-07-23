@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Interaction extends Model
 {
     protected $fillable = [
+        'id',
         'user_id',
         'image_id',
         'type_interaction',
@@ -15,8 +16,14 @@ class Interaction extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'image_id' => 'integer',
         'type_interaction' => 'string',
-        'status_interaction' => 'string'
+        'content' => 'string',
+        'status_interaction' => 'string',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     // Relationship với User (nhiều-1)

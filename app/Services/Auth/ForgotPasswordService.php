@@ -84,21 +84,21 @@ class ForgotPasswordService extends BaseService
             }
 
             // Kiểm tra rate limiting
-            $this->checkRateLimit($request->email);
+            $this->checkRateLimit($request->email ?? 'unknown');
 
             // Tạo và lưu mã xác thực
-            $verificationCode = $this->generateAndStoreVerificationCode($request->email);
+            $verificationCode = $this->generateAndStoreVerificationCode($request->email ?? 'unknown');
 
             // Gửi email chứa mã xác thực
-            $user = $this->userRepository->getUserByEmail($request->email);
+            $user = $this->userRepository->getUserByEmail($request->email ?? 'unknown');
 
             if ($user) {
                 $user->sendPasswordResetNotification($verificationCode);
-                return PasswordResetResource::sendCode($request->email, 'Chúng tôi đã gửi mã xác nhận đến email của bạn.');
+                return PasswordResetResource::sendCode($request->email ?? 'unknown', 'Chúng tôi đã gửi mã xác nhận đến email của bạn.');
             }
 
-            return PasswordResetResource::sendCode($request->email, 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.');
-        }, "Sending password reset email to: {$request->email}");
+            return PasswordResetResource::sendCode($request->email ?? 'unknown' , 'Chúng tôi đã gửi mã xác nhận đến email của bạn nếu tài khoản tồn tại.');
+        }, "Sending password reset email to: " . ($request->email ?? 'unknown'));
     }
 
     /**
@@ -108,7 +108,7 @@ class ForgotPasswordService extends BaseService
      */
     protected function checkRateLimit(string $email): void
     {
-        $emailKey = "password_reset_code_send_count:{$email}";
+        $emailKey = "password_reset_code_send_count:" . ($email ?? 'unknown');
         $attempts = Redis::incr($emailKey);
         if ($attempts === 1) {
             Redis::expire($emailKey, 300); // 5 phút
@@ -125,15 +125,15 @@ class ForgotPasswordService extends BaseService
      * @param string $email Email của người dùng
      * @return string Mã xác thực
      */
-    protected function generateAndStoreVerificationCode(string $email): string
+    protected function generateAndStoreVerificationCode(string $email = 'unknown'): string
     {
         $verificationCode = rand(100000, 999999);
         $verificationCodeStr = strval($verificationCode);
 
         // Lưu mã vào Redis (thời hạn 10 phút)
-        Redis::setex("password_reset_code:{$email}", 600, Hash::make($verificationCodeStr));
+        Redis::setex("password_reset_code:" . ($email ?? 'unknown'), 600, Hash::make($verificationCodeStr));
         // Lưu trữ thời gian tạo mã
-        Redis::setex("password_reset_code_created_at:{$email}", 600, time());
+        Redis::setex("password_reset_code_created_at:" . ($email ?? 'unknown'), 600, time());
 
         return $verificationCodeStr;
     }
@@ -151,8 +151,8 @@ class ForgotPasswordService extends BaseService
                 'code' => 'required|string|size:6',
             ]);
 
-            $record = Redis::get("password_reset_code:{$request->email}");
-            $createdAtTimeStamp = Redis::get("password_reset_code_created_at:{$request->email}");
+            $record = Redis::get("password_reset_code:" . ($request->email ?? 'unknown'));
+            $createdAtTimeStamp = Redis::get("password_reset_code_created_at:" . ($request->email ?? 'unknown'));
 
             if (!$record) {
                 throw new BusinessException('Mã xác thực không hợp lệ hoặc đã hết hạn');
@@ -160,22 +160,22 @@ class ForgotPasswordService extends BaseService
 
             // Kiểm tra thời gian tạo mã (mã chỉ có hiệu lực trong 60 phút)
             if ($createdAtTimeStamp && (time() - (int)$createdAtTimeStamp) > 3600) {
-                Redis::del("password_reset_code:{$request->email}");
-                Redis::del("password_reset_code_created_at:{$request->email}");
+                Redis::del("password_reset_code:" . ($request->email ?? 'unknown'));
+                Redis::del("password_reset_code_created_at:" . ($request->email ?? 'unknown'));
                 throw new BusinessException('Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.');
             }
 
             // Kiểm tra mã xác thực
-            if (!Hash::check($request->code, $record)) {
+            if (!Hash::check($request->code ?? 'unknown', $record)) {
                 throw new BusinessException('Mã xác thực không chính xác.');
             }
 
             // Tạo token mới để sử dụng cho bước reset mật khẩu
             $token = Str::random(64);
-            Redis::setex("password_reset_token:{$request->email}", 600, $token);
+            Redis::setex("password_reset_token:" . ($request->email ?? 'unknown'), 600, $token);
 
-            return PasswordResetResource::verifyCodeSuccess($request->email, $token, 'Mã xác thực hợp lệ');
-        }, "Verifying password reset code for email: {$request->email}");
+            return PasswordResetResource::verifyCodeSuccess($request->email ?? 'unknown', $token, 'Mã xác thực hợp lệ');
+        }, "Verifying password reset code for email: " . ($request->email ?? 'unknown'));
     }
 
     /**
@@ -193,22 +193,22 @@ class ForgotPasswordService extends BaseService
             ]);
 
             // Kiểm tra token
-            $token = Redis::get("password_reset_token:{$request->email}");
-            if (!$token || $token !== $request->token) {
+            $token = Redis::get("password_reset_token:" . ($request->email ?? 'unknown'));
+            if (!$token || $token !== ($request->token ?? 'unknown')) {
                 throw new BusinessException('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
             }
 
             // Kiểm tra user tồn tại
-            $user = $this->userRepository->getUserByEmail($request->email);
+            $user = $this->userRepository->getUserByEmail($request->email ?? 'unknown');
             if (!$user) {
-                throw BusinessException::resourceNotFound('tài khoản', $request->email);
+                throw BusinessException::resourceNotFound('tài khoản', $request->email ?? 'unknown');
             }
 
             // Cập nhật mật khẩu trong transaction
-            $this->updatePasswordInTransaction($user, $request->password, $request->email);
+            $this->updatePasswordInTransaction($user, $request->password ?? 'unknown', $request->email ?? 'unknown');
 
-            return PasswordResetResource::resetSuccess($request->email, 'Mật khẩu đã được đặt lại thành công');
-        }, "Resetting password for email: {$request->email}");
+            return PasswordResetResource::resetSuccess($request->email ?? 'unknown', 'Mật khẩu đã được đặt lại thành công');
+        }, "Resetting password for email: " . ($request->email ?? 'unknown'));
     }
 
     /**

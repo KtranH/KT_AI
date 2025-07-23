@@ -74,7 +74,7 @@ class NotificationService extends BaseService
             $notification = $this->notificationRepository->findNotification($id);
         
             // Kiểm tra xem thông báo có thuộc về người dùng hiện tại không
-            if ($notification->notifiable_id != Auth::id() || $notification->notifiable_type != get_class(Auth::user())) {
+            if ($notification->notifiable_id ?? 'unknown' != Auth::id() || $notification->notifiable_type ?? 'unknown' != get_class(Auth::user())) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không có quyền truy cập thông báo này'
@@ -118,7 +118,7 @@ class NotificationService extends BaseService
             $notification = $this->notificationRepository->findNotification($id);
 
             // Kiểm tra xem thông báo có thuộc về người dùng hiện tại không
-            if ($notification->notifiable_id != Auth::id() || $notification->notifiable_type != get_class(Auth::user())) {
+            if ($notification->notifiable_id ?? 'unknown' != Auth::id() || $notification->notifiable_type ?? 'unknown' != get_class(Auth::user())) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không có quyền truy cập thông báo này'

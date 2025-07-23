@@ -12,6 +12,7 @@ class Comment extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'user_id',
         'image_id',
         'parent_id',
@@ -22,6 +23,12 @@ class Comment extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'image_id' => 'integer',
+        'parent_id' => 'integer',
+        'origin_comment' => 'integer',
+        'content' => 'string',
         'list_like' => 'array',
         'sum_like' => 'integer'
     ];

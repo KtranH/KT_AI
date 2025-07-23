@@ -2,7 +2,7 @@
 
 Click vào ảnh để xem video
 [![video demo](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/Screenshot%202025-05-21%20002955.png)](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/demo-ktai.mp4)
-
+![Ảnh auth](https://pub-0ec2d0f968bd484492ed9495327a3698.r2.dev/KT_AI/auth.png)
 
 ## Giới thiệu
 

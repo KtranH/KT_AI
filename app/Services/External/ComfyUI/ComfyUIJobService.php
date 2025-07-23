@@ -64,7 +64,7 @@ class ComfyUIJobService extends BaseService
             
             // Cập nhật thông tin job
             $job->result_image = $resultImageUrl;
-            $job->status = 'completed';
+            $job->status = "completed";
             $job->progress = 100;
             $job->save();
             
@@ -110,14 +110,22 @@ class ComfyUIJobService extends BaseService
             Log::debug("Tìm thấy outputs trong cấu trúc 1");
             
             $filename = $this->findImageFilenameInOutputs($outputs);
-            if ($filename) return $filename;
+            if ($filename) 
+            {
+                Log::debug("Tìm thấy tên file ảnh output '{$filename}' trong cấu trúc 1");
+                return $filename;
+            }
         } 
         // Cấu trúc 2: {outputs: {...}}
         elseif (isset($historyData['outputs'])) {
             $outputs = $historyData['outputs'];
             Log::debug("Tìm thấy outputs trong cấu trúc 2");
             $filename = $this->findImageFilenameInOutputs($outputs);
-            if ($filename) return $filename;
+            if ($filename) 
+            {
+                Log::debug("Tìm thấy tên file ảnh output '{$filename}' trong cấu trúc 2");
+                return $filename;
+            }
         }
         
         // Kiểm tra các cấu trúc khác

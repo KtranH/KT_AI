@@ -12,6 +12,7 @@ class Image extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'user_id',
         'features_id',
         'title',
@@ -25,11 +26,17 @@ class Image extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'features_id' => 'integer',
+        'title' => 'string',
+        'prompt' => 'string',
         'image_url' => 'array',
         'sum_like' => 'integer',
         'sum_comment' => 'integer',
-        'metadata' => 'json',
         'privacy_status' => 'string',
+        'metadata' => 'json',
+        'list_like' => 'array',
     ];
 
     // Relationship với User (nhiều-1)

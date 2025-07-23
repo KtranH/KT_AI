@@ -12,16 +12,26 @@ class AIFeature extends Model
     protected $table = 'ai_features';
 
     protected $fillable = [
+        'id',
         'title',
         'description',
         'category',
         'thumbnail_url',
         'status_feature',
-        'input_requirements'
+        'input_requirements',
+        'sum_img'
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'title' => 'string',
+        'description' => 'string',
+        'category' => 'string',
+        'thumbnail_url' => 'string',
+        'status_feature' => 'string',
+        'input_requirements' => 'string',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'sum_img' => 'integer'
     ];
 } 

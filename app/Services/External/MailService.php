@@ -127,7 +127,7 @@ class MailService extends BaseService
                 'code' => ['required', 'string', 'size:6'],
             ]);
 
-            $storedCode = Redis::get("verify_code:{$request->email}");
+            $storedCode = Redis::get("verify_code:" . ($request->email ?? 'unknown'));
 
             if (!$storedCode) {
                 throw ValidationException::withMessages([
@@ -135,13 +135,13 @@ class MailService extends BaseService
                 ]);
             }
 
-            if ($request->code !== $storedCode) {
+            if ($request->code ?? 'unknown' !== $storedCode) {
                 throw ValidationException::withMessages([
                     'code' => ['Mã xác thực không đúng.'],
                 ]);
             }
 
-            $user = $this->userRepository->checkEmail($request->email);
+            $user = $this->userRepository->checkEmail($request->email ?? 'unknown');
 
             if (!$user) {
                 throw ValidationException::withMessages([
@@ -154,15 +154,15 @@ class MailService extends BaseService
             $this->userRepository->updateStatus();
 
             // Xóa các key Redis
-            $this->clearVerificationKeys($request->email);
+            $this->clearVerificationKeys($request->email ?? 'unknown');
 
             $this->logAction('Email verification successful', [
-                'email' => $request->email,
+                'email' => $request->email ?? 'unknown',
                 'user_id' => $user->id
             ]);
 
             return response()->json(AuthResource::verification('Xác thực email thành công.'));
-        }, "Verifying email for: {$request->email}");
+        }, "Verifying email for: " . ($request->email ?? 'unknown'));
     }
 
     /**
@@ -178,9 +178,9 @@ class MailService extends BaseService
             ]);
 
             // Kiểm tra rate limiting
-            $this->checkResendRateLimit($request->email);
+            $this->checkResendRateLimit($request->email ?? 'unknown');
 
-            $user = $this->userRepository->getUserByEmail($request->email);
+            $user = $this->userRepository->getUserByEmail($request->email ?? 'unknown');
 
             if (!$user) {
                 throw ValidationException::withMessages([
@@ -199,15 +199,15 @@ class MailService extends BaseService
                 throw ExternalServiceException::emailServiceError('Failed to resend verification code');
             }
 
-            $this->updateResendCounters($request->email);
+            $this->updateResendCounters($request->email ?? 'unknown');
 
             return response()->json(
                 MailVerificationResource::resendVerification(
-                    $request->email,
+                    $request->email ?? 'unknown',
                     'Đã gửi lại mã xác thực'
                 )
             );
-        }, "Resending verification for: {$request->email}");
+        }, "Resending verification for: " . ($request->email ?? 'unknown'));
     }
 
     /**
@@ -224,7 +224,7 @@ class MailService extends BaseService
             }
 
             // Kiểm tra rate limiting
-            $this->checkPasswordChangeRateLimit($user->email);
+            $this->checkPasswordChangeRateLimit($user->email ?? 'unknown');
 
             // Gửi mã xác thực
             if (!$this->sendPasswordChangeVerification($user)) {
@@ -232,11 +232,11 @@ class MailService extends BaseService
             }
 
             // Lưu thời gian gửi
-            Redis::setex("password_change_last_sent:{$user->email}", 600, time());
+            Redis::setex("password_change_last_sent:" . ($user->email ?? 'unknown'), 600, time());
 
             return response()->json(
                 MailVerificationResource::passwordChangeVerification(
-                    $user->email,
+                    $user->email ?? 'unknown',
                     'Đã gửi mã xác thực đến email của bạn'
                 )
             );
@@ -278,7 +278,7 @@ class MailService extends BaseService
      */
     private function checkPasswordChangeRateLimit(string $email): void
     {
-        $lastSentTime = Redis::get("password_change_last_sent:{$email}");
+        $lastSentTime = Redis::get("password_change_last_sent:" . ($email ?? 'unknown'));
         if ($lastSentTime && (time() - $lastSentTime) < 60) {
             throw BusinessException::quotaExceeded('password change verification attempts', 60);
         }
@@ -291,8 +291,8 @@ class MailService extends BaseService
      */
     private function updateResendCounters(string $email): void
     {
-        Redis::incr("verify_resend_count:{$email}");
-        Redis::setex("verify_last_resend:{$email}", 600, time());
+        Redis::incr("verify_resend_count:" . ($email ?? 'unknown'));
+        Redis::setex("verify_last_resend:" . ($email ?? 'unknown'), 600, time());
     }
 
     /**
@@ -302,8 +302,8 @@ class MailService extends BaseService
      */
     private function clearVerificationKeys(string $email): void
     {
-        Redis::del("verify_code:{$email}");
-        Redis::del("verify_attempts:{$email}");
-        Redis::del("verify_last_attempt:{$email}");
+        Redis::del("verify_code:" . ($email ?? 'unknown'));
+        Redis::del("verify_attempts:" . ($email ?? 'unknown'));
+        Redis::del("verify_last_attempt:" . ($email ?? 'unknown'));
     }
 }

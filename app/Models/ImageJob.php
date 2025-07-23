@@ -11,6 +11,7 @@ class ImageJob extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'user_id',
         'feature_id',
         'prompt',
@@ -22,20 +23,31 @@ class ImageJob extends Model
         'secondary_image',
         'result_image',
         'status', // 'pending', 'processing', 'completed', 'failed'
-        'comfy_prompt_id',
+        'comfy_prompt_id', // prompt id này có dạng: a9f04379-17218....
         'error_message',
         'progress', // thêm cột progress để lưu tiến độ (%)
         'credits_refunded', // flag để tránh duplicate refund credits
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'feature_id' => 'integer',
+        'prompt' => 'string',
         'width' => 'integer',
         'height' => 'integer',
         'seed' => 'integer',
-        'feature_id' => 'integer',
-        'user_id' => 'integer',
-        'progress' => 'integer',
+        'style' => 'string',
+        'main_image' => 'string',
+        'secondary_image' => 'string',
+        'result_image' => 'string',
+        'status' => 'string',
+        'comfy_prompt_id' => 'string',
+        'error_message' => 'string',
+        'progress' => 'float',
         'credits_refunded' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $appends = [

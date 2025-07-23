@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     protected $fillable = [
+        "id",
         "type",
         "notifiable_type",
         "notifiable_id",
@@ -17,10 +18,12 @@ class Notification extends Model
     ];
 
     protected $casts = [
-        "read_at" => "datetime",
+        "id" => "integer",
+        "type" => "string",
         "notifiable_type" => "string",
         "notifiable_id" => "integer",
-        "data" => "array", 
+        "data" => "array",
+        "read_at" => "datetime",
         "created_at" => "datetime",
         "updated_at" => "datetime"
     ];
