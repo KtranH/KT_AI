@@ -343,3 +343,7 @@ Các loại kênh được sử dụng:
 - `private-notifications.{userId}`: Thông báo cá nhân
 - `presence-online`: Trạng thái người dùng online
 - `public-interactions.{postId}`: Tương tác trên các bài đăng
+
+### Sau cùng
+
+Dự án đang phát triển, còn nhiều tính năng tạo ảnh trong Comfyui chưa được triển khai 😢.
