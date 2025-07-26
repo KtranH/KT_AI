@@ -1,6 +1,59 @@
 <template>
   <div class="bg-white rounded-xl shadow-lg p-6 mt-8 container mx-auto">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Danh sách ảnh người dùng tải lên</h2>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 shadow-lg">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4a3 3 0 014 0l4 4M2 20h20M12 4v4m0 0a4 4 0 110 8 4 4 0 010-8z"/>
+          </svg>
+        </span>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-transparent bg-clip-text drop-shadow">
+          Ảnh người dùng đã tải lên
+        </h2>
+      </div>
+
+      <!-- Arrange by time-->
+      <div class="flex items-center gap-4 mb-4">
+        <label for="sort-select" class="text-sm font-medium text-gray-700 mr-2">Sắp xếp:</label>
+        <div class="relative w-64">
+          <button
+            type="button"
+            class="w-full flex justify-between items-center px-4 py-2 border border-indigo-300 rounded-full bg-white text-gray-800 shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200 hover:border-indigo-500 hover:shadow-lg"
+            @click="isSortOpen = !isSortOpen"
+            @blur="isSortOpen = false"
+            :class="{'ring-2 ring-indigo-400': isSortOpen}"
+            tabindex="0"
+          >
+            <span>
+              <template v-if="sortValue === 'newest'"> <i class="fa-solid fa-clock text-indigo-500"></i> Mới nhất</template>
+              <template v-else-if="sortValue === 'oldest'"> <i class="fa-solid fa-clock text-yellow-500"></i> Cũ nhất</template>
+              <template v-else-if="sortValue === 'most_liked'"> <i class="fa-solid fa-heart text-pink-500"></i> Được thích nhiều nhất</template>
+            </span>
+            <svg class="h-5 w-5 text-indigo-400 transition-transform duration-200" :class="{'rotate-180': isSortOpen}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <transition name="fade">
+            <ul
+              v-if="isSortOpen"
+              class="absolute z-50 mt-2 w-full bg-white border border-indigo-200 rounded-xl shadow-lg py-1"
+              @mousedown.prevent
+            >
+              <li
+                v-for="option in sortOptions"
+                :key="option.value"
+                @click="selectSort(option.value)"
+                class="px-4 py-2 cursor-pointer hover:bg-indigo-50 flex items-center gap-2"
+                :class="{'bg-indigo-100 font-semibold': sortValue === option.value}"
+              >
+                <span v-html="option.icon"></span>
+                <span>{{ option.label }}</span>
+              </li>
+            </ul>
+          </transition>
+        </div>
+      </div>
+    </div>
     
     <div ref="masonryContainer" class="masonry-grid">
       <!-- Add image button cell -->
@@ -224,7 +277,28 @@ setup(props) {
   } = useImage()
 
   const { masonryContainer, initMasonry, onImageLoaded } = useMasonry()
+
+  const sortOptions = [
+    { 
+      value: 'newest', 
+      label: 'Mới nhất', 
+      icon: `<svg class="inline h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    },
+    { 
+      value: 'oldest', 
+      label: 'Cũ nhất', 
+      icon: `<svg class="inline h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 7v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
+    },
+    { 
+      value: 'most_liked', 
+      label: 'Được thích nhiều nhất', 
+      icon: `<svg class="inline h-5 w-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>`
+    }
+  ]
   
+  const sortValue = ref('newest')
+  const isSortOpen = ref(false)
+
   const featureId = computed(() => {
     if (props.featureId) {
       return Number(props.featureId);
@@ -262,12 +336,32 @@ setup(props) {
   // Theo dõi featureId để tải lại dữ liệu khi thay đổi
   watch(featureId, async (newId, oldId) => {
     if (newId && newId !== oldId) {
-      await fetchImagesByFeature(newId);
+      await fetchImagesByFeature(newId, 1, sortValue.value);
     }
     nextTick(() => {
       initMasonry()
     })
   }, { immediate: true });
+
+  // Theo dõi sortValue để tải lại dữ liệu khi thay đổi sorting
+  watch(sortValue, async (newSort, oldSort) => {
+    if (newSort !== oldSort && featureId.value) {
+      await fetchImagesByFeature(featureId.value, 1, newSort);
+    }
+    nextTick(() => {
+      initMasonry()
+    })
+  });
+
+  const selectSort = async (value) => {
+    sortValue.value = value
+    isSortOpen.value = false
+    
+    // Tải lại dữ liệu với sorting mới
+    if (featureId.value) {
+      await fetchImagesByFeature(featureId.value, 1, value);
+    }
+  }
 
   // Open file selector
   const openFileSelector = () => {
@@ -319,7 +413,7 @@ setup(props) {
   // Load more images
   const loadMore = async () => {
     if (featureId.value) {
-      await loadMoreImages(featureId.value);
+      await loadMoreImages(featureId.value, sortValue.value);
     }
   }
   
@@ -342,7 +436,11 @@ setup(props) {
     formatTime,
     goToImageDetail,
     onImageLoaded,
-    masonryContainer
+    masonryContainer,
+    sortOptions,
+    sortValue,
+    isSortOpen,
+    selectSort
   }
 }
 }

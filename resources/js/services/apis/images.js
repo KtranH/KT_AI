@@ -4,7 +4,7 @@ import apiClient from '../../config/apiConfig'
 export const imageAPI = {
   // Public Routes
   getImages: (id) => apiClient.get(`/get_images_information/${id}`),
-  getImagesByFeature: (id, page = 1) => apiClient.get(`/get_images_by_feature/${id}?page=${page}`),
+  getImagesByFeature: (id, page = 1, sort = 'newest') => apiClient.get(`/get_images_by_feature/${id}?page=${page}&sort=${sort}`),
   
   // Protected Routes
   getImagesUploaded: (userId, perPage = 10) => {

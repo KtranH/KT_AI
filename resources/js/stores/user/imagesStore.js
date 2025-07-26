@@ -263,12 +263,12 @@ export const useImageStore = defineStore('image',
             },
 
             // Tải thêm hình ảnh theo tính năng (phân trang)
-            async fetchImagesByFeature(id, page = 1) {
+            async fetchImagesByFeature(id, page = 1, sort = 'newest') {
                 this.error_message = null
                 this.isLoading = true
                 
                 try {
-                    const response = await imageAPI.getImagesByFeature(id, page)             
+                    const response = await imageAPI.getImagesByFeature(id, page, sort)             
                     if (response.data && response.data.success) {
                         // Xử lý cấu trúc dữ liệu mới: response.data.data.data chứa array images
                         let imageData = [];
@@ -276,7 +276,7 @@ export const useImageStore = defineStore('image',
                         if (response.data.data && response.data.data.data && Array.isArray(response.data.data.data.data)) {
                             // Structure mới: response.data.data.data là array images từ Laravel paginator
                             imageData = response.data.data.data.data;
-                        } 
+                        }
 
                         // Xử lý dữ liệu - thêm currentSlideIndex và parse image_url nếu cần
                         const processedData = imageData.map(image => {
@@ -406,7 +406,7 @@ export const useImageStore = defineStore('image',
             }
         },
         persist: {
-            enabled: true,
+            enabled: true, // Lưu dữ liệu vào localStorage
             strategies: [
                 {
                     key: 'image-store',

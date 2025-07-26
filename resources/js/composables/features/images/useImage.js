@@ -115,14 +115,14 @@ export default function useImage() {
     }
 
     // Phương thức fetch dữ liệu ảnh theo feature
-    const fetchImagesByFeature = async (id, page = 1) => {
+    const fetchImagesByFeature = async (id, page = 1, sort = 'newest') => {
         if (!id) return;
 
         isLoading.value = true
         hasError.value = false
 
         try {
-            const response = await store.fetchImagesByFeature(id, page)
+            const response = await store.fetchImagesByFeature(id, page, sort)
             return response;
         } catch (error) {
             hasError.value = true
@@ -133,10 +133,10 @@ export default function useImage() {
     }
 
     // Phương thức load thêm ảnh theo feature
-    const loadMoreImages = async (id) => {
+    const loadMoreImages = async (id, sort = 'newest') => {
         if (currentPage.value < lastPage.value) {
             const nextPage = currentPage.value + 1;
-            return await fetchImagesByFeature(id, nextPage);
+            return await fetchImagesByFeature(id, nextPage, sort);
         }
     }
 

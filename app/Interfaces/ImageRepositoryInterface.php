@@ -21,9 +21,10 @@ interface ImageRepositoryInterface
      * Lấy danh sách hình ảnh theo feature
      * @param int $featureId ID của feature
      * @param int $perPage Số lượng hình ảnh trên mỗi trang
+     * @param string $sortBy Cách sắp xếp (newest, oldest, most_liked)
      * @return array Danh sách hình ảnh
      */
-    public function getImagesByFeature(int $featureId, int $perPage = 10): array;
+    public function getImagesByFeature(int $featureId, int $perPage = 10, string $sortBy = 'newest'): array;
         
     /**
      * Phân trang các hình ảnh đã thích

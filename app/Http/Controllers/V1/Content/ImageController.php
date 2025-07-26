@@ -42,12 +42,15 @@ class ImageController extends BaseV1Controller
      * Lấy images theo feature
      * 
      * @param int $id
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getImagesByFeature(int $id): JsonResponse
+    public function getImagesByFeature(int $id, Request $request): JsonResponse
     {
+        $sortBy = $request->query('sort', 'newest');
+        
         return $this->executeServiceMethodV1(
-            fn() => $this->imageService->getImagesByFeature($id),
+            fn() => $this->imageService->getImagesByFeature($id, $sortBy),
             null,
             ErrorMessages::IMAGE_LOAD_ERROR
         );

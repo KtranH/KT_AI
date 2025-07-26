@@ -44,12 +44,27 @@ class ImageRepository implements ImageRepositoryInterface
             ]
         ];
     }
-    public function getImagesByFeature(int $featureId, int $perPage = 10): array
+    public function getImagesByFeature(int $featureId, int $perPage = 10, string $sortBy = 'newest'): array
     {
-        $images = Image::with('user:id,name,avatar_url')
-            ->where('features_id', $featureId)
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        $query = Image::with('user:id,name,avatar_url')
+            ->where('features_id', $featureId);
+
+        // Xử lý sorting
+        switch ($sortBy) {
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'most_liked':
+                $query->orderBy('sum_like', 'desc')->orderBy('created_at', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+
+        $images = $query->paginate($perPage);
 
         return [
             'data' => $images,

@@ -35,11 +35,12 @@ class ImageService extends BaseService
     /**
      * Lấy danh sách ảnh theo feature
      * @param int $featureId ID của feature
+     * @param string $sortBy Cách sắp xếp (newest, oldest, most_liked)
      * @return mixed Kết quả
      */
-    public function getImagesByFeature(int $featureId)
+    public function getImagesByFeature(int $featureId, string $sortBy = 'newest')
     {
-        return $this->imageRepository->getImagesByFeature($featureId);
+        return $this->imageRepository->getImagesByFeature($featureId, 10, $sortBy);
     }
 
     /**

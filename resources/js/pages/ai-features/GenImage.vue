@@ -6,15 +6,30 @@
             <div class="container mx-auto p-6">
                 <!-- Nút quay lại -->
                 <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 rounded-full"/>
-                <div class="flex items-center justify-left mt-8 mb-2">
-                    <h1 v-if="feature" class="text-3xl font-bold bg-gradient-text-v2">{{ feature.title }}</h1>
-                    <h1 v-else class="text-3xl font-bold text-gray-800 text-center">Đang tải...</h1>
-                    <img :src="icon_title" loading="lazy" class="w-12 h-12 ml-2" alt="">
+
+                <div v-if="user" class="flex items-center gap-2 mt-4">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold shadow">
+                    <svg class="w-5 h-5 mr-1 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 2a1 1 0 01.894.553l1.382 2.8 3.09.45a1 1 0 01.554 1.706l-2.236 2.18.528 3.08a1 1 0 01-1.451 1.054L10 12.347l-2.761 1.456a1 1 0 01-1.451-1.054l.528-3.08-2.236-2.18a1 1 0 01.554-1.706l3.09-.45L9.106 2.553A1 1 0 0110 2z"/>
+                    </svg>
+                    <span>Lượt tạo ảnh còn lại:</span>
+                    <span class="ml-2 font-bold text-yellow-300">{{ user.remaining_credits }}</span>
+                  </span>
                 </div>
 
-                <i v-if="user" class="ml-2 text-gray-400 mb-2">Lượt tạo ảnh còn lại: {{ user.remaining_credits }}</i>
-                
-                <div class="grid gap-8 mb-8" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
+                <div class="flex items-center gap-4 mt-4 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 shadow-md">
+                    <div class="flex-shrink-0">
+                        <img :src="icon_title" loading="lazy" class="w-14 h-14 rounded-full border-2 border-purple-300 shadow" alt="">
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 v-if="feature" class="text-2xl font-extrabold bg-gradient-text-v2 text-transparent bg-clip-text drop-shadow-lg">
+                            {{ feature.title }}
+                        </h1>
+                        <h1 v-else class="text-3xl font-bold text-gray-500 animate-pulse">Đang tải...</h1>
+                    </div>
+                </div>
+        
+                <div class="grid gap-8 mb-8 mt-4" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
                     <!-- Phần nhập thông tin bên trái -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <h2 class="text-xl font-semibold text-gray-700 mb-6">Thông số hình ảnh</h2>
