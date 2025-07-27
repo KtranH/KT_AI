@@ -2,9 +2,14 @@
   <div>
     <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 flex items-center justify-center py-24 px-4">
       <div class="w-full max-w-[70%]">
-        <h1 class="text-3xl font-extrabold text-center mb-10 flex items-center justify-center gap-2">
-          <span>⚙️</span> Cài đặt tài khoản
-        </h1>
+        <div class="flex items-center mb-10 relative">
+          <div class="absolute left-0">
+            <ButtonBack customClass="bg-gradient-text hover:from-blue-700 hover:to-purple-800 text-white font-semibold py-3 px-7 rounded-full shadow-xl transition-all duration-200 hover:scale-105"/>
+          </div>
+          <h1 class="text-3xl font-extrabold flex items-center gap-2 mx-auto">
+            <span>⚙️</span> Cài đặt tài khoản
+          </h1>
+        </div>
         <div class="flex items-center justify-center gap-8 w-full">
           <ProfileInfo />
           <ChangePassword />
@@ -18,6 +23,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { ButtonBack } from '@/components/base'
 import { ProfileInfo, ChangePassword, ActivityHistory } from '@/components/features/user-profile'
 
 export default {
@@ -25,7 +31,8 @@ export default {
   components: {
     ProfileInfo,
     ChangePassword,
-    ActivityHistory
+    ActivityHistory,
+    ButtonBack
   },
   setup() {
     const auth = useAuthStore()

@@ -173,7 +173,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { gsap } from 'gsap'
-import { useNotifications } from '@/composables/core/useNotifications'
+import { useNotifications } from '@/composables/features/social/useNotifications'
 
 export default {
   name: 'SidebarLayout',

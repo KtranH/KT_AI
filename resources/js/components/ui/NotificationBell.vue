@@ -96,7 +96,7 @@
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useNotifications } from '@/composables/core/useNotifications'
+import { useNotifications } from '@/composables/features/social/useNotifications'
 import { encodedID } from '@/utils'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
