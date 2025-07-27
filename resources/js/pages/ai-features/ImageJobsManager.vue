@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
       <ButtonBack customClass="bg-gradient-text hover: text-white font-bold py-2 px-4 mb-8 rounded-full"/>
-      <h1 class="text-3xl font-bold text-gray-800 mb-8">Quản lý tiến trình tạo ảnh</h1>
+      <h1 class="text-3xl bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent font-extrabold flex items-center gap-2 mx-auto mb-8">Quản lý tiến trình tạo ảnh</h1>
       
       <!-- Tab Navigation -->
       <div class="flex border-b border-gray-200 mb-6">

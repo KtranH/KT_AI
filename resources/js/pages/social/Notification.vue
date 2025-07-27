@@ -1,13 +1,23 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
     <div class="container mx-auto py-8 px-4 md:px-6">
+
       <!-- Header với gradient -->
-      <div class="mb-8">        
-        <div class="text-center mb-8">
-          <h1 class="text-4xl h-[50px] font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Thông báo của bạn
-          </h1>
-          <p class="text-gray-600 text-lg">Cập nhật những hoạt động mới nhất</p>
+      <div class="mb-10">
+        <div class="flex flex-col items-center justify-center mb-8">
+          <div class="flex items-center justify-center mb-3">
+            <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg mr-3">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+            </span>
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+              Thông báo của bạn
+            </h1>
+          </div>
+          <p class="text-gray-500 text-lg bg-white/70 px-6 py-2 rounded-full shadow backdrop-blur-sm">
+            Cập nhật những hoạt động mới nhất trên nền tảng <span class="font-semibold text-blue-600">KT_AI</span>
+          </p>
         </div>
       </div>
       

@@ -6,7 +6,7 @@
           <div class="absolute left-0">
             <ButtonBack customClass="bg-gradient-text hover:from-blue-700 hover:to-purple-800 text-white font-semibold py-3 px-7 rounded-full shadow-xl transition-all duration-200 hover:scale-105"/>
           </div>
-          <h1 class="text-3xl font-extrabold flex items-center gap-2 mx-auto">
+          <h1 class="text-3xl bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent font-extrabold flex items-center gap-2 mx-auto">
             <span>⚙️</span> Cài đặt tài khoản
           </h1>
         </div>

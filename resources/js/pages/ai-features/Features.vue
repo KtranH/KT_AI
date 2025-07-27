@@ -1,9 +1,9 @@
 <template>
   <div class="min-h-screen bg-gray-100 pt-4" data-aos="zoom-out">
     <div class="max-w-[90%] mx-auto my-4">
-      <h1 class="text-4xl font-bold text-center w-full">
+      <h1 class="text-3xl font-extrabold text-center w-full">
         <div class="flex items-center justify-center">
-          <span class="text-3xl font-bold feature-title bg-gradient-text-v2 from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>
+          <span class="text-3xl feature-title bg-gradient-text-v2 from-blue-600 to-purple-600 text-transparent bg-clip-text transform transition-all duration-500 mr-2">Chức năng tạo ảnh </span>
           <span class="bg-gradient-text rounded-full flex items-center justify-center p-2">
             <span class="text-white text-3xl ml-2 mr-2">bằng AI</span>
           </span>
