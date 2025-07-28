@@ -59,7 +59,7 @@ app.directive('click-outside', clickOutside);
 AOS.init({
     duration: 300,
     delay: 50,
-    once: false,
+    once: true, // Chỉ hiển thị hiệu ứng một lần
     offset: 20,
     easing: 'ease-in-out',
     disable: 'mobile'
