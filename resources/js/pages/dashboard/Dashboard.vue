@@ -1,9 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <!-- Toast notifications are handled globally in App.vue -->
-    <!-- Ảnh background và avtar -->
+  <div class="min-h-screen bg-gray-50">
     <!-- Container chính -->
-    <div class="max-w-[100%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="zoom-out">
+    <div class="max-w-[100%] mx-auto my-4 bg-white rounded-lg shadow-lg" data-aos="fade-right" data-aos-delay="100">
         <div class="relative">
           <!-- Cover Image section -->
           <div class="h-[300px] bg-purple-600 rounded-t-lg relative overflow-hidden group">
@@ -136,7 +134,6 @@
 
         </div>
       <div class="container mx-auto px-4" data-aos="zoom-in" data-aos-delay="300">
-        <!-- Xin chào -->
         <div class="bg-gradient-text rounded-lg shadow-md p-6 flex justify-between">
           <div>
             <h1 v-if="!isOtherUserProfile" class="text-2xl font-bold text-white mb-4">

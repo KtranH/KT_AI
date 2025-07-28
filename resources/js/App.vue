@@ -3,8 +3,8 @@
     <Loading />
   </div>
   <div v-else>
-    <Header />
-    <Sidebar v-if="showSidebar">
+    <Header_V2 />
+    <Sidebar_V2 v-if="showSidebar">
       <router-view v-slot="{ Component, route }">
         <transition name="fade" mode="out-in">
           <keep-alive :include="['Dashboard', 'ImageList']">
@@ -12,7 +12,7 @@
           </keep-alive>
         </transition>
       </router-view>
-    </Sidebar>
+    </Sidebar_V2>
     <router-view v-else v-slot="{ Component, route }">
       <transition name="fade" mode="out-in">
         <keep-alive :include="['Dashboard', 'ImageList']">
@@ -27,7 +27,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { AppSidebar as Sidebar, AppHeader as Header, AppLoading as Loading } from './components/layouts';
+import { AppSidebar as Sidebar, AppHeader as Header, AppLoading as Loading, AppHeader_V2 as Header_V2, AppSidebar_V2 as Sidebar_V2 } from './components/layouts';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export default {
@@ -36,7 +36,9 @@ export default {
     Sidebar,
     Header,
     Loading,
-    VueSonner
+    VueSonner,
+    Header_V2,
+    Sidebar_V2
   },
   setup() {
     const isLoading = ref(true);

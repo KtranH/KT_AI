@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  <div class="min-h-screen bg-white">
     <div class="container mx-auto py-8 px-4 md:px-6">
 
       <!-- Header với gradient -->

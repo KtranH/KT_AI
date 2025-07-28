@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 flex items-center justify-center py-24 px-4">
+    <div class="min-h-screen bg-white flex items-center justify-center py-24 px-4">
       <div class="w-full max-w-[70%]">
         <div class="flex items-center mb-10 relative">
           <div class="absolute left-0">

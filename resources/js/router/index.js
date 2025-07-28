@@ -11,6 +11,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword.vue'
 import Dashboard from '../pages/dashboard/Dashboard.vue'
 // Features Pages
 import Features from '../pages/ai-features/Features.vue'
+import Features_V2 from '../pages/ai-features/Features_V2.vue'
 // Image Pages
 import CreateImage from '../pages/ai-features/GenImage.vue'
 import Detail from '../pages/social/ImageDetail.vue'
@@ -80,6 +81,12 @@ const routes = [
     path: '/features',
     name: 'features',
     component: Features,
+    meta: { requiresAuth: true, title: 'KT_AI - Tính năng', keepAlive: true }
+  },
+  {
+    path: '/features-v2',
+    name: 'features-v2',
+    component: Features_V2,
     meta: { requiresAuth: true, title: 'KT_AI - Tính năng', keepAlive: true }
   },
   {
