@@ -27,7 +27,10 @@ const parseUserData = () => {
 const user = ref(parseUserData());
 const token = ref(localStorage.getItem('token') || null);
 const isRemembered = ref(localStorage.getItem('remember') === 'true');
-const isAuthenticated = computed(() => !!user.value && !!user.value.id);
+const isLoggingOut = ref(false);
+const isAuthenticated = computed(() => {
+  return !!user.value && !!user.value.id && typeof user.value.id === 'number' && !!token.value && !isAuthLoading.value && !isLoggingOut.value;
+});
 // Loading 
 const isAuthLoading = ref(false)
 
@@ -54,6 +57,7 @@ export const useAuthStore = () => {
     user.value = null
     token.value = null
     isRemembered.value = false
+    isLoggingOut.value = false
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     localStorage.removeItem('remember')
@@ -90,7 +94,10 @@ export const useAuthStore = () => {
         user.value = JSON.parse(sessionUser)
       }
 
-      if (!token.value || !user.value) return false
+      if (!token.value || !user.value) {
+        isAuthLoading.value = false;
+        return false
+      }
 
       // Thêm timeout cho API call để tránh bị treo
       const timeoutPromise = new Promise((_, reject) =>
@@ -198,6 +205,9 @@ export const useAuthStore = () => {
     try {
       console.log('🔐 Starting logout with double protection (CSRF + Sanctum)...')
       
+      // Set flag để tránh conflict với router guard
+      isLoggingOut.value = true
+      
       // Lấy CSRF token mới trước khi đăng xuất
       await refreshCsrfToken()
 
@@ -244,7 +254,7 @@ export const useAuthStore = () => {
       // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
       await refreshCsrfToken()
 
-      // Sử dụng router.replace thay vì router.push để tránh lịch sử điều hướng không cần thiết
+      // Sử dụng router.replace để giữ tính chất SPA
       router.replace('/login')
 
     } catch (error) {
@@ -258,7 +268,7 @@ export const useAuthStore = () => {
         storeLike.clearLikes()
         clearAuthData()
 
-        // Sử dụng router để điều hướng thay vì window.location.reload
+        // Sử dụng router.replace để giữ tính chất SPA
         router.replace('/login')
         return
       }
@@ -266,7 +276,7 @@ export const useAuthStore = () => {
       // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi khác
       await refreshCsrfToken()
       
-      // Luôn chuyển hướng về trang đăng nhập sau khi đăng xuất
+      // Sử dụng router.replace để giữ tính chất SPA
       router.replace('/login')
     }
   }
@@ -280,16 +290,25 @@ export const useAuthStore = () => {
 
       // Lắng nghe phản hồi từ popup
       const messageHandler = (event) => {
-        if (event.origin !== window.location.origin) return
+        // Kiểm tra origin để đảm bảo bảo mật
+        const allowedOrigins = [
+          window.location.origin,
+          'http://localhost:8000',
+          'http://127.0.0.1:8000'
+        ]
+        if (!allowedOrigins.includes(event.origin)) return
 
         const { success, user, auth, message } = event.data
 
         if (success && user && auth && auth.token) {
-          // Thử đóng popup, nếu không được thì bỏ qua lỗi
+          // Thử đóng popup một cách an toàn
           try {
-            popup.close()
+            // Kiểm tra xem popup vẫn còn mở và có thể truy cập
+            if (popup && !popup.closed && popup.close) {
+              popup.close()
+            }
           } catch (error) {
-            console.log('Không thể đóng popup (Cross-Origin-Opener-Policy):', error)
+            // Bỏ qua lỗi Cross-Origin-Opener-Policy một cách im lặng
             // Popup sẽ tự đóng hoặc user đóng thủ công
           }
           
@@ -334,6 +353,9 @@ export const useAuthStore = () => {
     user,
     token,
     isAuthenticated,
+    isAuthLoading,
+    isRemembered,
+    isLoggingOut,
     checkAuth,
     login,
     logout,

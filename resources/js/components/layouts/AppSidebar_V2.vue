@@ -281,7 +281,7 @@ export default {
       },
       { 
         name: 'Tạo ảnh', 
-        path: '/features', 
+        path: '/features-v2', 
         icon: 'ImageIcon' 
       },
       { 

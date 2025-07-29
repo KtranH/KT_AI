@@ -132,11 +132,26 @@ class GoogleService extends BaseService
     public function createPopupResponse(array $data): string
     {
         $jsonData = json_encode($data);
+        $appUrl = config('app.url', 'http://localhost:8000');
         
         return "
             <script>
-                window.opener.postMessage({$jsonData}, '*');
-                window.close();
+                try {
+                    // Gửi message với origin cụ thể thay vì wildcard để bảo mật
+                    if (window.opener) {
+                        window.opener.postMessage({$jsonData}, '{$appUrl}');
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi gửi message:', error);
+                }
+                
+                try {
+                    // Thử đóng popup, bỏ qua lỗi Cross-Origin-Opener-Policy
+                    window.close();
+                } catch (error) {
+                    // Popup sẽ tự đóng hoặc user đóng thủ công
+                    console.log('Popup sẽ tự đóng');
+                }
             </script>
         ";
     }

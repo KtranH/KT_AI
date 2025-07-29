@@ -9,6 +9,8 @@ use App\Services\External\ComfyUI\ComfyUIApiService;
 use App\Services\External\ComfyUI\ComfyUIJobService;
 use App\Interfaces\ImageJobRepositoryInterface;
 use App\Repositories\ImageJobsRepository;
+use App\Interfaces\StatisticsRepositoryInterface;
+use App\Repositories\StatisticsRepository;
 use App\Models\Image;
 use App\Models\Comment;
 use App\Models\Interaction;
@@ -42,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Đăng ký binding cho ImageJob
         $this->app->bind(ImageJobRepositoryInterface::class, ImageJobsRepository::class);
+        
+        // Đăng ký binding cho Statistics
+        $this->app->bind(StatisticsRepositoryInterface::class, StatisticsRepository::class);
     }
 
     /**

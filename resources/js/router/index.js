@@ -196,6 +196,12 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isGuestRoute = to.matched.some(record => record.meta.guest)
   
+  // Nếu đang logout, cho phép truy cập login page
+  if (to.path === '/login' && auth.isLoggingOut) {
+    next()
+    return
+  }
+  
   if (isGuestRoute) {
     // Nếu đã đăng nhập và cố gắng truy cập guest route, chuyển hướng đến dashboard
     try {

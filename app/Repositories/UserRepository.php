@@ -295,6 +295,7 @@ class UserRepository implements UserRepositoryInterface
         $user->delete();
         return $user;
     }
+    
     /**
      * Kiểm tra mật khẩu người dùng
      *

@@ -2,7 +2,12 @@
   <div class="relative">
     <!-- Bell Icon with Notification Counter -->
     <button
-      class="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+      :class="[
+        'relative p-2 transition-all duration-200 focus:outline-none',
+        isHomePage 
+          ? 'text-white hover:text-gray-200 hover:bg-white/10' 
+          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+      ]"
       @click="toggleNotificationPanel"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +113,14 @@ dayjs.extend(relativeTime)
 export default {
   name: 'NotificationBell',
 
-  setup() {
+  props: {
+    isHomePage: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  setup(props) {
     const isOpen = ref(false)
     const router = useRouter()
     const { notifications, unreadCount, loading, fetchNotifications, markAsRead, markAllAsRead } = useNotifications()
@@ -207,6 +219,7 @@ export default {
       notifications,
       unreadCount,
       loading,
+      isHomePage: props.isHomePage,
       toggleNotificationPanel,
       viewNotification,
       formatTime,
