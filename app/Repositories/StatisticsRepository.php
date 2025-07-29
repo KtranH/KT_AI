@@ -8,7 +8,7 @@ use App\Interfaces\StatisticsRepositoryInterface;
 use App\Models\User;
 use App\Models\Image;
 use App\Models\Comment;
-use App\Models\Like;
+use App\Models\Interaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -24,7 +24,7 @@ class StatisticsRepository implements StatisticsRepositoryInterface
     public function getUserOverview(User $user): array
     {
         $totalImages = Image::where('user_id', $user->id)->count();
-        $totalLikes = Like::where('user_id', $user->id)->count();
+        $totalLikes = Interaction::where('user_id', $user->id)->where('type_interaction', 'like')->count();
         $totalComments = Comment::where('user_id', $user->id)->count();
         
         // Thống kê hôm nay
@@ -32,7 +32,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
         $imagesToday = Image::where('user_id', $user->id)
             ->whereDate('created_at', $today)
             ->count();
-        $likesToday = Like::where('user_id', $user->id)
+        $likesToday = Interaction::where('user_id', $user->id)
+            ->where('type_interaction', 'like')
             ->whereDate('created_at', $today)
             ->count();
         $commentsToday = Comment::where('user_id', $user->id)
@@ -77,7 +78,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
                 'images' => Image::where('user_id', $user->id)
                     ->whereBetween('created_at', [$monthStart, $monthEnd])
                     ->count(),
-                'likes' => Like::where('user_id', $user->id)
+                'likes' => Interaction::where('user_id', $user->id)
+                    ->where('type_interaction', 'like')
                     ->whereBetween('created_at', [$monthStart, $monthEnd])
                     ->count(),
                 'comments' => Comment::where('user_id', $user->id)
@@ -116,7 +118,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
                 'images' => Image::where('user_id', $user->id)
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count(),
-                'likes' => Like::where('user_id', $user->id)
+                'likes' => Interaction::where('user_id', $user->id)
+                    ->where('type_interaction', 'like')
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count(),
                 'comments' => Comment::where('user_id', $user->id)
@@ -141,9 +144,9 @@ class StatisticsRepository implements StatisticsRepositoryInterface
     public function getTopFeatures(User $user, int $limit = 5): Collection
     {
         return Image::where('user_id', $user->id)
-            ->join('ai_features', 'images.feature_id', '=', 'ai_features.id')
-            ->select('ai_features.name', 'ai_features.id', DB::raw('count(*) as count'))
-            ->groupBy('ai_features.id', 'ai_features.name')
+            ->join('ai_features', 'images.features_id', '=', 'ai_features.id')
+            ->select('ai_features.title', 'ai_features.id', DB::raw('count(*) as count'))
+            ->groupBy('ai_features.id', 'ai_features.title')
             ->orderBy('count', 'desc')
             ->limit($limit)
             ->get();
@@ -168,7 +171,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
                 'images' => Image::where('user_id', $user->id)
                     ->whereBetween('created_at', [$hourStart, $hourEnd])
                     ->count(),
-                'likes' => Like::where('user_id', $user->id)
+                'likes' => Interaction::where('user_id', $user->id)
+                    ->where('type_interaction', 'like')
                     ->whereBetween('created_at', [$hourStart, $hourEnd])
                     ->count(),
                 'comments' => Comment::where('user_id', $user->id)
@@ -197,7 +201,7 @@ class StatisticsRepository implements StatisticsRepositoryInterface
             'imagesUploadedToday' => Image::whereDate('created_at', $today)->count(),
             'totalComments' => Comment::count(),
             'commentsToday' => Comment::whereDate('created_at', $today)->count(),
-            'likesToday' => Like::whereDate('created_at', $today)->count(),
+            'likesToday' => Interaction::whereDate('created_at', $today)->where('type_interaction', 'like')->count(),
             'chartData' => [
                 'labels' => ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
                 'datasets' => [

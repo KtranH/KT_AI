@@ -6,6 +6,7 @@ namespace App\Services\Business;
 
 use App\Interfaces\StatisticsRepositoryInterface;
 use App\Models\User;
+use App\Services\BaseService;
 use Illuminate\Http\JsonResponse;
 
 class StatisticsService extends BaseService

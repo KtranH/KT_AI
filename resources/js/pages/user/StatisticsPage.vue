@@ -1,5 +1,12 @@
 <template>
   <div class="p-6 min-h-screen">
+    <!-- Loading overlay -->
+    <div v-if="loading && !isDataLoaded" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-8 flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-700 font-medium">Đang tải dữ liệu thống kê...</p>
+      </div>
+    </div>
     <!-- Header -->
     <div class="mb-10 relative">
       <div class="absolute left-0 top-1">
@@ -12,6 +19,57 @@
         <p class="text-lg text-gray-700 bg-white/70 px-6 py-2 rounded-full shadow-md backdrop-blur-sm">
           Theo dõi hoạt động và hiệu suất của bạn trên nền tảng <span class="font-semibold text-blue-600">KT_AI</span>
         </p>
+        <!-- Nút làm mới -->
+        <button
+          @click="refreshStatistics"
+          :disabled="loading"
+          class="mt-4 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-md transition-all duration-200 hover:scale-110 hover:from-blue-700 hover:to-purple-800 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="loading ? 'Đang tải...' : 'Làm mới'"
+        >
+          <svg 
+            v-if="!loading"
+            xmlns="http://www.w3.org/2000/svg" 
+            class="w-6 h-6 text-white" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor" 
+            stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582M20 20v-5h-.581M19.418 9A7.978 7.978 0 0012 4c-3.042 0-5.824 1.721-7.418 4.5M4.582 15A7.978 7.978 0 0012 20c3.042 0 5.824-1.721 7.418-4.5"/>
+          </svg>
+          <svg 
+            v-else
+            class="w-6 h-6 text-white animate-spin" 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+        
+        <!-- Thông báo lỗi -->
+        <div v-if="hasError" class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="pi pi-exclamation-triangle mr-2"></i>
+              <span>{{ error }}</span>
+            </div>
+            <button 
+              @click="clearError"
+              class="text-red-500 hover:text-red-700"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Thông báo cập nhật cuối -->
+        <div v-if="lastUpdated" class="mt-2 text-sm text-gray-500">
+          <i class="pi pi-clock mr-1"></i>
+          Cập nhật lần cuối: {{ lastUpdated }}
+        </div>
       </div>
     </div>
 
@@ -183,9 +241,9 @@
               <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
                 {{ index + 1 }}
               </div>
-              <span class="font-medium text-gray-800">{{ feature.name }}</span>
+              <span class="font-medium text-gray-800">{{ feature.title }}</span>
             </div>
-            <span class="text-lg font-bold text-blue-600">{{ feature.count }}</span>
+            <span class="text-lg font-bold text-blue-600">{{ feature.count }} lần sử dụng</span>
           </div>
         </div>
       </div>
@@ -251,11 +309,11 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { statisticsAPI } from '@/services/apis/statistics';
+import { onMounted } from 'vue';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
-import { ButtonBack } from '@/components/base'
+import { ButtonBack } from '@/components/base';
+import useStatistics from '@/composables/features/user/useStatistics';
 
 import {
   Chart as ChartJS,
@@ -295,370 +353,13 @@ export default {
     ButtonBack
   },
   setup() {
-    const statistics = ref({
-      overview: {
-        totalImages: 0,
-        totalLikes: 0,
-        totalComments: 0,
-        remainingCredits: 0,
-        memberSince: 'N/A',
-        today: {
-          images: 0,
-          likes: 0,
-          comments: 0
-        }
-      },
-      monthlyStats: { labels: [], data: [] },
-      weeklyStats: { labels: [], data: [] },
-      topFeatures: [],
-      hourlyActivity: []
-    });
-
-    // Chart Data Computed Properties
-    const monthlyChartData = computed(() => ({
-      labels: statistics.value.monthlyStats?.labels || [],
-      datasets: [
-        {
-          label: 'Hình Ảnh',
-          data: statistics.value.monthlyStats?.data?.map(item => item.images) || [],
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Lượt Thích',
-          data: statistics.value.monthlyStats?.data?.map(item => item.likes) || [],
-          borderColor: '#EF4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Bình Luận',
-          data: statistics.value.monthlyStats?.data?.map(item => item.comments) || [],
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    }));
-
-    const weeklyChartData = computed(() => ({
-      labels: statistics.value.weeklyStats?.labels || [],
-      datasets: [
-        {
-          label: 'Hình Ảnh',
-          data: statistics.value.weeklyStats?.data?.map(item => item.images) || [],
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-          borderColor: '#3B82F6',
-          borderWidth: 1
-        },
-        {
-          label: 'Lượt Thích',
-          data: statistics.value.weeklyStats?.data?.map(item => item.likes) || [],
-          backgroundColor: 'rgba(239, 68, 68, 0.8)',
-          borderColor: '#EF4444',
-          borderWidth: 1
-        },
-        {
-          label: 'Bình Luận',
-          data: statistics.value.weeklyStats?.data?.map(item => item.comments) || [],
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          borderColor: '#10B981',
-          borderWidth: 1
-        }
-      ]
-    }));
-
-    const topFeaturesChartData = computed(() => ({
-      labels: statistics.value.topFeatures?.map(feature => feature.name) || [],
-      datasets: [{
-        data: statistics.value.topFeatures?.map(feature => feature.count) || [],
-        backgroundColor: [
-          '#3B82F6',
-          '#8B5CF6',
-          '#EF4444',
-          '#10B981',
-          '#F59E0B'
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff'
-      }]
-    }));
-
-    const hourlyChartData = computed(() => ({
-      labels: statistics.value.hourlyActivity?.map(item => `${item.hour}:00`) || [],
-      datasets: [
-        {
-          label: 'Hình Ảnh',
-          data: statistics.value.hourlyActivity?.map(item => item.images) || [],
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          pointBackgroundColor: '#3B82F6',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2
-        },
-        {
-          label: 'Lượt Thích',
-          data: statistics.value.hourlyActivity?.map(item => item.likes) || [],
-          borderColor: '#EF4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-          pointBackgroundColor: '#EF4444',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2
-        },
-        {
-          label: 'Bình Luận',
-          data: statistics.value.hourlyActivity?.map(item => item.comments) || [],
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.2)',
-          pointBackgroundColor: '#10B981',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2
-        }
-      ]
-    }));
-
-    // Chart Options
-    const lineChartOptions = ref({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            font: { size: 12 },
-            usePointStyle: true
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: { color: 'rgba(0, 0, 0, 0.05)' }
-        },
-        x: {
-          grid: { display: false }
-        }
-      }
-    });
-
-    const barChartOptions = ref({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            font: { size: 12 },
-            usePointStyle: true
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: { color: 'rgba(0, 0, 0, 0.05)' }
-        },
-        x: {
-          grid: { display: false }
-        }
-      }
-    });
-
-    const doughnutChartOptions = ref({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: { size: 12 },
-            usePointStyle: true
-          }
-        }
-      }
-    });
-
-    const radarChartOptions = ref({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            font: { size: 12 },
-            usePointStyle: true
-          }
-        }
-      },
-      scales: {
-        r: {
-          beginAtZero: true,
-          grid: { color: 'rgba(0, 0, 0, 0.05)' },
-          pointLabels: { font: { size: 10 } }
-        }
-      }
-    });
-
-    // Tính toán trung bình
-    const averageImagesPerMonth = computed(() => {
-      if (!statistics.value.monthlyStats?.data || statistics.value.monthlyStats.data.length === 0) return 0;
-      const total = statistics.value.monthlyStats.data.reduce((sum, item) => sum + (item.images || 0), 0);
-      return Math.round(total / statistics.value.monthlyStats.data.length);
-    });
-
-    const averageLikesPerMonth = computed(() => {
-      if (!statistics.value.monthlyStats?.data || statistics.value.monthlyStats.data.length === 0) return 0;
-      const total = statistics.value.monthlyStats.data.reduce((sum, item) => sum + (item.likes || 0), 0);
-      return Math.round(total / statistics.value.monthlyStats.data.length);
-    });
-
-    const averageCommentsPerMonth = computed(() => {
-      if (!statistics.value.monthlyStats?.data || statistics.value.monthlyStats.data.length === 0) return 0;
-      const total = statistics.value.monthlyStats.data.reduce((sum, item) => sum + (item.comments || 0), 0);
-      return Math.round(total / statistics.value.monthlyStats.data.length);
-    });
-
-    const performanceScore = computed(() => {
-      const totalImages = statistics.value.overview?.totalImages || 0;
-      const remainingCredits = statistics.value.overview?.remainingCredits || 0;
-      const usedCredits = 100 - remainingCredits; // Tính toán số lượng credit đã sử dụng
-      if (usedCredits === 0) return 0;
-      return Math.min(100, Math.round((totalImages / usedCredits) * 100));
-    });
-
-    const engagementScore = computed(() => {
-      const totalLikes = statistics.value.overview?.totalLikes || 0;
-      const totalComments = statistics.value.overview?.totalComments || 0;
-      const totalImages = statistics.value.overview?.totalImages || 0;
-      
-      if (totalImages === 0) return 0;
-      const engagement = (totalLikes + totalComments) / totalImages;
-      return Math.min(100, Math.round(engagement * 10));
-    });
-
-    const fetchUserStatistics = async () => {
-      try {
-        console.log('Đang gọi API thống kê...');
-        const response = await statisticsAPI.getUserStatistics();
-        console.log('Response từ API:', response);
-        
-        if (response.data && response.data.data) {
-          statistics.value = response.data.data;
-          console.log('Dữ liệu thống kê đã được cập nhật:', statistics.value);
-        } else {
-          console.warn('Dữ liệu thống kê không đúng định dạng:', response);
-          // Sử dụng dữ liệu mẫu để test
-          statistics.value = {
-            overview: {
-              totalImages: 25,
-              totalLikes: 150,
-              totalComments: 45,
-              remainingCredits: 75,
-              memberSince: '15/01/2025',
-              today: {
-                images: 3,
-                likes: 12,
-                comments: 5
-              }
-            },
-            monthlyStats: {
-              labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
-              data: [
-                { images: 5, likes: 20, comments: 8 },
-                { images: 8, likes: 35, comments: 12 },
-                { images: 12, likes: 45, comments: 15 },
-                { images: 15, likes: 60, comments: 20 },
-                { images: 18, likes: 75, comments: 25 },
-                { images: 25, likes: 150, comments: 45 }
-              ]
-            },
-            weeklyStats: {
-              labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
-              data: [
-                { images: 3, likes: 15, comments: 5 },
-                { images: 5, likes: 25, comments: 8 },
-                { images: 7, likes: 35, comments: 12 },
-                { images: 10, likes: 75, comments: 20 }
-              ]
-            },
-            topFeatures: [
-              { id: 1, name: 'Text to Image', count: 15 },
-              { id: 2, name: 'Image to Image', count: 8 },
-              { id: 3, name: 'Style Transfer', count: 5 },
-              { id: 4, name: 'Face Swap', count: 3 },
-              { id: 5, name: 'Background Remove', count: 2 }
-            ],
-            hourlyActivity: Array.from({ length: 24 }, (_, i) => ({
-              hour: i,
-              images: Math.floor(Math.random() * 5),
-              likes: Math.floor(Math.random() * 10),
-              comments: Math.floor(Math.random() * 3)
-            }))
-          };
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu thống kê:', error);
-        // Sử dụng dữ liệu mẫu khi có lỗi
-        statistics.value = {
-          overview: {
-            totalImages: 25,
-            totalLikes: 150,
-            totalComments: 45,
-            remainingCredits: 75,
-            memberSince: '15/01/2025',
-            today: {
-              images: 3,
-              likes: 12,
-              comments: 5
-            }
-          },
-          monthlyStats: {
-            labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
-            data: [
-              { images: 5, likes: 20, comments: 8 },
-              { images: 8, likes: 35, comments: 12 },
-              { images: 12, likes: 45, comments: 15 },
-              { images: 15, likes: 60, comments: 20 },
-              { images: 18, likes: 75, comments: 25 },
-              { images: 25, likes: 150, comments: 45 }
-            ]
-          },
-          weeklyStats: {
-            labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
-            data: [
-              { images: 3, likes: 15, comments: 5 },
-              { images: 5, likes: 25, comments: 8 },
-              { images: 7, likes: 35, comments: 12 },
-              { images: 10, likes: 75, comments: 20 }
-            ]
-          },
-          topFeatures: [
-            { id: 1, name: 'Text to Image', count: 15 },
-            { id: 2, name: 'Image to Image', count: 8 },
-            { id: 3, name: 'Style Transfer', count: 5 },
-            { id: 4, name: 'Face Swap', count: 3 },
-            { id: 5, name: 'Background Remove', count: 2 }
-          ],
-          hourlyActivity: Array.from({ length: 24 }, (_, i) => ({
-            hour: i,
-            images: Math.floor(Math.random() * 5),
-            likes: Math.floor(Math.random() * 10),
-            comments: Math.floor(Math.random() * 3)
-          }))
-        };
-      }
-    };
-
-    onMounted(() => {
-      fetchUserStatistics();
-    });
-
-    return {
+    const {
       statistics,
+      loading,
+      error,
+      hasError,
+      isDataLoaded,
+      lastUpdated,
       monthlyChartData,
       weeklyChartData,
       topFeaturesChartData,
@@ -672,7 +373,52 @@ export default {
       averageCommentsPerMonth,
       performanceScore,
       engagementScore,
-      fetchUserStatistics
+      fetchUserStatistics,
+      refreshStatistics,
+      clearError
+    } = useStatistics();
+
+    onMounted(() => {
+      // Chỉ gọi API nếu chưa có dữ liệu hoặc dữ liệu cũ quá 5 phút
+      if (!isDataLoaded.value) {
+        fetchUserStatistics();
+      } else {
+        // Kiểm tra xem dữ liệu có cũ quá không (5 phút)
+        const lastUpdate = new Date(lastUpdated.value);
+        const now = new Date();
+        const diffInMinutes = (now - lastUpdate) / (1000 * 60);
+        
+        if (diffInMinutes > 5) {
+          console.log('Dữ liệu cũ, đang cập nhật...');
+          fetchUserStatistics();
+        } else {
+          console.log('Sử dụng dữ liệu đã cache');
+        }
+      }
+    });
+
+    return {
+      statistics,
+      loading,
+      error,
+      hasError,
+      isDataLoaded,
+      lastUpdated,
+      monthlyChartData,
+      weeklyChartData,
+      topFeaturesChartData,
+      hourlyChartData,
+      lineChartOptions,
+      barChartOptions,
+      doughnutChartOptions,
+      radarChartOptions,
+      averageImagesPerMonth,
+      averageLikesPerMonth,
+      averageCommentsPerMonth,
+      performanceScore,
+      engagementScore,
+      refreshStatistics,
+      clearError
     };
   }
 };

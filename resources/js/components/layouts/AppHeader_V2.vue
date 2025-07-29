@@ -27,12 +27,22 @@
           </span>
         </router-link>
 
-                <!-- Right side content -->
+        <!-- Right side content -->
         <div class="flex items-center space-x-4">
+          <template v-if="auth.isAuthLoading.value">
+            <div class="flex items-center space-x-2">
+              <div :class="[
+                'animate-pulse rounded-lg h-8 w-16',
+                isHomePage ? 'bg-white/20' : 'bg-gray-200'
+              ]"></div>
+              <div :class="[
+                'animate-pulse rounded-full h-8 w-16',
+                isHomePage ? 'bg-white/20' : 'bg-gray-200'
+              ]"></div>
+            </div>
+          </template>
 
-          
-          <!-- Auth Buttons khi chưa đăng nhập hoặc đang loading -->
-          <template v-if="!isAuthenticated">
+          <template v-else-if="shouldShowAuthButtons">
             <router-link 
               to="/login" 
               :class="[
@@ -57,7 +67,7 @@
             </router-link>
           </template>
 
-                    <!-- User Menu khi đã đăng nhập -->
+          <!-- User Menu khi đã đăng nhập -->
           <template v-else>
             <div class="flex items-center space-x-4">
               <!-- Notification Bell Component -->
@@ -205,7 +215,10 @@ export default {
       return auth.isAuthenticated && !auth.isAuthLoading
     })
 
-
+    // Computed để tránh flash UI - chỉ hiển thị auth buttons sau khi loading hoàn thành
+    const shouldShowAuthButtons = computed(() => {
+      return !auth.isAuthLoading.value && !auth.isAuthenticated
+    })
 
     // Methods
     const toggleUserMenu = () => {
@@ -235,9 +248,6 @@ export default {
     watch(() => router.currentRoute.value, () => {
       isUserMenuOpen.value = false
     })
-
-
-
     return {
       auth,
       isAuthenticated: auth.isAuthenticated,
@@ -245,6 +255,7 @@ export default {
       isHomePage,
       isUserLoggedIn,
       isAuthLoading,
+      shouldShowAuthButtons,
       safeUser,
       toggleUserMenu,
       closeUserMenu,
