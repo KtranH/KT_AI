@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('ai_features', function (Blueprint $table) {
-            $table->dropColumn('count_img');
-        });
+        // Schema::table('ai_features', function (Blueprint $table) {
+        //     $table->dropColumn('count_img');
+        // });
 
         Schema::table('ai_features', function (Blueprint $table) {
             $table->string('title')->nullable()->change();
@@ -35,9 +35,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('ai_features', function (Blueprint $table) {
-            $table->integer('count_img')->nullable();
-        });
+        // Schema::table('ai_features', function (Blueprint $table) {
+        //     $table->integer('count_img')->nullable();
+        // });
 
         Schema::table('ai_features', function (Blueprint $table) {
             $table->string('title')->nullable(false)->change();

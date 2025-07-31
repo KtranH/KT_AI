@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('slug');
             $table->string('description');
             $table->string('prompt_template');
-            $table->integer('creadit_cost')->default(0);
+            $table->integer('credit_cost')->default(0);
             $table->integer('count_img')->default(0);
             $table->string('thumbnail_url');
             $table->json('input_requirements');
