@@ -1,6 +1,6 @@
 <template>
   <div v-if="isLoading && showLoadingForRoute">
-    <Loading />
+    <Loading_V1 />
   </div>
   <div v-else>
     <Header_V2 />
@@ -27,18 +27,20 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { AppSidebar as Sidebar, AppHeader as Header, AppLoading as Loading, AppHeader_V2 as Header_V2, AppSidebar_V2 as Sidebar_V2 } from './components/layouts';
+import { AppLoading as Loading_V1, AppHeader as Header_V1, AppSidebar as Sidebar_V1, AppFooter as Footer_V1 } from '@/components/layouts/V1';
+import { AppHeader as Header_V2, AppSidebar as Sidebar_V2 } from '@/components/layouts/V2';
 import { toast, Toaster as VueSonner } from 'vue-sonner'
 
 export default {
   name: 'App',
   components: {
-    Sidebar,
-    Header,
-    Loading,
+    Loading_V1,
     VueSonner,
     Header_V2,
-    Sidebar_V2
+    Sidebar_V2,
+    Header_V1,
+    Sidebar_V1,
+    Footer_V1,
   },
   setup() {
     const isLoading = ref(true);

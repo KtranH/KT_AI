@@ -23,6 +23,7 @@ class VerifyCsrfToken extends Middleware
         'api/get_images_by_feature/*',    // Lấy hình ảnh theo feature (public)
         'api/get_likes_information/*',    // Lấy thông tin like (public)
         'api/check',                      // Check auth status (có thể gọi khi chưa đăng nhập)
+        'api/api-login',                  // API Login
         
         // === GOOGLE OAUTH CALLBACKS ===
         'api/google/url',                 // Google OAuth URL
@@ -32,7 +33,6 @@ class VerifyCsrfToken extends Middleware
         // Tất cả auth endpoints sẽ yêu cầu CSRF:
         // - api/login
         // - api/register
-        // - api/api-login
         // - api/forgot-password
         // - api/verify-email
         // - api/resend-verification

@@ -9,6 +9,7 @@ use App\Http\Controllers\Constants\ErrorMessages;
 use App\Http\Controllers\Constants\SuccessMessages;
 use App\Http\Requests\V1\Auth\SignUpRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
+use App\Http\Requests\V1\Auth\PostmanRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -70,10 +71,10 @@ class AuthController extends BaseV1Controller
      * API Login cho testing (Postman, API clients)
      * Không yêu cầu Turnstile verification
      * 
-     * @param Request $request
+     * @param PostmanRequest $request
      * @return JsonResponse
      */
-    public function apiLogin(Request $request): JsonResponse
+    public function apiLogin(PostmanRequest $request): JsonResponse
     {
         return $this->executeServiceMethodV1(
             fn() => $this->authService->apiLogin($request),

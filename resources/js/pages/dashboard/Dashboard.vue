@@ -336,10 +336,10 @@ export default {
           const response = await profileAPI.updateAvatar(formData)
           if (response.data.success) {
             // Update local avatar
-            avatar.value = response.data.data.avatar_url
+            avatar.value = response.data.data.original.file_info.url
             // Update auth store
             if (auth.user.value) {
-              auth.user.value.avatar_url = response.data.data.avatar_url
+              auth.user.value.avatar_url = response.data.data.original.file_info.url
             }
             toast.dismiss()
             toast.success('Cập nhật ảnh đại diện thành công!')
@@ -353,10 +353,10 @@ export default {
           const response = await profileAPI.updateCoverImage(formData)
           if (response.data.success) {
             // Update local cover image
-            coverImage.value = response.data.data.cover_image_url
+            coverImage.value = response.data.data.original.file_info.url
             // Update auth store
             if (auth.user.value) {
-              auth.user.value.cover_image_url = response.data.data.cover_image_url
+              auth.user.value.cover_image_url = response.data.data.original.file_info.url
             }
             toast.dismiss()
             toast.success('Cập nhật ảnh bìa thành công!')

@@ -44,9 +44,9 @@ class AuthService extends BaseService
      * Đăng ký user
      * 
      * @param SignUpRequest $request
-     * @return array
+     * @return AuthResource
      */
-    public function register(SignUpRequest $request): array
+    public function register(SignUpRequest $request): AuthResource
     {
         return $this->executeInTransactionSafely(function() use ($request) {
             // Validate input
@@ -78,7 +78,7 @@ class AuthService extends BaseService
      * Đăng nhập user với Double Protection (CSRF + Sanctum + Turnstile)
      * 
      * @param LoginRequest $request
-     * @return array
+     * @return AuthResource
      */
     public function login(LoginRequest $request): AuthResource
     {
@@ -141,9 +141,9 @@ class AuthService extends BaseService
      * Không yêu cầu Turnstile verification
      * 
      * @param PostmanRequest $request
-     * @return array
+     * @return AuthResource
      */
-    public function apiLogin(PostmanRequest $request): array
+    public function apiLogin(PostmanRequest $request): AuthResource
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
             $request->validated();
@@ -181,9 +181,9 @@ class AuthService extends BaseService
      * Đăng xuất user
      * 
      * @param Request $request Request object
-     * @return array
+     * @return AuthResource
      */
-    public function logout(Request $request): array
+    public function logout(Request $request): AuthResource
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
             $user = $request->user();

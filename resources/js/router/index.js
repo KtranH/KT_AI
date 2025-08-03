@@ -10,10 +10,10 @@ import ForgotPassword from '../pages/auth/ForgotPassword.vue'
 // Dashboard Pages
 import Dashboard from '../pages/dashboard/Dashboard.vue'
 // Features Pages
-import Features from '../pages/ai-features/Features.vue'
-import Features_V2 from '../pages/ai-features/Features_V2.vue'
+import Features from '../pages/ai-features/V1/Features.vue'
+import Features_V2 from '../pages/ai-features/V2/Features_V2.vue'
 // Image Pages
-import CreateImage from '../pages/ai-features/GenImage.vue'
+import CreateImage from '../pages/ai-features/V1/GenImage.vue'
 import Detail from '../pages/social/ImageDetail.vue'
 // Error Pages
 import Error404 from '../pages/errors/error404.vue'
@@ -33,7 +33,7 @@ import Notifications from '../pages/social/Notification.vue'
 // Statistics Pages
 import StatisticsPage from '../pages/user/StatisticsPage.vue';
 // Image Jobs Management
-import ImageJobsManager from '../pages/ai-features/ImageJobsManager.vue';
+import ImageJobsManager from '../pages/ai-features/V1/ImageJobsManager.vue';
 
 const routes = [
   {
