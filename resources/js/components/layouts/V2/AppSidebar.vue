@@ -93,7 +93,7 @@
                     class="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold px-1 rounded-full animate-pulse border-2 border-white shadow"
                     style="font-size: 11px;"
                   >
-                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                    {{ unreadCount > 9 ? '9+' : unreadCount }}
                   </span>
                 </div>
                 <span>Thông báo</span>

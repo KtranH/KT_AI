@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div v-if="isLoading" class="min-h-screen">
+    <LoadingState />
+  </div>
+  
+  <div v-else class="min-h-screen bg-gray-50">
     <div class="max-w-full mx-auto my-4">
         <h1 v-if="error_message != null" class="text-2xl font-bold text-center mb-2 text-red-600 bg-red-100 p-4 rounded-full">{{ error_message }}</h1>
         <div class="min-h-screen bg-gray-50">
@@ -29,48 +33,79 @@
                     </div>
                 </div>
         
-                <div class="grid gap-8 mb-8 mt-4" :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'">
-                    <!-- Phần nhập thông tin bên trái -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Thông số hình ảnh</h2>
-                        
-                        <div class="space-y-6">
-                            <!-- Sử dụng ImageParameters component cho phần kích thước -->
-                            <ImageParameters 
-                              :width="width" 
-                              :height="height"
-                              @update:width="width = $event"
-                              @update:height="height = $event"
-                            />
-                            
-                            <!-- Sử dụng PromptInput component cho phần nhập prompt -->
-                            <PromptInput
-                              :prompt="prompt"
-                              :seed="randomSeed"
-                              :style="selectedOption"
-                              :options="options"
-                              :isGenerating="isGenerating"
-                              @update:prompt="prompt = $event"
-                              @update:seed="randomSeed = $event"
-                              @update:style="selectedOption = $event"
-                              @generate="handleGenerateImage"
-                            />
-                        </div>
+                <div
+                  class="grid gap-10 mb-12 mt-6"
+                  :class="feature?.input_requirements === null ? 'grid-cols-1 lg:grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'"
+                >
+                  <!-- Phần nhập thông tin bên trái -->
+                  <div class="bg-white rounded-2xl shadow-2xl p-8 border border-purple-100">
+                    <h2 class="text-2xl font-bold text-gradient mb-8 flex items-center gap-2">
+                      <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      Thông số hình ảnh
+                    </h2>
+                    <div class="space-y-8">
+                      <!-- Sử dụng ImageParameters component cho phần kích thước -->
+                      <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 shadow-inner">
+                        <ImageParameters 
+                          :width="width" 
+                          :height="height"
+                          @update:width="width = $event"
+                          @update:height="height = $event"
+                        />
+                      </div>
+                      <!-- Sử dụng PromptInput component cho phần nhập prompt -->
+                      <div class="bg-gradient-to-r from-blue-50 to-pink-50 rounded-xl p-4 shadow-inner">
+                        <PromptInput
+                          :prompt="prompt"
+                          :seed="randomSeed"
+                          :style="selectedOption"
+                          :options="options"
+                          :isGenerating="isGenerating"
+                          @update:prompt="prompt = $event"
+                          @update:seed="randomSeed = $event"
+                          @update:style="selectedOption = $event"
+                          @generate="handleGenerateImage"
+                        />
+                      </div>
                     </div>
-                    
-                    <!-- Phần kéo thả/tải ảnh lên bên phải -->
-                    <div v-if="feature?.input_requirements != null">
-                        <div v-for="(sectionImage, index) in feature.input_requirements" :key="sectionImage" 
-                             class="bg-white rounded-xl shadow-lg p-6 flex flex-col" 
-                             :class="sectionImage == 2 || feature.input_requirements == 2? 'mt-8' : ''">
-                            <!-- Sử dụng ImageUploader component cho phần tải ảnh -->
-                            <ImageUploader
-                              :title="sectionImage == 1 ? 'Xem trước & Tải lên ảnh chính' : 'Xem trước & Tải lên ảnh phụ'"
-                              :imageValue="index === 0 ? mainImage : secondaryImage"
-                              @update:image="index === 0 ? mainImage = $event : secondaryImage = $event"
-                            />
-                        </div>
+                  </div>
+                  
+                  <!-- Phần kéo thả/tải ảnh lên bên phải -->
+                  <div
+                    v-if="feature?.input_requirements != null"
+                    :class="[
+                      'gap-8',
+                      feature.input_requirements.length === 2
+                        ? 'flex flex-row items-stretch justify-between'
+                        : 'flex flex-col'
+                    ]"
+                  >
+                    <div
+                      v-for="(sectionImage, index) in feature.input_requirements"
+                      :key="sectionImage"
+                      :class="[
+                        'bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col transition-transform hover:scale-[1.02]',
+                        feature.input_requirements.length === 2 ? 'w-1/2' : '',
+                        feature.input_requirements.length === 2 && index === 0 ? 'mr-4' : '',
+                        feature.input_requirements.length === 2 && index === 1 ? 'ml-4' : '',
+                        feature.input_requirements.length === 1 ? 'w-full' : ''
+                      ]"
+                    >
+                      <div class="mb-4">
+                        <span class="inline-block px-4 py-1 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold shadow text-sm">
+                          {{ sectionImage == 1 ? 'Ảnh chính' : 'Ảnh phụ' }}
+                        </span>
+                      </div>
+                      <!-- Sử dụng ImageUploader component cho phần tải ảnh -->
+                      <ImageUploader
+                        :title="sectionImage == 1 ? 'Xem trước & Tải lên ảnh chính' : 'Xem trước & Tải lên ảnh phụ'"
+                        :imageValue="index === 0 ? mainImage : secondaryImage"
+                        @update:image="index === 0 ? mainImage = $event : secondaryImage = $event"
+                      />
                     </div>
+                  </div>
                 </div>
                 
                 <!-- Preview ảnh khi tạo thành công -->
@@ -130,7 +165,7 @@
 </template>
 <script>
 import { GuideSection, ImageParameters, ImageUploader, PromptInput, ImageGalleryLayout, ImageReview } from '@/components/features/images'
-import { ButtonBack } from '@/components/base'
+import { ButtonBack, LoadingState } from '@/components/base'
 import { useImageGen } from '@/composables/features/images/useImageGen'
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -147,7 +182,8 @@ export default {
         PromptInput,
         ImageUploader,
         ImageReview,
-        ButtonBack
+        ButtonBack,
+        LoadingState
     },
     setup() {
         // State
@@ -187,6 +223,9 @@ export default {
         const successfulJob = ref(null)
         // Set để theo dõi các job đã hiển thị thông báo
         const notifiedJobIds = ref(new Set())
+        
+        // Loading state
+        const isLoading = ref(true)
         
         // Items cho hướng dẫn
         const guideItems = ref([
@@ -269,7 +308,6 @@ export default {
             }
             // Thiết lập interval kiểm tra trạng thái các tiến trình
             checkInterval.value = setInterval(async () => {
-                // Luôn kiểm tra completed jobs
                 await checkCompletedJobs(successfulJob, notifiedJobIds)
                 limitNotifiedJobsSet() // Giới hạn kích thước của Set
                 // Cập nhật active jobs
@@ -279,7 +317,7 @@ export default {
                     clearInterval(checkInterval.value)
                     checkInterval.value = null
                 }
-            }, 15000) // Tăng lên 15 giây để giảm tải server
+            }, 15000)
         };
 
         // Mounted Hook
@@ -292,14 +330,20 @@ export default {
             } catch (error) {
                 console.error('Error decoding ID:', error)
             }
-            await get_feature()
-            await fetchActiveJobs(activeJobs)
-            // Luôn kiểm tra completed jobs khi component được mount
-            await checkCompletedJobs(successfulJob, notifiedJobIds)
-            // Khởi động interval nếu có active jobs
-            if (activeJobs.value.length > 0) {
-                startCheckingInterval()
-            }
+            
+            // Hiển thị loading trong 0.5s
+            setTimeout(async () => {
+                await get_feature()
+                await fetchActiveJobs(activeJobs)
+                // Luôn kiểm tra completed jobs khi component được mount
+                await checkCompletedJobs(successfulJob, notifiedJobIds)
+                // Khởi động interval nếu có active jobs
+                if (activeJobs.value.length > 0) {
+                    startCheckingInterval()
+                }
+                // Ẩn loading
+                isLoading.value = false
+            }, 500)
         })
     
         // Xóa interval khi component bị hủy
@@ -331,7 +375,8 @@ export default {
             handleCancelJob,
             successfulJob,
             handleClosePreview,
-            user
+            user,
+            isLoading
         }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AIFeature extends Model
 {
@@ -29,9 +30,15 @@ class AIFeature extends Model
         'category' => 'string',
         'thumbnail_url' => 'string',
         'status_feature' => 'string',
-        'input_requirements' => 'string',
+        'input_requirements' => 'int',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'sum_img' => 'integer'
     ];
+
+    // Relationship với Image (1-nhiều)
+    public function images(): HasMany
+    {
+        return $this->hasMany(Image::class);
+    }
 } 

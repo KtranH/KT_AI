@@ -2,14 +2,14 @@
     <div class="flex items-center p-4 border-b">
         <!-- Go back -->
         <ButtonBack customClass="flex items-center bg-gradient-text mr-2 rounded-full hover: text-white font-bold py-2 px-4 rounded-full"/>
-        <img :src="currentUserImage && currentUserImage.avatar_url ? currentUserImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
+        <img :src="postOwnerImage && postOwnerImage.avatar_url ? postOwnerImage.avatar_url : avataUser" class="w-8 h-8 rounded-full" alt="Profile" />
         <div class="ml-3">
             <div class="flex items-center">
                 <span 
                     class="font-semibold cursor-pointer hover:text-purple-800 transition-colors duration-300 ease-in-out"
-                    @click="navigateToUserDashboard(currentUserImage?.id)"
+                    @click="navigateToUserDashboard(postOwnerImage?.id)"
                 >
-                    {{ currentUserImage && currentUserImage.name ? currentUserImage.name : nameUser }}
+                    {{ postOwnerImage && postOwnerImage.name ? postOwnerImage.name : nameUser }}
                 </span>
                 <div class="flex items-center ml-1">
                     <img :src="icon_title" class="w-4 h-4" alt="Icon" />
@@ -83,7 +83,7 @@ import EditImageForm from './EditImageForm.vue'
 import { toast } from 'vue-sonner'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { useImageStore } from '@/stores/user/imagesStore'
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -125,39 +125,30 @@ export default {
         const auth = useAuthStore()
         const icon_title = ref("/img/creativity.png")
 
-        // Đảm bảo trạng thái đăng nhập được khởi tạo
-        onMounted(async () => {
-            try {
-                // Kiểm tra xác thực
-                await auth.checkAuth()
-            } catch (error) {
-                console.error('Lỗi khi kiểm tra xác thực:', error)
-            }
-            document.addEventListener('click', handleClickOutside)
-        })
-
         const user = computed(() => auth.user)
         const deleteRef = ref(null)
         const reportRef = ref(null)
 
         const currentUserImage = computed(() => imageStore.currentUser)
         
+        // Computed để lấy thông tin user của chủ bài viết
+        const postOwnerImage = computed(() => imageStore.user || imageStore.currentUser)
+        
         // Computed để kiểm tra xem user hiện tại có phải chủ bài viết không
         const isOwner = computed(() => {
             const currentUser = auth.user.value
-            const postOwner = dataImage.value && dataImage.value.user ? dataImage.value.user : null
+            // Sử dụng user từ store thay vì từ dataImage
+            const postOwner = imageStore.user || imageStore.currentUser
             
             if (!currentUser || !postOwner) {
                 return false
             }
             
             // Chuyển về cùng kiểu dữ liệu để so sánh
-            const currentUserId = String(currentUser.id)
-            const postOwnerId = String(postOwner.id)
+            const currentUserId = Number(currentUser.id)
+            const postOwnerId = Number(postOwner.id)
             
-            const isMatch = currentUserId === postOwnerId
-            
-            return isMatch
+            return currentUserId === postOwnerId
         })
 
         // Thêm hàm để điều hướng đến trang dashboard của người dùng
@@ -181,6 +172,17 @@ export default {
                 isDropdownOpen.value = false
             }
         }
+
+        // Đảm bảo trạng thái đăng nhập được khởi tạo
+        onMounted(async () => {
+            try {
+                // Kiểm tra xác thực
+                await auth.checkAuth()
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra xác thực:', error)
+            }
+            document.addEventListener('click', handleClickOutside)
+        })
 
         onUnmounted(() => {
             document.removeEventListener('click', handleClickOutside)
@@ -232,6 +234,7 @@ export default {
         return {
             dataImage,
             currentUserImage,
+            postOwnerImage,
             formatTime,
             isDropdownOpen,
             isEditing,
