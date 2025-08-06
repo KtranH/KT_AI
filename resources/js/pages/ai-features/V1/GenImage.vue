@@ -5,7 +5,6 @@
   
   <div v-else class="min-h-screen bg-gray-50">
     <div class="max-w-full mx-auto my-4">
-        <h1 v-if="error_message != null" class="text-2xl font-bold text-center mb-2 text-red-600 bg-red-100 p-4 rounded-full">{{ error_message }}</h1>
         <div class="min-h-screen bg-gray-50">
             <div class="container mx-auto p-6">
                 <!-- Nút quay lại -->
@@ -144,6 +143,16 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- Thông báo lỗi -->
+                <div v-if="error_message != null" class="flex items-center justify-center mb-4">
+                  <div class="flex items-center gap-3 bg-red-100 border border-red-300 rounded-xl px-6 py-4 shadow text-red-700">
+                    <svg class="w-7 h-7 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="#fee2e2"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" />
+                    </svg>
+                    <span class="text-lg font-semibold">{{ error_message }}</span>
+                  </div>
                 </div>
 
                 <!-- Phần hướng dẫn sử dụng -->
