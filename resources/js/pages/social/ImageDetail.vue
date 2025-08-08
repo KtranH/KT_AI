@@ -6,10 +6,21 @@
             <!-- Instagram-like layout: post image on left, details on right -->
             <div class="flex flex-col md:flex-row h-full">
                 <!-- Left column: Image -->
-                <ImageViewer :imageID="imageId" @navigate-to-user="navigateToUserDashboard" />
+                <ImageViewer 
+                    :imageID="imageId" 
+                    :isImageOwner="isImageOwner"
+                    @navigate-to-user="navigateToUserDashboard" 
+                />
 
                 <!-- Right column: Post header, comments, interactions -->
-                <CommentSection :imageId="imageId" :highlightCommentId="commentId" :shouldHighlight="shouldHighlight" @navigate-to-user="navigateToUserDashboard" />
+                <CommentSection 
+                    :imageId="imageId" 
+                    :highlightCommentId="commentId" 
+                    :shouldHighlight="shouldHighlight"
+                    :isImageOwner="isImageOwner"
+                    :isCommentOwner="isCommentOwner"
+                    @navigate-to-user="navigateToUserDashboard" 
+                />
             </div>
         </div>
     </div>
@@ -22,6 +33,7 @@ import { CommentSection } from '@/components/features/comments'
 import { useRoute, useRouter } from 'vue-router'
 import { decodedID } from '@/utils'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { useImageOwnership } from '@/composables/features/images/useImageOwnership'
 
 export default {
     name: 'Detail',
@@ -33,6 +45,8 @@ export default {
         const route = useRoute()
         const router = useRouter()
         const userStore = useAuthStore()
+        const { isImageOwner, isCommentOwner } = useImageOwnership()
+        
         let imageId = null
         let commentId = null
         let shouldHighlight = false
@@ -73,6 +87,8 @@ export default {
             imageId,
             commentId,
             shouldHighlight,
+            isImageOwner,
+            isCommentOwner,
             navigateToUserDashboard
         }
     }

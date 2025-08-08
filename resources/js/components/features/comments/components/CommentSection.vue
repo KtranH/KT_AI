@@ -1,7 +1,10 @@
 <template>
     <div class="md:w-2/5 md:flex md:flex-col md:border-l h-full">
         <!-- Header with profile info -->
-        <HeaderSection @navigate-to-user="handleNavigateToUser" />
+        <HeaderSection 
+            :isImageOwner="isImageOwner"
+            @navigate-to-user="handleNavigateToUser" 
+        />
 
         <!-- Loading indicator -->
         <div v-if="loading" class="flex justify-center items-center py-6">
@@ -26,6 +29,8 @@
                 :hasMoreComments="hasMoreComments"
                 :loading="loading"
                 :highlightCommentId="highlightCommentId"
+                :isImageOwner="isImageOwner"
+                :isCommentOwner="isCommentOwner"
                 @reply="handleStartReply"
                 @cancel-reply="handleCancelReply"
                 @reply-submit="handleReplySubmit"
@@ -83,6 +88,14 @@ export default {
         shouldHighlight: {
             type: Boolean,
             default: false
+        },
+        isImageOwner: {
+            type: Boolean,
+            default: false
+        },
+        isCommentOwner: {
+            type: Function,
+            default: () => false
         }
     },
     emits: ['navigate-to-user'],

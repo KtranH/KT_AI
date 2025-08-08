@@ -1,5 +1,5 @@
 <template>
-    <div :id="`comment-${comment.id}`" class="flex space-x-3"
+    <div :id="`comment-${comment.id}`" class="flex space-x-3 group"
         :class="{
             'bg-yellow-100 transition-colors duration-1000 p-2 rounded-lg': highlightCommentId == comment.id || comment.is_highlighted,
             'bg-green-50 transition-colors duration-1000 p-2 rounded-lg': comment.is_new && !comment.is_highlighted
@@ -52,7 +52,7 @@
                 <button class="font-medium hover:underline" @click="onReply(index, comment.username)">Trả lời</button>
 
                 <!-- Nút xóa và sửa chỉ hiển thị cho chủ sở hữu bình luận -->
-                <template v-if="comment.isOwner">
+                <template v-if="isCommentOwnerComputed">
                     <button class="font-medium ml-2 hover:underline" @click="confirmDelete">Xóa</button>
                     <button class="font-medium ml-2 hover:underline" @click="startEdit">Sửa</button>
                 </template>
@@ -66,6 +66,18 @@
                     </button>
                 </div>
                 <span v-if="comment.updated_at !== comment.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
+
+                <!-- Menu ba chấm -->
+                <CommentDropdownMenu
+                    :isOpen="showCommentMenu === index"
+                    :isImageOwner="isImageOwner"
+                    :isOwner="isCommentOwnerComputed"
+                    :showEdit="true"
+                    :showDelete="true"
+                    @toggle="toggleCommentMenu(index)"
+                    @report="reportComment"
+                    @delete="confirmDelete"
+                />
             </div>
 
             <!-- Xác nhận xóa bình luận -->
@@ -87,7 +99,7 @@
                     <!-- Comment Reply Item -->
                     <div v-for="(reply, replyIndex) in comment.replies" :key="reply.id"
                         :id="`reply-${reply.id}`"
-                        class="flex space-x-2"
+                        class="flex space-x-2 group"
                         :class="{
                             'bg-yellow-100 transition-colors duration-1000 p-2 rounded-lg': highlightCommentId == reply.id || reply.is_highlighted,
                             'bg-green-50 transition-colors duration-1000 p-2 rounded-lg': reply.is_new && !reply.is_highlighted
@@ -144,7 +156,7 @@
                                 <button class="font-medium hover:underline" @click="onReplyToReply(index, reply.username, reply.id)">Trả lời</button>
 
                                 <!-- Nút xóa và sửa chỉ hiển thị cho chủ sở hữu phản hồi -->
-                                <template v-if="reply.isOwner">
+                                <template v-if="isReplyOwnerComputed(reply.userid || reply.user_id || reply.user?.id)">
                                     <button class="font-medium ml-2 hover:underline" @click="confirmReplyDelete(replyIndex)">Xóa</button>
                                     <button class="font-medium ml-2 hover:underline" @click="startReplyEdit(reply, replyIndex)">Sửa</button>
                                 </template>
@@ -158,6 +170,18 @@
                                     </button>
                                 </div>
                                 <span v-if="reply.updated_at !== reply.created_at" class="ml-1 text-gray-500 text-xs font-medium">(Đã chỉnh sửa)</span>
+
+                                <!-- Menu ba chấm cho reply -->
+                                <CommentDropdownMenu
+                                    :isOpen="showReplyMenu === replyIndex"
+                                    :isImageOwner="isImageOwner"
+                                    :isOwner="isReplyOwnerComputed(reply.userid || reply.user_id || reply.user?.id)"
+                                    :showEdit="true"
+                                    :showDelete="true"
+                                    @toggle="toggleReplyMenu(replyIndex)"
+                                    @report="reportReply(reply)"
+                                    @delete="confirmReplyDelete(replyIndex)"
+                                />
                             </div>
 
                             <!-- Xác nhận xóa phản hồi -->
@@ -211,16 +235,18 @@
 </template>
 
 <script>
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, watch, onMounted, computed } from 'vue'
 import CommentReply from './ReplyLayout.vue'
 import useLikes from '@/composables/features/social/useLikes'
-import { ConfirmUpdate } from '@/components/base'
+import { ConfirmUpdate, CommentDropdownMenu } from '@/components/base'
+import { toast } from 'vue-sonner'
 
 export default {
     name: 'CommentItem',
     components: {
         CommentReply,
         ConfirmUpdate,
+        CommentDropdownMenu
     },
     props: {
         comment: Object,
@@ -245,6 +271,14 @@ export default {
         highlightCommentId: {
             type: [Number, String],
             default: null
+        },
+        isImageOwner: {
+            type: Boolean,
+            default: false
+        },
+        isCommentOwner: {
+            type: Function,
+            default: () => false
         }
     },
     emits: [
@@ -275,6 +309,19 @@ export default {
         const showDeleteReplyConfirm = ref({})
         const updateRef = ref(null)
         const updateReplyRef = ref([])
+
+        // State cho menu dropdown
+        const showCommentMenu = ref(null)
+        const showReplyMenu = ref(null)
+
+        // Computed để kiểm tra quyền sở hữu comment và reply
+        const isCommentOwnerComputed = computed(() => {
+            return props.isCommentOwner(props.comment.user_id)
+        })
+
+        const isReplyOwnerComputed = computed(() => {
+            return (replyUserId) => props.isCommentOwner(replyUserId)
+        })
 
         // Xử lý trả lời bình luận
         const onReply = (index, username) => {
@@ -351,6 +398,8 @@ export default {
             editText.value = props.comment.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
             isEditing.value = true
             textOriginal.value = editText.value
+            // Đóng menu dropdown
+            showCommentMenu.value = null
         }
 
         watch(editText, (newValue) => {
@@ -396,6 +445,8 @@ export default {
             editReplyText.value = reply.text.replace(/<[^>]*>/g, '') // Loại bỏ các thẻ HTML
             isEditingReply.value = { ...isEditingReply.value, [replyIndex]: true }
             textOriginal.value = editReplyText.value
+            // Đóng menu dropdown
+            showReplyMenu.value = null
         }
 
         watch(editReplyText, (newValue) => {
@@ -445,6 +496,8 @@ export default {
         // Xử lý xóa bình luận
         const confirmDelete = () => {
             showDeleteConfirm.value = true
+            // Đóng menu dropdown
+            showCommentMenu.value = null
         }
 
         const deleteComment = () => {
@@ -460,6 +513,8 @@ export default {
         // Xử lý xóa phản hồi
         const confirmReplyDelete = (replyIndex) => {
             showDeleteReplyConfirm.value = { ...showDeleteReplyConfirm.value, [replyIndex]: true }
+            // Đóng menu dropdown
+            showReplyMenu.value = null
         }
 
         const cancelReplyDelete = (replyIndex) => {
@@ -498,6 +553,60 @@ export default {
             emit('navigate-to-user', userId)
         }
 
+        // Xử lý menu dropdown cho comment
+        const toggleCommentMenu = (index) => {
+            if (showCommentMenu.value === index) {
+                showCommentMenu.value = null
+            } else {
+                showCommentMenu.value = index
+                showReplyMenu.value = null // Đóng menu reply nếu đang mở
+            }
+        }
+
+        // Xử lý menu dropdown cho reply
+        const toggleReplyMenu = (replyIndex) => {
+            if (showReplyMenu.value === replyIndex) {
+                showReplyMenu.value = null
+            } else {
+                showReplyMenu.value = replyIndex
+                showCommentMenu.value = null // Đóng menu comment nếu đang mở
+            }
+        }
+
+        // Xử lý báo cáo comment
+        const reportComment = () => {
+            toast.success('Báo cáo comment thành công')
+            // TODO: Implement report functionality
+            console.log('Báo cáo comment:', props.comment.id)
+            showCommentMenu.value = null
+        }
+
+        // Xử lý báo cáo reply
+        const reportReply = (reply) => {
+            // TODO: Implement report functionality
+            console.log('Báo cáo reply:', reply.id)
+            showReplyMenu.value = null
+        }
+
+        // Đóng menu khi click ra ngoài
+        const closeMenus = () => {
+            showCommentMenu.value = null
+            showReplyMenu.value = null
+        }
+
+        // Thêm event listener để đóng menu khi click ra ngoài
+        onMounted(() => {
+            document.addEventListener('click', (e) => {
+                // Kiểm tra xem click có phải vào button menu hoặc dropdown không
+                const isMenuButton = e.target.closest('button[class*="rounded-full"]')
+                const isDropdown = e.target.closest('[class*="absolute right-0"]')
+                
+                if (!isMenuButton && !isDropdown) {
+                    closeMenus()
+                }
+            })
+        })
+
         return {
             onReply,
             onCancelReply,
@@ -529,7 +638,15 @@ export default {
             updateRef,
             updateReplyRef,
             isNotNewValue,
-            navigateToUserDashboard
+            navigateToUserDashboard,
+            showCommentMenu,
+            showReplyMenu,
+            toggleCommentMenu,
+            toggleReplyMenu,
+            reportComment,
+            reportReply,
+            isCommentOwnerComputed,
+            isReplyOwnerComputed
         }
     }
 }

@@ -23,32 +23,14 @@
             </span>
         </div>
          <!-- Setting post button with dropdown -->
-        <div class="ml-auto relative dropdown-container">
-            <button @click="toggleDropdown" class="focus:outline-none p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-            </button>
-            
-            <!-- Dropdown menu -->
-            <div v-if="isDropdownOpen" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
-                <div class="py-1" v-if="isOwner">
-                    <button @click="handleEdit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                        <i class="fa-solid fa-pen-to-square mr-2"></i> Sửa bài viết
-                    </button>
-                    <button @click="handleDelete" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                        <i class="fa-solid fa-trash mr-2"></i> Xóa bài viết
-                    </button>
-                    <ConfirmDelete ref="deleteRef" />
-                </div>
-                <div class="py-1" v-else>
-                    <button @click="handleReport" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                        <i class="fa-solid fa-bell mr-2"></i> Báo cáo
-                    </button>
-                    <ConfirmReport ref="reportRef" />
-                </div>
-            </div>
-        </div>
+        <PostDropdownMenu
+            :isOpen="isDropdownOpen"
+            :isOwner="isOwner"
+            @toggle="toggleDropdown"
+            @edit="handleEdit"
+            @delete="handleDelete"
+            @report="handleReport"
+        />
     </div>
 
      <!-- Post Title -->
@@ -77,7 +59,7 @@ import useImage from '@/composables/features/images/useImage'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
-import { ConfirmDelete, ConfirmReport } from '@/components/base'
+import { ConfirmDelete, ConfirmReport, PostDropdownMenu } from '@/components/base'
 import { ButtonBack } from '@/components/base'
 import EditImageForm from './EditImageForm.vue'
 import { toast } from 'vue-sonner'
@@ -93,7 +75,8 @@ export default {
         ConfirmDelete,
         ConfirmReport,
         ButtonBack,
-        EditImageForm
+        EditImageForm,
+        PostDropdownMenu
     },
     props:
     {
@@ -110,6 +93,10 @@ export default {
         title: {
             type: String,
             default: 'Đang tải...'
+        },
+        isImageOwner: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['navigate-to-user'],
@@ -134,22 +121,8 @@ export default {
         // Computed để lấy thông tin user của chủ bài viết
         const postOwnerImage = computed(() => imageStore.user || imageStore.currentUser)
         
-        // Computed để kiểm tra xem user hiện tại có phải chủ bài viết không
-        const isOwner = computed(() => {
-            const currentUser = auth.user.value
-            // Sử dụng user từ store thay vì từ dataImage
-            const postOwner = imageStore.user || imageStore.currentUser
-            
-            if (!currentUser || !postOwner) {
-                return false
-            }
-            
-            // Chuyển về cùng kiểu dữ liệu để so sánh
-            const currentUserId = Number(currentUser.id)
-            const postOwnerId = Number(postOwner.id)
-            
-            return currentUserId === postOwnerId
-        })
+        // Sử dụng prop isImageOwner thay vì logic riêng
+        const isOwner = computed(() => props.isImageOwner)
 
         // Thêm hàm để điều hướng đến trang dashboard của người dùng
         const navigateToUserDashboard = (userId) => {

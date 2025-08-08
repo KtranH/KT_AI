@@ -16,9 +16,8 @@
         </button>
       </div>
       
-      <div v-if="isLoading && !isLoadingMore" class="text-center py-8">
-        <p>Đang tải dữ liệu...</p>
-      </div>
+      <!-- Loading state -->
+      <LoadingState v-if="isLoading && !isLoadingMore" />
       
       <div v-else-if="hasError" class="text-center py-8">
         <p class="text-red-500">Đã xảy ra lỗi khi tải dữ liệu</p>
@@ -138,11 +137,13 @@ import { ImageGalleryLayout } from '../../images'
 import useImage from '@/composables/features/images/useImage'
 import useMasonry from '@/composables/features/ui/useMasonry'
 import { useImageStore } from '@/stores/user/imagesStore'
+import LoadingState from '@/components/base/feedback/LoadingState.vue'
 
 export default {
   name: 'ImageList',
   components: {
-    ImageGalleryLayout
+    ImageGalleryLayout,
+    LoadingState
   },
   props: {
     filter: {

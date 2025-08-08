@@ -144,6 +144,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <!-- Thông báo lỗi -->
                 <div v-if="error_message != null" class="flex items-center justify-center mb-4">
                   <div class="flex items-center gap-3 bg-red-100 border border-red-300 rounded-xl px-6 py-4 shadow text-red-700">

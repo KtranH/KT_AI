@@ -5,10 +5,37 @@ declare(strict_types=1);
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Constants\ResponseCode;
-use App\Http\Controllers\Constants\ErrorMessages;
-use App\Http\Controllers\Constants\SuccessMessages;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Info(
+ *     version="1.0.0",
+ *     title="KT AI API Documentation",
+ *     description="API documentation cho hệ thống KT AI",
+ *     @OA\Contact(
+ *         email="admin@ktai.com",
+ *         name="KT AI Team"
+ *     ),
+ *     @OA\License(
+ *         name="MIT",
+ *         url="https://opensource.org/licenses/MIT"
+ *     )
+ * )
+ * 
+ * @OA\Server(
+ *     url=L5_SWAGGER_CONST_HOST,
+ *     description="API Server"
+ * )
+ * 
+ * @OA\SecurityScheme(
+ *     securityScheme="bearerAuth",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT"
+ * )
+ */
 abstract class BaseV1Controller extends Controller
 {
     /**
@@ -56,16 +83,37 @@ abstract class BaseV1Controller extends Controller
     }
     
     /**
-     * Thực thi service method với version header
-     * 
-     * @param callable $serviceMethod
-     * @param string|null $successMessage
-     * @param string $context
-     * @return \Illuminate\Http\JsonResponse
+     * Thực thi service method với tài liệu tự động
      */
-    protected function executeServiceMethodV1(callable $serviceMethod, ?string $successMessage = null, string $context = '')
+    protected function executeServiceMethodV1(callable $serviceMethod, ?string $successMessage = null, ?string $errorMessage = null): JsonResponse
     {
-        $response = $this->executeServiceMethod($serviceMethod, $successMessage, $context);
-        return $this->withVersionHeader($response);
+        try {
+            $result = $serviceMethod();
+            
+            $response = [
+                'success' => true,
+                'message' => $successMessage ?? 'Thành công',
+                'data' => $result
+            ];
+            
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $errorMessage ?? $e->getMessage(),
+                'data' => null
+            ];
+            
+            return response()->json($response, 500);
+        }
+    }
+
+    /**
+     * Auto-generate Swagger documentation for CRUD operations
+     */
+    protected function autoDocumentCrud(string $resource, string $model, array $fields = []): void
+    {
+        // Phương thức này sẽ được sử dụng để tự động tạo tài liệu Swagger cho các hoạt động CRUD
+        // Thực hiện sẽ được thêm dựa trên phân tích route
     }
 } 

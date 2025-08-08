@@ -14,6 +14,9 @@ import ConfirmUpload from './modals/ConfirmUpload.vue';
 // Feedback
 import LoadingState from './feedback/LoadingState.vue';
 
+// Dropdowns
+import { BaseDropdownMenu, CommentDropdownMenu, PostDropdownMenu } from './dropdowns';
+
 // Named exports
 export {
   Button,
@@ -23,7 +26,10 @@ export {
   ConfirmReport,
   ConfirmDelete,
   ConfirmUpload,
-  LoadingState
+  LoadingState,
+  BaseDropdownMenu,
+  CommentDropdownMenu,
+  PostDropdownMenu
 };
 
 // Component để đăng ký toàn cục nếu cần
@@ -35,5 +41,8 @@ export const BASE_COMPONENTS = {
   ConfirmReport,
   ConfirmDelete,
   ConfirmUpload,
-  LoadingState
+  LoadingState,
+  BaseDropdownMenu,
+  CommentDropdownMenu,
+  PostDropdownMenu
 };

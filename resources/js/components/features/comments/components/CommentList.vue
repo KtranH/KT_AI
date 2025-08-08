@@ -17,6 +17,8 @@
                 :replyToUsername="replyToUsername"
                 :replyToParentId="replyToParentId"
                 :highlightCommentId="highlightCommentId"
+                :isImageOwner="isImageOwner"
+                :isCommentOwner="isCommentOwner"
                 @reply="handleReply"
                 @cancel-reply="handleCancelReply"
                 @reply-submit="handleReplySubmit"
@@ -80,6 +82,14 @@ export default {
         highlightCommentId: {
             type: [Number, String],
             default: null
+        },
+        isImageOwner: {
+            type: Boolean,
+            default: false
+        },
+        isCommentOwner: {
+            type: Function,
+            default: () => false
         }
     },
     emits: [
