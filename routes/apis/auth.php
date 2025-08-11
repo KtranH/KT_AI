@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Route;
 
 // Auth Routes
 Route::get('/check', [AuthController::class, 'checkStatus']);
-Route::post('/login', [AuthController::class, 'login']);    
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('web');    
+Route::post('/register', [AuthController::class, 'register'])->middleware('web');
 
 // API Testing Route - Dành cho Postman/API testing (không cần Turnstile)
 Route::post('/api-login', [AuthController::class, 'apiLogin']);
@@ -27,8 +27,8 @@ Route::post('/reset-password', [PasswordController::class, 'reset']);
 Route::get('/turnstile/config', [TurnstileController::class, 'getConfig']);
 
 // Google OAuth Routes
-Route::get('/google/url', [GoogleAuthController::class, 'getRedirectUrl']);
-Route::get('/google/callback', [GoogleAuthController::class, 'handleCallback']);
+Route::get('/google/url', [GoogleAuthController::class, 'getRedirectUrl'])->middleware('web');
+Route::get('/google/callback', [GoogleAuthController::class, 'handleCallback'])->middleware('web');
 
 // Protected Auth Routes
 Route::middleware(['auth:sanctum'])->group(function () {

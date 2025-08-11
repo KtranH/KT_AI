@@ -97,11 +97,12 @@ class AuthController extends BaseV1Controller
             ErrorMessages::LOGOUT_ERROR
         );
 
-        // Thêm CSRF token cookie vào response khi logout
+        // Thêm CSRF token cookie vào response khi logout (giúp web FE cập nhật nhanh)
         if ($result->getStatusCode() === 200) {
             $data = $result->getData(true);
             if (isset($data['data']['csrf_token'])) {
-                $result = $result->cookie('XSRF-TOKEN', $data['data']['csrf_token'], 120, null, null, null, false);
+                // Cookie httpOnly=false để FE có thể đọc và set header X-XSRF-TOKEN cho tiếp theo
+                $result = $result->cookie('XSRF-TOKEN', $data['data']['csrf_token'], 120, '/', null, false, false);
             }
         }
 

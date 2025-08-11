@@ -110,7 +110,7 @@
               class="h-8 w-8 rounded-full object-cover"
             >
             <div>
-              <p class="text-sm font-medium text-gray-700">{{ user.name }}</p>
+              <p class="text-sm font-medium text-gray-700">{{ user?.name || 'User' }}</p>
               <button 
                 @click="logout"
                 class="text-xs text-gray-500 hover:text-gray-700"
@@ -170,7 +170,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { gsap } from 'gsap'
 import { useNotifications } from '@/composables/features/social/useNotifications'
@@ -281,8 +281,8 @@ export default {
       menuItems,
       unreadCount,
       testSubMenu,
-      isAuthenticated: auth.isAuthenticated,
-      user: auth.user,
+      isAuthenticated: computed(() => auth.isAuthenticated.value),
+      user: computed(() => auth.user.value),
       isOpen,
       toggleSidebar,
       isTestMenuOpen,

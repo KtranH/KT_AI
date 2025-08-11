@@ -4,6 +4,8 @@ import apiClient from '../../config/apiConfig'
 export const authAPI = {
   // Basic Auth
   login: (credentials) => apiClient.post('/login', credentials),
+  // Mobile / API client login: nhận Bearer token
+  mobileLogin: (credentials) => apiClient.post('/api-login', credentials),
   logout: () => apiClient.post('/logout'),
   check: () => apiClient.get('/check'),
   register: (userData) => apiClient.post('/register', userData),

@@ -18,9 +18,13 @@ class UserRepository implements UserRepositoryInterface
      */
     public function checkStatus(): array
     {
+        // Session authentication: sử dụng web guard cụ thể
+        $isAuthenticated = Auth::guard('web')->check();
+        $user = Auth::guard('web')->user();
+        
         return [
-            'authenticated' => Auth::check(),
-            'user' => Auth::user()
+            'authenticated' => $isAuthenticated,
+            'user' => $user
         ];
     }
 

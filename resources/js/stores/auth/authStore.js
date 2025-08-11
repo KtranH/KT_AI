@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import router from '../../router'
 import { authAPI, googleAPI, profileAPI } from '../../services/api'
 import { useImageStore } from '@/stores/user/imagesStore'
@@ -29,7 +29,11 @@ const token = ref(localStorage.getItem('token') || null);
 const isRemembered = ref(localStorage.getItem('remember') === 'true');
 const isLoggingOut = ref(false);
 const isAuthenticated = computed(() => {
-  return !!user.value && !!user.value.id && typeof user.value.id === 'number' && !!token.value && !isAuthLoading.value && !isLoggingOut.value;
+  // Web (session cookie): không cần token; Mobile: có token
+  const hasValidUser = !!user.value && !!user.value.id && typeof user.value.id === 'number'
+  const isMobileClient = typeof navigator !== 'undefined' && /Mobile|Android|iP(ad|hone)/i.test(navigator.userAgent)
+  const hasToken = !!token.value
+  return hasValidUser && !isAuthLoading.value && !isLoggingOut.value && (isMobileClient ? hasToken : true)
 });
 // Loading 
 const isAuthLoading = ref(false)
@@ -39,31 +43,57 @@ export const useAuthStore = () => {
   const storeLike = useLikeStore()
   const saveAuthData = (userData, userToken, remember = false) => {
     user.value = userData
-    token.value = userToken
+    token.value = userToken || null
     isRemembered.value = remember
 
     localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('token', userToken)
+    if (userToken) {
+      localStorage.setItem('token', userToken)
+    } else {
+      localStorage.removeItem('token')
+    }
     localStorage.setItem('remember', remember)
 
     // Nếu không remember, dữ liệu sẽ bị xóa khi đóng trình duyệt
     if (!remember) {
       sessionStorage.setItem('user', JSON.stringify(userData))
-      sessionStorage.setItem('token', userToken)
+      if (userToken) {
+        sessionStorage.setItem('token', userToken)
+      } else {
+        sessionStorage.removeItem('token')
+      }
     }
   }
 
   const clearAuthData = () => {
+    console.log('🐛 Before clearAuthData:', {
+      user: user.value?.email,
+      token: !!token.value,
+      isRemembered: isRemembered.value
+    })
+    
     user.value = null
     token.value = null
     isRemembered.value = false
-    isLoggingOut.value = false
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     localStorage.removeItem('remember')
     sessionStorage.removeItem('user')
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('remember')
+    
+    console.log('🐛 After clearAuthData:', {
+      user: user.value,
+      token: token.value,
+      isRemembered: isRemembered.value,
+      isAuthenticated: isAuthenticated.value
+    })
+
+    // Force trigger reactivity để components update ngay lập tức
+    nextTick(() => {
+      // Components sẽ re-render sau khi DOM update cycle hoàn tất
+      console.log('🐛 NextTick triggered - Components should update now')
+    })
 
     // Xóa dữ liệu trong các store khác nếu cần
     if (window.$pinia) {
@@ -79,22 +109,28 @@ export const useAuthStore = () => {
   const checkAuth = async () => {
     isAuthLoading.value = true;
     try {
+      if (isLoggingOut.value) {
+        isAuthLoading.value = false;
+        return false
+      }
+
       // Nếu không remember, kiểm tra trong sessionStorage
       if (!isRemembered.value) {
-        const sessionToken = sessionStorage.getItem('token')
         const sessionUser = sessionStorage.getItem('user')
 
-        if (!sessionToken || !sessionUser) {
+        if (!sessionUser) {
           clearAuthData()
           isAuthLoading.value = false;
           return false
         }
 
-        token.value = sessionToken
+        // Session authentication: token có thể null (dùng session cookie)
+        const sessionToken = sessionStorage.getItem('token')
+        token.value = sessionToken || null
         user.value = JSON.parse(sessionUser)
       }
 
-      if (!token.value || !user.value) {
+      if (!user.value) {
         isAuthLoading.value = false;
         return false
       }
@@ -163,7 +199,8 @@ export const useAuthStore = () => {
       // Lấy CSRF token mới trước khi đăng nhập
       await refreshCsrfToken()
 
-      const response = await authAPI.login(credentials)
+      const isMobileClient = typeof navigator !== 'undefined' && /Mobile|Android|iP(ad|hone)/i.test(navigator.userAgent)
+      const response = isMobileClient ? await authAPI.mobileLogin(credentials) : await authAPI.login(credentials)
       
       console.log('✅ Login successful with double protection')
       
@@ -176,8 +213,8 @@ export const useAuthStore = () => {
           return loginData
         }
         
-        saveAuthData(loginData.user, loginData.token, loginData.remember)
-        
+        // Web: có thể không có token (session cookie). Mobile: có token
+        saveAuthData(loginData.user, loginData.token || null, !!loginData.remember)
         setTimeout(() => {
           router.push(router.currentRoute.value.query.redirect || '/dashboard')
         }, 100)
@@ -253,6 +290,9 @@ export const useAuthStore = () => {
 
       // Gọi refreshCsrfToken một lần nữa sau khi đăng xuất để đảm bảo token mới nhất
       await refreshCsrfToken()
+      
+      // Reset logout flag SAU khi đã clear xong data
+      isLoggingOut.value = false
 
       // Sử dụng router.replace để giữ tính chất SPA
       router.replace('/login')
@@ -267,16 +307,15 @@ export const useAuthStore = () => {
         storeImage.clearImagesCreatedByUser()
         storeLike.clearLikes()
         clearAuthData()
+        isLoggingOut.value = false // Reset logout flag
 
         // Sử dụng router.replace để giữ tính chất SPA
         router.replace('/login')
         return
       }
 
-      // Vẫn phải cập nhật CSRF token ngay cả khi có lỗi khác
       await refreshCsrfToken()
-      
-      // Sử dụng router.replace để giữ tính chất SPA
+      isLoggingOut.value = false
       router.replace('/login')
     }
   }
@@ -300,22 +339,22 @@ export const useAuthStore = () => {
 
         const { success, user, auth, message } = event.data
 
-        if (success && user && auth && auth.token) {
+        if (success && user) {
           // Thử đóng popup một cách an toàn
           try {
             // Kiểm tra xem popup vẫn còn mở và có thể truy cập
             if (popup && !popup.closed && popup.close) {
               popup.close()
             }
-          } catch (error) {
-            // Bỏ qua lỗi Cross-Origin-Opener-Policy một cách im lặng
-            // Popup sẽ tự đóng hoặc user đóng thủ công
-          }
+          } catch (error) {}
+          // Google OAuth giờ dùng session (không có token)
+          // auth.token có thể null hoặc undefined cho web session
+          const token = auth?.token || null
+          const remember = auth?.remember || true
           
-          // Lưu thông tin đăng nhập với cấu trúc đúng
-          saveAuthData(user, auth.token, auth.remember || true)
+          // Lưu thông tin đăng nhập (có thể không có token cho web)
+          saveAuthData(user, token, remember)
 
-          // Sử dụng router.push() thay vì window.location.reload()
           setTimeout(() => {
             router.push('/dashboard')
           }, 100)

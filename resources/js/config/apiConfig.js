@@ -58,25 +58,17 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   config => {
     // === 1. SANCTUM TOKEN PROTECTION ===
-    let token = null;
-    
-    // Kiểm tra trong local storage
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      token = storedToken;
-    }
-    
-    // Kiểm tra trong session storage nếu không có trong local storage
-    if (!token) {
-      const sessionToken = sessionStorage.getItem('token');
-      if (sessionToken) {
-        token = sessionToken;
+    // Chính sách mới:
+    // - Web: ưu tiên session cookie + CSRF, KHÔNG bắt buộc Authorization
+    // - Mobile/API client: gửi Bearer token (được lưu trong localStorage/sessionStorage)
+    const isMobileClient = typeof navigator !== 'undefined' && /Mobile|Android|iP(ad|hone)/i.test(navigator.userAgent);
+    const preferBearer = isMobileClient || !!localStorage.getItem('MOBILE_CLIENT');
+
+    if (preferBearer) {
+      let token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-    }
-    
-    // Thêm Bearer token vào header nếu có
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
     }
     
     // === 2. CSRF TOKEN PROTECTION ===

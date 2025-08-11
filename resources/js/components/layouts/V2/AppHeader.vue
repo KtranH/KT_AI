@@ -74,12 +74,12 @@
           </template>
 
           <!-- User Menu khi đã đăng nhập -->
-          <template v-else>
+          <template v-else-if="isAuthenticated">
             <div class="flex items-center space-x-4">
               <!-- Notification Bell Component -->
               <NotificationBell :isHomePage="isHomePage" />
             </div>
-            <!-- User Menu -->
+            <!-- User Menu (Authenticated) -->
             <div class="relative" v-click-outside="closeUserMenu">
               <button 
                 @click="toggleUserMenu"
@@ -172,7 +172,35 @@
                   </div>
                 </transition>
               </div>
-            </template>
+          </template>
+          
+          <!-- Login/Register Buttons (Not Authenticated) -->
+          <template v-else>
+            <div class="flex items-center space-x-3">
+              <router-link 
+                to="/login" 
+                :class="[
+                  'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                  isHomePage 
+                    ? 'text-white hover:bg-white/10 border border-white/20' 
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                ]"
+              >
+                Đăng nhập
+              </router-link>
+              <router-link 
+                to="/register" 
+                :class="[
+                  'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                  isHomePage 
+                    ? 'bg-white text-indigo-600 hover:bg-gray-100' 
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                ]"
+              >
+                Đăng ký
+              </router-link>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -210,9 +238,9 @@ export default {
       return auth.isAuthLoading.value || false
     })
 
-    // Computed để kiểm tra user đã đăng nhập
+    // Computed để kiểm tra user đã đăng nhập - Sử dụng trực tiếp từ store
     const isAuthenticated = computed(() => {
-      return auth.isAuthenticated.value && !auth.isAuthLoading.value
+      return auth.isAuthenticated.value
     })
 
     // Methods
@@ -245,7 +273,10 @@ export default {
     })
     return {
       auth,
-      user: auth.user,
+      user: computed(() => {
+        console.log('🐛 V2 Header user computed:', auth.user.value?.email || 'null')
+        return auth.user.value
+      }),
       isUserMenuOpen,
       isHomePage,
       isAuthenticated,

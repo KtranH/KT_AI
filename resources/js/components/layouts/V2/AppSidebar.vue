@@ -173,7 +173,7 @@
                 <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-white truncate">{{ user.name }}</p>
+                <p class="text-sm font-semibold text-white truncate">{{ user?.name || 'User' }}</p>
                 <p class="text-xs text-white/70">Online</p>
               </div>
               <button 
@@ -437,8 +437,8 @@ export default {
       menuItems,
       featuresSubMenu,
       unreadCount,
-      isAuthenticated: auth.isAuthenticated,
-      user: auth.user,
+      isAuthenticated: computed(() => auth.isAuthenticated.value),
+      user: computed(() => auth.user.value),
       isOpen,
       isFeaturesMenuOpen,
       toggleSidebar,

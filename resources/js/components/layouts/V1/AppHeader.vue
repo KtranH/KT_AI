@@ -52,7 +52,7 @@
                     alt="User avatar"
                     class="h-8 w-8 rounded-full object-cover"
                   >
-                  <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
+                  <span class="text-sm font-medium text-gray-700">{{ user?.name || 'User' }}</span>
                 </button>
                 <!-- Notification Bell -->
                 <NotificationBell />
@@ -155,8 +155,11 @@ export default {
     return {
       auth,
       menuItems,
-      isAuthenticated: auth.isAuthenticated,
-      user: auth.user,
+      isAuthenticated: computed(() => auth.isAuthenticated.value),
+      user: computed(() => {
+        console.log('🐛 V1 Header user computed:', auth.user.value?.email || 'null')
+        return auth.user.value
+      }),
       isUserMenuOpen,
       toggleUserMenu,
       closeUserMenu,

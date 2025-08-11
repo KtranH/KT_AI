@@ -14,6 +14,7 @@ class AuthResource extends BaseResource
     protected bool $remember;
     protected ?int $expiresIn;
     protected ?string $message;
+    protected ?array $logoutData;
 
     /**
      * Tạo instance resource mới
@@ -33,6 +34,7 @@ class AuthResource extends BaseResource
         $this->remember = $remember;
         $this->expiresIn = $expiresIn;
         $this->message = $message;
+        $this->logoutData = null;
     }
 
     /**
@@ -42,6 +44,19 @@ class AuthResource extends BaseResource
      */
     public function toArray(Request $request): array
     {
+        // Nếu là logout response, trả về data logout
+        if ($this->logoutData !== null) {
+            return $this->logoutData;
+        }
+        
+        // Nếu không có resource (user), trả về response rỗng
+        if (!$this->resource) {
+            return [
+                'success' => false,
+                'message' => 'Không có dữ liệu user',
+            ];
+        }
+        
         return [
             'success' => true,
             'message' => $this->message ?? 'Đăng nhập thành công',
@@ -92,13 +107,21 @@ class AuthResource extends BaseResource
     /**
      * Tạo response cho logout
      */
-    public static function logout(string $message = 'Đăng xuất thành công'): array
+    public static function logout(string $message = 'Đăng xuất thành công', ?string $csrfToken = null): self
     {
-        return [
+        // Tạo instance mới với resource là null (vì user đã logout)
+        $instance = new self(null);
+        $instance->message = $message;
+        
+        // Lưu thông tin logout vào instance
+        $instance->logoutData = [
             'success' => true,
             'message' => $message,
             'logged_out_at' => now()->format('d/m/Y H:i'),
+            'csrf_token' => $csrfToken,
         ];
+        
+        return $instance;
     }
 
     /**

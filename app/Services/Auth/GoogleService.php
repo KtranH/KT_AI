@@ -60,24 +60,26 @@ class GoogleService extends BaseService
             // Tìm hoặc tạo user
             $user = $this->findOrCreateUser($googleUser);
             
-            // Đăng nhập user
-            Auth::login($user);
+            // Đăng nhập user với remember me (Google OAuth thường được coi là "trusted")
+            Auth::login($user, true); // true = remember me
             
-            // Tạo token
-            $token = $user->createToken('google_auth_token')->plainTextToken;
+            // Đảm bảo session được tạo và regenerate để tăng bảo mật
+            session()->regenerate();
             
             $this->logAction('Google OAuth login successful', [
                 'user_id' => $user->id,
-                'email' => $user->email
+                'email' => $user->email,
+                'remember' => true
             ]);
             
+            // Tạo response giống như web login: session-based, không có token
             $authResource = new AuthResource(
                 $user,
-                $token,
-                'Bearer',
-                false,
-                null,
-                'Đăng nhập Google thành công'
+                null, // Không có token cho web session
+                'Session',
+                true, // Google OAuth = remember me
+                null, // Không có expiration cho session
+                'Đăng nhập Google thành công (session cookie)'
             );
 
             return $authResource->toArray(request());

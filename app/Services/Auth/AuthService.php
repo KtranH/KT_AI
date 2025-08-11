@@ -37,7 +37,34 @@ class AuthService extends BaseService
      */
     public function checkStatus(): array
     {
-        return $this->userRepository->checkStatus();
+        // Ưu tiên session (web)
+        $sessionAuth = $this->userRepository->checkStatus();
+        if ($sessionAuth['authenticated'] === true) {
+            return $sessionAuth;
+        }
+
+        // Fallback: Bearer token (mobile/api client) không qua middleware
+        try {
+            $request = request();
+            $bearer = $request->bearerToken();
+            if ($bearer) {
+                \Laravel\Sanctum\PersonalAccessToken::preventAccessingMissingColumns();
+                $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($bearer);
+                if ($tokenModel && $tokenModel->tokenable) {
+                    return [
+                        'authenticated' => true,
+                        'user' => $tokenModel->tokenable,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silent fallback
+        }
+
+        return [
+            'authenticated' => false,
+            'user' => null,
+        ];
     }
     
     /**
@@ -102,7 +129,7 @@ class AuthService extends BaseService
                 ]);
             }
 
-            // 2. Xác thực tài khoản
+            // 2. Xác thực tài khoản và tạo session
             if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
                 \Log::warning('❌ Credential authentication failed', [
                     'email' => $request->input('email'),
@@ -113,25 +140,26 @@ class AuthService extends BaseService
                 ]);
             }
             
-            // Lấy user mới nhất từ database
-            $user = $this->userRepository->getUser();
+            // Lấy user từ session đã được tạo bởi Auth::attempt()
+            $user = Auth::user();
+            
+            // Đảm bảo session được lưu và regenerate để tăng bảo mật
+            $request->session()->regenerate();
 
-            if (!$user->is_verified) {
+            if (!$user || !$user->is_verified) {
                 Auth::logout();
                 throw BusinessException::invalidPermissions('unverified email');
             }
 
-            // 3. Sanctum Token Generation
-            $tokenName = $request->boolean('remember') ? 'auth_token_remember' : 'auth_token_session';
-            $token = $user->createToken($tokenName)->plainTextToken;
-
+            // 3. Web session-based login: Session đã được tạo bởi Auth::attempt()
+            // Không cần phát token, rely vào cookie session + CSRF
             return new AuthResource(
-                $user, 
-                $token, 
-                'Bearer', 
+                $user,
+                null,
+                'Session',
                 $request->boolean('remember'),
                 null,
-                'Đăng nhập thành công với bảo mật 2 lớp'
+                'Đăng nhập thành công (session cookie)'
             );
         }, "Login attempt for email: {$request->input('email')}");
     }
@@ -187,11 +215,23 @@ class AuthService extends BaseService
     {
         return $this->executeWithExceptionHandling(function() use ($request) {
             $user = $request->user();
+            // Xóa PAT cho mobile nếu có
             if ($user && method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
-            
-            return AuthResource::logout('Đăng xuất thành công');
+
+            // Đăng xuất session cho web - Sử dụng guard cụ thể
+            if (Auth::guard('web')->check()) {
+                Auth::guard('web')->logout();
+                // Vô hiệu hóa session hiện tại
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+
+            // Lấy CSRF token mới (để client có thể cập nhật nếu muốn)
+            $csrfToken = csrf_token();
+
+            return AuthResource::logout('Đăng xuất thành công', $csrfToken);
         }, "Logging out user ID: " . ($request->user()->id ?? 'unknown'));
     }
 }
