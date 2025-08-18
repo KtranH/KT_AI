@@ -2,7 +2,13 @@
     <div class="flex-1 overflow-y-auto">
         <!-- Không có bình luận -->
         <div v-if="!comments || comments.length === 0" class="flex justify-center items-center h-full">
-            <p class="text-gray-500 text-center">Chưa có bình luận nào.<br>Hãy là người đầu tiên bình luận!</p>
+            <div class="flex flex-col items-center justify-center space-y-3 py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2M12 12v.01M12 16h.01M8 12h.01M16 12h.01" />
+                </svg>
+                <p class="text-gray-500 text-lg font-medium">Chưa có bình luận nào</p>
+                <span class="text-gray-400 text-sm">Hãy là người đầu tiên để lại bình luận!</span>
+            </div>
         </div>
 
         <!-- Danh sách bình luận -->

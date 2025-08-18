@@ -233,7 +233,7 @@
         <h3 class="text-xl font-semibold text-gray-800 mb-4">Top Tính Năng AI</h3>
         <div class="space-y-3">
           <div 
-            v-for="(feature, index) in statistics.topFeatures" 
+            v-for="(feature, index) in TopFeatures" 
             :key="feature.id"
             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
@@ -309,12 +309,11 @@
 </template>
 
 <script>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import { ButtonBack } from '@/components/base';
 import useStatistics from '@/composables/features/user/useStatistics';
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -378,6 +377,14 @@ export default {
       clearError
     } = useStatistics();
 
+    const TopFeatures = computed(() => {
+      return statistics.value.topFeatures.map((feature) => ({
+        id: feature.id,
+        title: feature.title,
+        count: feature.count
+      }));
+    });
+
     onMounted(() => {
       // Chỉ gọi API nếu chưa có dữ liệu hoặc dữ liệu cũ quá 5 phút
       if (!isDataLoaded.value) {
@@ -418,7 +425,8 @@ export default {
       performanceScore,
       engagementScore,
       refreshStatistics,
-      clearError
+      clearError,
+      TopFeatures
     };
   }
 };

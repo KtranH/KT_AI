@@ -24,7 +24,15 @@
       </div>
       
       <div v-else-if="imageGroups.length === 0" class="text-center py-8">
-        <p>Không có ảnh nào</p>
+        <div class="flex flex-col items-center justify-center space-y-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <rect x="3" y="5" width="18" height="14" rx="3" fill="#f3f4f6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19l5.5-7a2 2 0 013.2-.2l2.6 3.2a2 2 0 003.2-.2L21 19" stroke="#d1d5db"/>
+            <circle cx="8.5" cy="9.5" r="1.5" fill="#d1d5db"/>
+          </svg>
+          <p class="text-gray-500 text-lg font-medium">Chưa có ảnh nào được tải lên</p>
+          <span class="text-gray-400 text-sm">Hãy nhấn nút <span class="font-semibold text-blue-500">Tạo ảnh</span> để bắt đầu chia sẻ hình ảnh của bạn!</span>
+        </div>
       </div>
       
       <div v-else>

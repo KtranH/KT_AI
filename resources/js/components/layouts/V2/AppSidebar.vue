@@ -162,7 +162,19 @@
 
         <!-- User Profile Section -->
         <div class="px-4 py-4 border-t border-white/10">
-          <template v-if="isAuthenticated">
+          <template v-if="isAuthLoading">
+            <div class="flex items-center space-x-2">
+              <div :class="[
+                'animate-pulse rounded-lg h-8 w-16',
+                isHomePage ? 'bg-white/20' : 'bg-gray-200'
+              ]"></div>
+              <div :class="[
+                'animate-pulse rounded-full h-8 w-16',
+                isHomePage ? 'bg-white/20' : 'bg-gray-200'
+              ]"></div>
+            </div>
+          </template>
+          <template v-else-if="isAuthenticated">
             <div class="flex items-center space-x-3 p-3 rounded-lg bg-white/10 backdrop-blur-sm">
               <div class="relative">
                 <img 
@@ -421,6 +433,16 @@ export default {
       }
     }
 
+    // Kiểm tra có phải trang chủ không
+    const isHomePage = computed(() => {
+      return router.currentRoute.value.path === '/'
+    })
+
+    // Computed để kiểm tra trạng thái loading của auth
+    const isAuthLoading = computed(() => {
+      return auth.isAuthLoading.value || false
+    })
+
     // Lifecycle hooks
     onMounted(() => {
       auth.checkAuth()
@@ -454,7 +476,9 @@ export default {
       HistoryIcon,
       PaymentIcon,
       SupportIcon,
-      router
+      router,
+      isHomePage,
+      isAuthLoading
     }
   }
 }

@@ -15,6 +15,7 @@ use App\Http\Requests\V1\Auth\PostmanRequest;
 use App\Http\Requests\V1\Auth\SignUpRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Resources\V1\Auth\AuthResource;
+use Illuminate\Support\Facades\Log;
 
 class AuthService extends BaseService
 {
@@ -120,7 +121,7 @@ class AuthService extends BaseService
             );
 
             if (!$turnstileResponse['success']) {
-                \Log::warning('❌ Turnstile verification failed', [
+                Log::warning('❌ Turnstile verification failed', [
                     'email' => $request->input('email'),
                     'ip' => $request->ip()
                 ]);
@@ -131,7 +132,7 @@ class AuthService extends BaseService
 
             // 2. Xác thực tài khoản và tạo session
             if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-                \Log::warning('❌ Credential authentication failed', [
+                Log::warning('❌ Credential authentication failed', [
                     'email' => $request->input('email'),
                     'ip' => $request->ip()
                 ]);
