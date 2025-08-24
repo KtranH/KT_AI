@@ -319,6 +319,11 @@ export default {
         path: '/test/2',
         icon: 'HistoryIcon'
       },
+      {
+        name: 'Bảo mật 2 lớp',
+        path: '/user/google2fa',
+        icon: 'SecurityIcon'
+      },
       { 
         name: 'Thanh toán', 
         path: '/test/3',

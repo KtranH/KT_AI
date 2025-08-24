@@ -193,17 +193,13 @@ export const useAuthStore = () => {
   }
 
   const login = async (credentials) => {
-    try {
-      console.log('🔐 Starting login with double protection (CSRF + Sanctum)...')
-      
+    try {      
       // Lấy CSRF token mới trước khi đăng nhập
       await refreshCsrfToken()
 
       const isMobileClient = typeof navigator !== 'undefined' && /Mobile|Android|iP(ad|hone)/i.test(navigator.userAgent)
       const response = isMobileClient ? await authAPI.mobileLogin(credentials) : await authAPI.login(credentials)
-      
-      console.log('✅ Login successful with double protection')
-      
+            
       // Cấu trúc mới: {success: true, data: {user: {...}, token: "...", remember: true}, message: "Đăng nhập thành công"}
       if (response.data && response.data.success && response.data.data) {
         const loginData = response.data.data
@@ -211,6 +207,11 @@ export const useAuthStore = () => {
         // Kiểm tra nếu cần verification
         if (loginData.needs_verification) {
           return loginData
+        }
+        
+        // Kiểm tra nếu cần 2FA
+        if (response.data.challenge_id || response.data.requires_2fa) {
+          return response.data
         }
         
         // Web: có thể không có token (session cookie). Mobile: có token
@@ -224,6 +225,12 @@ export const useAuthStore = () => {
         if (response.data.needs_verification) {
           return response.data
         }
+        
+        // Kiểm tra nếu cần 2FA
+        if (response.data.challenge_id || response.data.requires_2fa) {
+          return response.data
+        }
+        
         saveAuthData(response.data.user, response.data.token, response.data.remember)
         
         setTimeout(() => {
@@ -337,7 +344,7 @@ export const useAuthStore = () => {
         ]
         if (!allowedOrigins.includes(event.origin)) return
 
-        const { success, user, auth, message } = event.data
+        const { success, user, auth, message, requires_2fa, challenge_id } = event.data
 
         if (success && user) {
           // Thử đóng popup một cách an toàn
@@ -358,6 +365,26 @@ export const useAuthStore = () => {
           setTimeout(() => {
             router.push('/dashboard')
           }, 100)
+        } else if (requires_2fa && challenge_id) {
+          // Đóng popup nếu cần 2FA
+          try {
+            if (popup && !popup.closed && popup.close) {
+              popup.close()
+            }
+          } catch (error) {}
+          
+          // Emit event để Login.vue có thể xử lý 2FA
+          const customEvent = new CustomEvent('google-oauth-2fa-required', {
+            detail: {
+              challenge_id: challenge_id,
+              user_id: event.data.user_id,
+              email: event.data.email,
+              message: message
+            }
+          })
+          window.dispatchEvent(customEvent)
+          
+          console.log('Google OAuth yêu cầu 2FA:', { challenge_id, user_id: event.data.user_id, email: event.data.email })
         } else {
           console.error('Đăng nhập Google thất bại:', message || event.data.message || 'Lỗi không xác định')
         }
@@ -387,6 +414,40 @@ export const useAuthStore = () => {
     }
   }
 
+  const verify2FA = async (data) => {
+    try {
+      const response = await authAPI.verify2FA(data)
+      if (response.data.success) {
+        // Cập nhật thông tin user nếu cần
+        if (response.data.data?.user) {
+          saveAuthData(response.data.data.user, null, true)
+        }
+        return response.data
+      }
+      throw new Error(response.data.message || 'Xác thực 2FA thất bại')
+    } catch (error) {
+      console.error('Lỗi khi xác thực 2FA:', error)
+      throw error
+    }
+  }
+
+  const verifyRecoveryCode = async (data) => {
+    try {
+      const response = await authAPI.verifyRecoveryCode(data)
+      if (response.data.success) {
+        // Cập nhật thông tin user nếu cần
+        if (response.data.data?.user) {
+          saveAuthData(response.data.data.user, null, true)
+        }
+        return response.data
+      }
+      throw new Error(response.data.message || 'Xác thực mã khôi phục thất bại')
+    } catch (error) {
+      console.error('Lỗi khi xác thực mã khôi phục:', error)
+      throw error
+    }
+  }
+
 
   return {
     user,
@@ -399,6 +460,10 @@ export const useAuthStore = () => {
     login,
     logout,
     handleLoginByGoogle,
-    initializeAuth
+    initializeAuth,
+    saveAuthData,
+    clearAuthData,
+    verify2FA,
+    verifyRecoveryCode
   }
 }

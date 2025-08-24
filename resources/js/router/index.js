@@ -32,6 +32,8 @@ import Notifications from '../pages/social/Notification.vue'
 // import Test4 from '../pages/test/Test4.vue'
 // Statistics Pages
 import StatisticsPage from '../pages/user/StatisticsPage.vue';
+// Google2FA Pages
+import Google2FA from '../pages/user/Google2FA.vue';
 // Image Jobs Management
 import ImageJobsManager from '../pages/ai-features/V1/ImageJobsManager.vue';
 
@@ -136,6 +138,12 @@ const routes = [
     name: 'Statistics',
     component: StatisticsPage,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/google2fa',
+    name: 'google2fa',
+    component: Google2FA,
+    meta: { requiresAuth: true, title: 'KT_AI - Bảo mật 2 lớp' }
   },
   // Quản lý tiến trình tạo ảnh
   {

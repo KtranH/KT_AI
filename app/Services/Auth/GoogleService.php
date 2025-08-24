@@ -9,17 +9,22 @@ use App\Models\User;
 use App\Interfaces\UserRepositoryInterface;
 use App\Http\Resources\V1\Auth\AuthResource;
 use App\Services\BaseService;
+use App\Services\Auth\Google2FAService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class GoogleService extends BaseService
 {
     protected UserRepositoryInterface $userRepository;
+    protected Google2FAService $google2FAService;
 
-    public function __construct(UserRepositoryInterface $userRepository)
+    public function __construct(UserRepositoryInterface $userRepository, Google2FAService $google2FAService)
     {
         $this->userRepository = $userRepository;
+        $this->google2FAService = $google2FAService;
     }
 
     /**
@@ -59,6 +64,38 @@ class GoogleService extends BaseService
             
             // Tìm hoặc tạo user
             $user = $this->findOrCreateUser($googleUser);
+            
+            // Kiểm tra xem user có 2FA được bật không
+            if ($this->google2FAService->isEnabled($user)) {
+                $this->logAction('Google OAuth login requires 2FA', [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+                
+                // Tạo challenge ID để theo dõi quá trình xác thực 2FA
+                $challengeId = uniqid('2fa_challenge_', true);
+                
+                Log::info('challengeId: ' . $challengeId);
+                
+                // Lưu challenge vào cache với thời gian hết hạn (5 phút)
+                Cache::put($challengeId, [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'remember' => true,
+                    'created_at' => now(),
+                    'ip' => request()->ip()
+                ], now()->addMinutes(5));
+                
+                return [
+                    'success' => false,
+                    'requires_2fa' => true,
+                    'challenge_id' => $challengeId,
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'message' => 'Vui lòng xác thực 2FA để hoàn tất đăng nhập Google',
+                    'auth_type' => 'Google_OAuth_2FA_Required'
+                ];
+            }
             
             // Đăng nhập user với remember me (Google OAuth thường được coi là "trusted")
             Auth::login($user, true); // true = remember me

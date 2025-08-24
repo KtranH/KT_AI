@@ -15,20 +15,23 @@ use App\Http\Requests\V1\Auth\PostmanRequest;
 use App\Http\Requests\V1\Auth\SignUpRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Resources\V1\Auth\AuthResource;
+use App\Services\Auth\Google2FAService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class AuthService extends BaseService
 {
     protected MailService $mailService;
     protected UserRepository $userRepository;
     protected TurnStileService $turnStileService;
+    protected Google2FAService $google2FAService;
     
-    
-    public function __construct(UserRepository $userRepository, TurnStileService $turnStileService, MailService $mailService) 
+    public function __construct(UserRepository $userRepository, TurnStileService $turnStileService, MailService $mailService, Google2FAService $google2FAService) 
     {
         $this->userRepository = $userRepository;
         $this->turnStileService = $turnStileService;
         $this->mailService = $mailService;
+        $this->google2FAService = $google2FAService;
     }
     
     /**
@@ -121,10 +124,6 @@ class AuthService extends BaseService
             );
 
             if (!$turnstileResponse['success']) {
-                Log::warning('❌ Turnstile verification failed', [
-                    'email' => $request->input('email'),
-                    'ip' => $request->ip()
-                ]);
                 throw ValidationException::withMessages([
                     'captcha' => ['Xác thực không thành công. Vui lòng thử lại.'],
                 ]);
@@ -132,10 +131,6 @@ class AuthService extends BaseService
 
             // 2. Xác thực tài khoản và tạo session
             if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-                Log::warning('❌ Credential authentication failed', [
-                    'email' => $request->input('email'),
-                    'ip' => $request->ip()
-                ]);
                 throw ValidationException::withMessages([
                     'email' => ['Thông tin đăng nhập không chính xác.'],
                 ]);
@@ -144,15 +139,44 @@ class AuthService extends BaseService
             // Lấy user từ session đã được tạo bởi Auth::attempt()
             $user = Auth::user();
             
-            // Đảm bảo session được lưu và regenerate để tăng bảo mật
-            $request->session()->regenerate();
-
             if (!$user || !$user->is_verified) {
                 Auth::logout();
                 throw BusinessException::invalidPermissions('unverified email');
             }
+            
+            // 3. Kiểm tra tài khoản có kích hoạt 2FA không
+            if ($this->google2FAService->isEnabled($user)) {
+                // Xóa session nếu 2FA được bật
+                Auth::logout();
+                
+                // Tạo challenge ID để theo dõi quá trình xác thực 2FA
+                $challengeId = uniqid('2fa_challenge_', true);
+                
+                // Lưu challenge vào cache với thời gian hết hạn (5 phút)
+                Cache::put($challengeId, [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'remember' => $request->boolean('remember'),
+                    'created_at' => now(),
+                    'ip' => $request->ip()
+                ], now()->addMinutes(5));
+                
+                // Trả về thông tin cần thiết để frontend hiển thị form 2FA
+                return new AuthResource(
+                    $user,
+                    null,
+                    '2FA_Required',
+                    $request->boolean('remember'),
+                    null,
+                    'Vui lòng xác thực 2FA để đăng nhập',
+                    $challengeId
+                );
+            }
+            
+            // Đảm bảo session được lưu và regenerate để tăng bảo mật
+            $request->session()->regenerate();
 
-            // 3. Web session-based login: Session đã được tạo bởi Auth::attempt()
+            // 4. Web session-based login: Session đã được tạo bởi Auth::attempt()
             // Không cần phát token, rely vào cookie session + CSRF
             return new AuthResource(
                 $user,

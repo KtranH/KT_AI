@@ -42,6 +42,23 @@
             </div>
           </AlertMessage>
 
+          <!-- 2FA Modal sử dụng component có sẵn -->
+          <Google2FALoginModal 
+            :show="show2FAModal"
+            :challenge-data="twoFAData"
+            @close="cancel2FA"
+            @verification-success="handle2FASuccess"
+            @showRecovery="showRecoveryCodeInput = true"
+          />
+
+          <!-- Recovery Code Modal sử dụng component có sẵn -->
+          <Google2FARecoveryCodeModal 
+            :show="showRecoveryCodeInput"
+            :challenge-data="twoFAData"
+            @close="cancelRecoveryCode"
+            @verification-success="handleRecoveryCodeSuccess"
+          />
+
           <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" autocomplete="on">
             <div class="rounded-xl shadow-sm bg-white/60 border border-gray-200 p-4 space-y-4">
               <div>
@@ -181,6 +198,8 @@ import AuthCard from '@/components/features/auth/components/AuthCard.vue'
 import AuthFormHeader from '@/components/features/auth/components/AuthFormHeader.vue'
 import AlertMessage from '@/components/features/auth/components/AlertMessage.vue'
 import SocialLoginButton from '@/components/features/auth/components/SocialLoginButton.vue'
+import Google2FALoginModal from '@/components/features/auth/components/Google2FALoginModal.vue'
+import Google2FARecoveryCodeModal from '@/components/features/auth/components/Google2FARecoveryCodeModal.vue'
 
 export default {
   name: 'Login',
@@ -189,6 +208,8 @@ export default {
     AuthFormHeader,
     AlertMessage,
     SocialLoginButton,
+    Google2FALoginModal,
+    Google2FARecoveryCodeModal,
   },
   setup() {
     const router = useRouter()
@@ -196,6 +217,10 @@ export default {
     const loading = ref(false)
     const error = ref(null)
     const needsVerification = ref(false)
+    const show2FAModal = ref(false)
+    const showRecoveryCodeInput = ref(false)
+    const twoFAData = ref(null)
+    
     const { 
       turnstileWidget, 
       turnstileError, 
@@ -204,31 +229,58 @@ export default {
       resetTurnstile,
       initTurnstile
     } = useTurnstile()
+    
     const form = reactive({
       email: '',
       password: '',
       remember: false,
       turnstileToken: ''
     })
+    
     watch(turnstileToken, (newToken) => {
       form.turnstileToken = newToken
     })
+    
     onMounted(async () => {
       if (turnstileWidget.value) {
         await initTurnstile()
       }
+      
+      // Lắng nghe event từ Google OAuth khi cần 2FA
+      window.addEventListener('google-oauth-2fa-required', handleGoogleOAuth2FA)
     })
+    
     onBeforeUnmount(() => {
       resetTurnstile()
+      // Xóa event listener
+      window.removeEventListener('google-oauth-2fa-required', handleGoogleOAuth2FA)
     })
+    
+    const handleGoogleOAuth2FA = (event) => {
+      const { challenge_id, user_id, email, message } = event.detail
+      
+      // Hiển thị form 2FA với challenge_id từ Google OAuth
+      twoFAData.value = {
+        challenge_id: challenge_id,
+        user_id: user_id,
+        email: email
+      }
+      show2FAModal.value = true
+      error.value = null
+      
+      console.log('Google OAuth 2FA required:', { challenge_id, user_id, email })
+    }
+    
     const goToVerification = () => {
       router.push({
         name: 'verify-email',
         query: { email: form.email }
       })
     }
+    
     const authStore = useAuthStore();
     const { handleLoginByGoogle } = authStore;
+    
     const startHandleLoginByGoogle = async () => {
       loading.value = true;
       try{
@@ -238,24 +290,68 @@ export default {
       } catch (err) {
         console.log(err)
       }
-    } 
+    }
+    
+    const handle2FASuccess = () => {
+      show2FAModal.value = false;
+      twoFAData.value = null;
+      error.value = null;
+      // Redirect sau khi xác thực 2FA thành công
+      router.push('/dashboard');
+    };
+
+    const handleRecoveryCodeSuccess = () => {
+      showRecoveryCodeInput.value = false;
+      twoFAData.value = null;
+      error.value = null;
+      // Redirect sau khi xác thực recovery code thành công
+      router.push('/dashboard');
+    };
+
+    const cancel2FA = () => {
+      show2FAModal.value = false
+      twoFAData.value = null
+      error.value = null
+    }
+    
+    const cancelRecoveryCode = () => {
+      showRecoveryCodeInput.value = false
+      error.value = null
+    }
+    
     const handleSubmit = async () => {
       if (!form.turnstileToken) {
         turnstileError.value = 'Vui lòng xác nhận bạn không phải robot'
         return
       }
+      
       try {
         loading.value = true
         error.value = null
         needsVerification.value = false
+        
         const loginData = {
           ...form,
           'cf-turnstile-response': form.turnstileToken
         }
+        
         const response = await auth.login(loginData)
+        
         if (response?.needs_verification) {
           needsVerification.value = true
           error.value = response.message
+        } else if (response?.challenge_id || response?.requires_2fa) {
+          // Hiển thị form 2FA với challenge_id
+          twoFAData.value = {
+            challenge_id: response.challenge_id,
+            user_id: response.user_id || response.user?.id,
+            email: response.email || response.user?.email
+          }
+          show2FAModal.value = true
+          error.value = null
+        } else if (response?.success) {
+          // Đăng nhập thành công
+          router.push('/dashboard')
         }
       } catch (err) {
         error.value = "Thông tin đăng nhập không đúng"
@@ -276,7 +372,15 @@ export default {
       turnstileSiteKey,
       turnstileWidget,
       turnstileError,
-      startHandleLoginByGoogle
+      startHandleLoginByGoogle,
+      show2FAModal,
+      twoFAData,
+      handle2FASuccess,
+      handleRecoveryCodeSuccess,
+      cancel2FA,
+      cancelRecoveryCode,
+      showRecoveryCodeInput,
+      handleGoogleOAuth2FA
     }
   }
 }

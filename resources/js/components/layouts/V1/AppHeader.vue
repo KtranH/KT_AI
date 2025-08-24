@@ -157,7 +157,6 @@ export default {
       menuItems,
       isAuthenticated: computed(() => auth.isAuthenticated.value),
       user: computed(() => {
-        console.log('🐛 V1 Header user computed:', auth.user.value?.email || 'null')
         return auth.user.value
       }),
       isUserMenuOpen,

@@ -15,7 +15,8 @@ class AuthResource extends BaseResource
     protected ?int $expiresIn;
     protected ?string $message;
     protected ?array $logoutData;
-
+    
+    protected ?string $challengeId;
     /**
      * Tạo instance resource mới
      * 
@@ -26,7 +27,7 @@ class AuthResource extends BaseResource
      * @param int|null $expiresIn
      * @param string|null $message
      */
-    public function __construct($resource, ?string $token = null, string $tokenType = 'Bearer', bool $remember = false, ?int $expiresIn = null, ?string $message = null)
+    public function __construct($resource, ?string $token = null, string $tokenType = 'Bearer', bool $remember = false, ?int $expiresIn = null, ?string $message = null, ?string $challengeId = null)
     {
         parent::__construct($resource);
         $this->token = $token;
@@ -35,6 +36,7 @@ class AuthResource extends BaseResource
         $this->expiresIn = $expiresIn;
         $this->message = $message;
         $this->logoutData = null;
+        $this->challengeId = $challengeId;
     }
 
     /**
@@ -86,6 +88,7 @@ class AuthResource extends BaseResource
                 'can_comment' => $this->resource->is_verified,
                 'can_like' => $this->resource->is_verified,
             ],
+            'challenge_id' => $this->challengeId,
         ];
     }
 

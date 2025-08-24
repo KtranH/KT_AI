@@ -164,6 +164,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\RepositoryProvider::class,
+        App\Providers\FortifyServiceProvider::class,
     ],
 
     'aliases' => [

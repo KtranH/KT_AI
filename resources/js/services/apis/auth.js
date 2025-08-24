@@ -21,6 +21,10 @@ export const authAPI = {
   
   // Password Change Verification (Protected)
   sendPasswordChangeVerification: (data) => apiClient.post('/send-password-change-verification', data),
+  
+  // 2FA Verification
+  verify2FA: (data) => apiClient.post('/2fa/verify-login', data),
+  verifyRecoveryCode: (data) => apiClient.post('/2fa/recovery', data),
 }
 
 // === GOOGLE OAUTH API ===

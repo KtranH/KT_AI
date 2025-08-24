@@ -9,12 +9,15 @@
         "php": "^8.2",
         "darkaonline/l5-swagger": "^9.0",
         "doctrine/dbal": "^4.2",
+        "laravel/fortify": "^1.28",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.29",
+        "pragmarx/google2fa-laravel": "^2.3",
         "predis/predis": "^2.3",
+
         "pusher/pusher-php-server": "^7.2",
         "tymon/jwt-auth": "^2.1",
         "zircote/swagger-php": "^5.1"

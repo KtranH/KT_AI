@@ -47,7 +47,7 @@ class MailService extends BaseService
                 'code' => $verificationcode
             ];
             
-            Mail::to($user->email)->send(new VerificationMail($detail));
+            Mail::queue($user->email)->send(new VerificationMail($detail));
             
             $this->logAction('Verification email sent', [
                 'email' => $user->email,
@@ -76,7 +76,7 @@ class MailService extends BaseService
                 'code' => $verificationcode
             ];
             
-            Mail::to($user->email)->send(new VerificationMail($detail));
+            Mail::queue($user->email)->send(new VerificationMail($detail));
             
             $this->logAction('Verification email resent', [
                 'email' => $user->email
@@ -104,7 +104,7 @@ class MailService extends BaseService
                 'code' => $verificationcode
             ];
             
-            Mail::to($user->email)->send(new VerificationMail($detail));
+            Mail::queue($user->email)->send(new VerificationMail($detail));
             
             $this->logAction('Password change verification email sent', [
                 'email' => $user->email

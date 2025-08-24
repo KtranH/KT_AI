@@ -274,7 +274,6 @@ export default {
     return {
       auth,
       user: computed(() => {
-        console.log('🐛 V2 Header user computed:', auth.user.value?.email || 'null')
         return auth.user.value
       }),
       isUserMenuOpen,

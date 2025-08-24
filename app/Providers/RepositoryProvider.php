@@ -14,6 +14,8 @@ use App\Repositories\LikeRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\FeatureRepository;
 use App\Repositories\NotificationRepository;
+use App\Repositories\Google2FARepository;
+use App\Interfaces\Google2FARepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -38,6 +40,8 @@ class RepositoryProvider extends ServiceProvider
         $this->app->bind(FeatureRepositoryInterface::class, FeatureRepository::class);
         // Noticaition
         $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
+        // Google2FA
+        $this->app->bind(Google2FARepositoryInterface::class, Google2FARepository::class);
     }
 
     /**
