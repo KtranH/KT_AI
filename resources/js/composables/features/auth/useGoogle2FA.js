@@ -25,9 +25,7 @@ export function useGoogle2FA() {
   // Methods
   const check2FAStatus = async () => {
     try {
-      console.log('Đang kiểm tra trạng thái 2FA...')
       const response = await google2FAService.getStatus()
-      console.log('Response từ API 2FA status:', response.data)
       
       // Cập nhật state dựa trên response
       if (response.data && response.data.data) {
@@ -43,7 +41,6 @@ export function useGoogle2FA() {
         }
       }
       
-      console.log('Trạng thái 2FA đã được cập nhật:', is2FAEnabled.value)
     } catch (error) {
       console.error('Lỗi khi kiểm tra trạng thái 2FA:', error)
       // Không thay đổi state nếu có lỗi
@@ -192,7 +189,7 @@ export function useGoogle2FA() {
   const generateRecoveryCodes = async () => {
     try {
       const response = await google2FAService.generateRecoveryCodes()
-      recoveryCodes.value = response.data.recovery_codes.map(code => code.code)
+      recoveryCodes.value = response.data.data.recovery_codes.map(code => code.code)
       toast.success('Đã tạo mã khôi phục mới!')
     } catch (error) {
       console.error('Lỗi khi tạo mã khôi phục:', error)

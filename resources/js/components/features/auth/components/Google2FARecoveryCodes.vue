@@ -11,18 +11,30 @@
       </div>
       <button
         @click="$emit('generateNew')"
-        class="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg hover:bg-green-200 transition-colors duration-200"
+        :disabled="isGenerating"
+        class="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg hover:bg-green-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg v-if="isGenerating" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        Tạo mã mới
+        <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        {{ isGenerating ? 'Đang tạo...' : 'Tạo mã mới' }}
       </button>
     </div>
     <p class="text-gray-600 mb-6 leading-relaxed">
       Lưu trữ các mã này ở nơi an toàn. Bạn có thể sử dụng chúng để truy cập tài khoản nếu mất thiết bị hoặc ứng dụng xác thực.
     </p>
-    <div v-if="recoveryCodes.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div v-if="isGenerating" class="text-center py-8">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-green-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </div>
+      <p class="text-green-600 font-medium">Đang tạo mã khôi phục mới...</p>
+    </div>
+    <div v-else-if="recoveryCodes.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div
         v-for="code in recoveryCodes"
         :key="code"
@@ -47,6 +59,10 @@ defineProps({
   recoveryCodes: {
     type: Array,
     default: () => []
+  },
+  isGenerating: {
+    type: Boolean,
+    default: false
   }
 })
 

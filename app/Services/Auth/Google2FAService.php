@@ -275,16 +275,14 @@ class Google2FAService extends BaseService
         }
         
         // Xác thực challenge từ cache
-        // Nếu challengeId có prefix 2fa_challenge_, loại bỏ prefix
-        $cacheKey = str_starts_with($challengeId, '2fa_challenge_') ? substr($challengeId, 15) : $challengeId;
-        $challenge = Cache::get($cacheKey);
+        $challenge = Cache::get($challengeId);
         if (!$challenge) {
             throw new \Exception('Challenge đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.');
         }
         
         // Kiểm tra IP để tăng bảo mật
         if ($challenge['ip'] !== request()->ip()) {
-            Cache::forget($cacheKey);
+            Cache::forget($challengeId);
             throw new \Exception('IP không khớp. Vui lòng đăng nhập lại.');
         }
         
@@ -311,7 +309,7 @@ class Google2FAService extends BaseService
         request()->session()->regenerate();
         
         // Xóa challenge sau khi xác thực thành công
-        Cache::forget($cacheKey);
+        Cache::forget($challengeId);
         
         return [
             'success' => true,
