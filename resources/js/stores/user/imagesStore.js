@@ -317,11 +317,31 @@ export const useImageStore = defineStore('image',
                             this.currentPage = response.data.pagination.current_page;
                             this.lastPage = response.data.pagination.last_page;
                             this.totalImages = response.data.pagination.total;
+                            console.log('Pagination from response.data.pagination:', {
+                                currentPage: this.currentPage,
+                                lastPage: this.lastPage,
+                                totalImages: this.totalImages
+                            });
+                        } else if (response.data.data && response.data.data.pagination) {
+                            // Fallback: lấy từ Laravel paginator response trong data.pagination
+                            this.currentPage = response.data.data.pagination.current_page || 1;
+                            this.lastPage = response.data.data.pagination.last_page || 1;
+                            this.totalImages = response.data.data.pagination.total || 0;
+                            console.log('Pagination from response.data.data.pagination:', {
+                                currentPage: this.currentPage,
+                                lastPage: this.lastPage,
+                                totalImages: this.totalImages
+                            });
                         } else if (response.data.data) {
-                            // Fallback: lấy từ Laravel paginator response
+                            // Fallback: lấy từ Laravel paginator response trực tiếp
                             this.currentPage = response.data.data.current_page || 1;
                             this.lastPage = response.data.data.last_page || 1;
                             this.totalImages = response.data.data.total || 0;
+                            console.log('Pagination from response.data.data:', {
+                                currentPage: this.currentPage,
+                                lastPage: this.lastPage,
+                                totalImages: this.totalImages
+                            });
                         }
                     } else {
                         console.error('Error:', response.statusText)

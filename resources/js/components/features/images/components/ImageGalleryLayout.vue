@@ -1,14 +1,34 @@
 <template>
-  <div class="bg-white rounded-xl shadow-lg p-6 mt-8 container mx-auto">
+  <div class="bg-white rounded-xl shadow-lg p-6 mt-8 container mx-auto relative">
+    <!-- Overlay Loading -->
+    <OverlayLoading 
+      :visible="isRefreshing" 
+      title="Đang làm mới bộ sưu tập"
+      message="Vui lòng chờ trong giây lát..."
+    />
+    
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4a3 3 0 014 0l4 4M2 20h20M12 4v4m0 0a4 4 0 110 8 4 4 0 010-8z"/>
-          </svg>
+      <div class="flex items-center gap-4 mb-4">
+        <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 shadow-lg">
+          <BookImage class="w-6 h-6 text-white" />
         </span>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-transparent bg-clip-text drop-shadow">
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-transparent bg-clip-text drop-shadow flex items-center">
           Ảnh người dùng đã tải lên
+           <button
+             @click="refreshGallery()"
+             :disabled="isRefreshing || isLoading"
+             class="ml-3 flex items-center justify-center w-9 h-9 rounded-full bg-white/80 hover:bg-white shadow transition-all duration-200 hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+             title="Làm mới bộ sưu tập"
+           >
+             <RefreshCw 
+               v-if="!isRefreshing && !isLoading"
+               class="w-5 h-5 text-indigo-600 transition-transform duration-200 hover:rotate-90" 
+             />
+             <div 
+               v-else
+               class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"
+             ></div>
+           </button>
         </h2>
       </div>
 
@@ -159,10 +179,22 @@
     <div v-if="currentPage < lastPage" class="text-center mt-8">
       <button 
         @click="loadMore" 
-        class="px-6 py-2 bg-gradient-text text-white rounded-lg hover:bg-blue-700 transition-colors"
+        class="px-6 py-2 bg-gradient-text text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
         :disabled="isLoading"
       >
-        {{ isLoading ? 'Đang tải...' : 'Xem thêm' }}
+        <InlineLoading 
+          v-if="isLoading" 
+          :visible="isLoading" 
+          text="Đang tải..." 
+          size="sm" 
+          variant="primary"
+        />
+        <template v-else>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Xem thêm
+        </template>
       </button>
     </div>
   </div>
@@ -246,9 +278,18 @@ import { useRouter } from 'vue-router'
 import useImage from '@/composables/features/images/useImage'
 import useMasonry from '@/composables/features/ui/useMasonry'
 import { formatTime } from '@/utils'
+import { RefreshCw, BookImage } from 'lucide-vue-next'
+import InlineLoading from '@/components/base/feedback/InlineLoading.vue'
+import OverlayLoading from '@/components/base/feedback/OverlayLoading.vue'
 
 export default {
 name: 'ImageGallery',
+components: {
+  RefreshCw,
+  InlineLoading,
+  OverlayLoading,
+  BookImage
+},
 props: {
   featureId: {
     type: [Number, String, null],
@@ -318,6 +359,7 @@ setup(props) {
   const previewImages = ref([])
   const previewIndex = ref(0)
   const currentPreviewImage = ref(null)
+  const isRefreshing = ref(false)
   
   // Theo dõi imageUrls để cập nhật slide cho mỗi ảnh
   watch(imageUrls, (newImages) => {
@@ -331,6 +373,15 @@ setup(props) {
     nextTick(() => {
       initMasonry()
     })
+  }, { immediate: true });
+
+  // Debug pagination values
+  watch([currentPage, lastPage], ([newCurrentPage, newLastPage]) => {
+    console.log('Pagination values in component:', {
+      currentPage: newCurrentPage,
+      lastPage: newLastPage,
+      shouldShowLoadMore: newCurrentPage < newLastPage
+    });
   }, { immediate: true });
 
   // Theo dõi featureId để tải lại dữ liệu khi thay đổi
@@ -352,6 +403,19 @@ setup(props) {
       initMasonry()
     })
   });
+
+  // Làm mới dữ liệu
+  const refreshGallery = async () => {
+    isRefreshing.value = true
+    try {
+      await fetchImagesByFeature(featureId.value, 1, sortValue.value);
+      nextTick(() => {
+        initMasonry()
+      })
+    } finally {
+      isRefreshing.value = false
+    }
+  }
 
   const selectSort = async (value) => {
     sortValue.value = value
@@ -440,7 +504,9 @@ setup(props) {
     sortOptions,
     sortValue,
     isSortOpen,
-    selectSort
+    selectSort,
+    refreshGallery,
+    isRefreshing
   }
 }
 }
